@@ -1,0 +1,145 @@
+services:
+  cards-db:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wynterlabs_cards
+      POSTGRES_USER: wynterlabs_cards
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - cards-db-data:/var/lib/postgresql/data
+    networks:
+      - cards-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wynterlabs_cards -d wynterlabs_cards"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  cards-api:
+    build:
+      context: ../../api
+    image: ${CARDS_API_IMAGE}
+    restart: unless-stopped
+    environment:
+      CARDS_DATABASE_HOST: cards-db
+      CARDS_DATABASE_NAME: wynterlabs_cards
+      CARDS_DATABASE_USER: wynterlabs_cards
+      CARDS_DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      CARDS_BOOTSTRAP_SECRET_FILE: /run/secrets/bootstrap_secret
+      CARDS_SESSION_PEPPER_FILE: /run/secrets/session_pepper
+      CARDS_MFA_ENCRYPTION_KEY_FILE: /run/secrets/mfa_encryption_key
+      CARDS_CATALOG_MEDIA_CACHE_DIR: /var/lib/wynterlabs/catalog-media
+      CARDS_ENVIRONMENT: production
+    volumes:
+      - cards-catalog-media:/var/lib/wynterlabs/catalog-media
+    secrets:
+      - db_password
+      - bootstrap_secret
+      - session_pepper
+      - mfa_encryption_key
+    depends_on:
+      cards-db:
+        condition: service_healthy
+    networks:
+      - cards-internal
+      - cards-edge
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  cards-web:
+    build:
+      context: ../../web
+    image: ${CARDS_WEB_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      cards-api:
+        condition: service_healthy
+    networks:
+      - cards-edge
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  cards-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CARDS_HOST: ${CARDS_HOST}
+      CARDS_HTTPS_ORIGIN: ${CARDS_HTTPS_ORIGIN}
+    depends_on:
+      cards-api:
+        condition: service_healthy
+      cards-web:
+        condition: service_healthy
+    ports:
+      - "${CARDS_HTTP_PORT}:80"
+      - "${CARDS_HTTPS_PORT}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${CARDS_INSTALL_ROOT}/public:/srv/public:ro
+      - cards-caddy-data:/data
+      - cards-caddy-config:/config
+    networks:
+      - cards-edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  cards-internal:
+    internal: true
+  cards-edge:
+
+volumes:
+  cards-db-data:
+    name: ${CARDS_DB_VOLUME}
+  cards-catalog-media:
+  cards-caddy-data:
+  cards-caddy-config:
+
+secrets:
+  db_password:
+    file: ${CARDS_INSTALL_ROOT}/secrets/db_password
+  bootstrap_secret:
+    file: ${CARDS_INSTALL_ROOT}/secrets/bootstrap_secret
+  session_pepper:
+    file: ${CARDS_INSTALL_ROOT}/secrets/session_pepper
+  mfa_encryption_key:
+    file: ${CARDS_ESCROW_ROOT}/mfa_aesgcm_key

@@ -1,0 +1,34 @@
+{
+	default_sni {$CARDS_HOST}
+}
+
+http://{$CARDS_HOST} {
+	handle /wynterlabs-cards-root-ca.crt {
+		root * /srv/public
+		file_server
+		header Content-Type application/x-x509-ca-cert
+	}
+	handle {
+		redir {$CARDS_HTTPS_ORIGIN}{uri} permanent
+	}
+}
+
+https://{$CARDS_HOST} {
+	tls internal
+	encode zstd gzip
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy cards-api:8000
+	}
+	handle {
+		reverse_proxy cards-web:8080
+	}
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+		-Server
+	}
+}
