@@ -47,7 +47,7 @@ export function LoginPage() {
       </div>
       <form className="auth-card" onSubmit={(event) => void submit(event)}>
         <div>
-          <p className="form-kicker">WynterLabs Cards</p>
+          <p className="form-kicker">WynterLabs CardVault</p>
           <h2>Sign in</h2>
           <p>Use your WynterLabs account.</p>
         </div>

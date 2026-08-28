@@ -80,9 +80,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
         <div className="header-topline">
-          <Link className="brand" to="/" aria-label="WynterLabs Cards home">
+          <Link className="brand" to="/" aria-label="WynterLabs CardVault home">
             <LogoMark />
-            <span><strong>WynterLabs</strong><small>CARDS</small></span>
+            <span><strong>WynterLabs</strong><small>CARDVAULT</small></span>
           </Link>
           <div className="header-account" aria-label="Current workspace">
             <span className="header-signal" aria-hidden="true" />
@@ -119,8 +119,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main id="main">{children}</main>
       <footer className="site-footer">
-        <span>WynterLabs Cards</span>
-        <span>Private community collection workspace</span>
+        <span>WynterLabs CardVault</span>
+        <span>Scan it. Sort it. Own your collection.</span>
       </footer>
     </div>
   );

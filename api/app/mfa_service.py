@@ -159,10 +159,10 @@ async def begin_enrollment(
     credential.pending_expires_at = expires
     credential.last_totp_counter = None
     encoded = base64.b32encode(secret).decode().rstrip("=")
-    label = quote(f"WynterLabs Cards:{locked.email}")
+    label = quote(f"WynterLabs CardVault:{locked.email}")
     uri = (
         f"otpauth://totp/{label}?secret={encoded}"
-        f"&issuer={quote('WynterLabs Cards')}"
+        f"&issuer={quote('WynterLabs CardVault')}"
         "&algorithm=SHA1&digits=6&period=30"
     )
     return EnrollmentMaterial(secret=encoded, otpauth_uri=uri, expires_at=expires)

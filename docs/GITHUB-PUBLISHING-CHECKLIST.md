@@ -1,6 +1,7 @@
 # GitHub publishing checklist
 
-Prepare the `wynterlabs-cards` repository with **private** visibility.
+Prepare the `wynterlabs-cardvault` repository privately, complete every check,
+and obtain owner approval before changing it to **public** visibility.
 
 - Review the sanitized archive, including the public documents and release
   candidate, before it enters the repository.

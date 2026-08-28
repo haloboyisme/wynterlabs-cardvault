@@ -1,4 +1,4 @@
-# Install WynterLabs Cards
+# Install WynterLabs CardVault
 
 Use the standalone Docker workflow included with this release. Supply your own
 domain or LAN host, storage location, secrets, and backup destination; do not
@@ -18,7 +18,7 @@ reuse values from another installation.
 
 ## Install
 
-From the root of this release, prepare the host and install WynterLabs Cards
+From the root of this release, prepare the host and install WynterLabs CardVault
 with one command:
 
 ```sh

@@ -49,8 +49,8 @@ export function HomePage() {
     <>
       <section className="hero home-hero">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="status-dot" /> WynterLabs Cards · Private by design</p>
-          <h1>Your cards, clearly organized.</h1>
+          <p className="eyebrow"><span className="status-dot" /> WynterLabs CardVault · Private by design</p>
+          <h1>Scan it. Sort it. Own your collection.</h1>
           <p className="hero-lede">
             A private card workspace built for real collections: fast enough
             for a new stack, detailed enough for every exact printing, and
@@ -98,7 +98,7 @@ export function HomePage() {
           </div>
           <p>Every major tool is one clear step away, with feedback that keeps you oriented.</p>
         </div>
-        <nav className="home-quick-grid" aria-label="Explore WynterLabs Cards">
+        <nav className="home-quick-grid" aria-label="Explore WynterLabs CardVault">
           {quickActions.map((item) => (
             <Link className="home-quick-card" to={item.to} key={item.title}>
               <span className="home-quick-code">{item.code}</span>

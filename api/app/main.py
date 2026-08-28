@@ -30,7 +30,7 @@ def create_app(
         session_factory = create_session_factory(create_engine(resolved_settings))
 
     app = FastAPI(
-        title="WynterLabs Cards API",
+        title="WynterLabs CardVault API",
         version="0.3.0",
         docs_url=None if resolved_settings.environment == "production" else "/api/docs",
     )

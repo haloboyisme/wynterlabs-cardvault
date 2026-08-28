@@ -1,10 +1,13 @@
 <div align="center">
 
-# 🃏 WynterLabs Cards
+# 🃏 WynterLabs CardVault
 
-### A private, self-hosted card collection workspace built for collectors—not subscriptions.
+### Scan it. Sort it. Own your collection.
 
-![Version](https://img.shields.io/badge/version-1.0.0-7c3aed?style=for-the-badge)
+**A private, self-hosted trading-card scanner and collection vault built for
+collectors—not subscriptions.**
+
+![Version](https://img.shields.io/badge/version-1.0.1-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -12,7 +15,7 @@
 </div>
 
 > [!NOTE]
-> WynterLabs Cards is a fun, AI-assisted hobby project. I built it as a practical
+> WynterLabs CardVault is a fun, AI-assisted hobby project. I built it as a practical
 > way to organize my cards and experiment with AI while avoiding another paid
 > collection app—especially for scanning many cards. It is not a commercial
 > service or a promise of permanent professional support.
@@ -114,10 +117,10 @@ attribution requirements, and acceptable-use rules.
 
 ## 🚦 Start here
 
-- [Install with the standalone Docker workflow](https://github.com/haloboyisme/wynterlabs-cards/blob/main/docs/INSTALL.md)
-- [Read the security policy](https://github.com/haloboyisme/wynterlabs-cards/blob/main/SECURITY.md)
-- [Read contribution expectations](https://github.com/haloboyisme/wynterlabs-cards/blob/main/CONTRIBUTING.md)
-- [Review the GitHub publishing checklist](https://github.com/haloboyisme/wynterlabs-cards/blob/main/docs/GITHUB-PUBLISHING-CHECKLIST.md)
+- [Install with the standalone Docker workflow](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/docs/INSTALL.md)
+- [Read the security policy](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/SECURITY.md)
+- [Read contribution expectations](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/CONTRIBUTING.md)
+- [Review the GitHub publishing checklist](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/docs/GITHUB-PUBLISHING-CHECKLIST.md)
 
 ---
 
@@ -134,10 +137,10 @@ attribution requirements, and acceptable-use rules.
 ### One copy-and-paste command
 
 Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
-open WynterLabs Cards:
+open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v1.0.0 https://github.com/haloboyisme/wynterlabs-cards.git && cd wynterlabs-cards && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v1.0.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

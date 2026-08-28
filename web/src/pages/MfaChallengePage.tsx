@@ -38,7 +38,7 @@ export function MfaChallengePage() {
   }
 
   return <section className="auth-layout"><form className="auth-card" onSubmit={(event) => void submit(event)}>
-    <div><p className="form-kicker">WynterLabs Cards</p><h1>Two-step verification</h1><p>Enter a code from your authenticator or a recovery code.</p></div>
+    <div><p className="form-kicker">WynterLabs CardVault</p><h1>Two-step verification</h1><p>Enter a code from your authenticator or a recovery code.</p></div>
     {error && <div className="form-error" role="alert">{error}</div>}
     <fieldset><legend>Verification method</legend>
       <label><input type="radio" checked={mode === "totp"} onChange={() => { setMode("totp"); setCode(""); }} />Authenticator code</label>

@@ -1,1 +1,1 @@
-"""WynterLabs Cards API."""
+"""WynterLabs CardVault API."""

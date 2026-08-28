@@ -55,7 +55,7 @@ export function ChangePasswordPage() {
       </div>
       <form className="auth-card" onSubmit={(event) => void submit(event)}>
         <div>
-          <p className="form-kicker">WynterLabs Cards</p>
+          <p className="form-kicker">WynterLabs CardVault</p>
           <h2>Secure your account</h2>
           <p>Your permanent password must contain at least 12 characters.</p>
         </div>
