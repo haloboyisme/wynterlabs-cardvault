@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CollectionValueChart } from "./CollectionValueChart";
@@ -42,6 +42,65 @@ describe("CollectionValueChart", () => {
     expect(chart.querySelector(".collection-value-chart-area")).not.toBeNull();
   });
 
+  it("scales from zero to the next thousand above the selected range high", () => {
+    render(<CollectionValueChart history={history} />);
+
+    const scale = screen.getByRole("group", { name: /collection value scale/i });
+    expect(within(scale).getAllByText(/^\$/).map((label) => label.textContent)).toEqual([
+      "$1K", "$750", "$500", "$250", "$0",
+    ]);
+    expect(screen.getByText("Scale: $0–$1,000")).toBeVisible();
+  });
+
+  it("rounds larger ranges upward by one thousand and caps the supported scale", () => {
+    const { rerender } = render(<CollectionValueChart history={{
+      ...history,
+      current_value_usd: "24400.00",
+      points: history.points.map((point, index) => ({
+        ...point,
+        estimated_value_usd: index === 0 ? "24000.00" : "24400.00",
+      })),
+    }} />);
+
+    expect(screen.getByText("Scale: $0–$25,000")).toBeVisible();
+
+    rerender(<CollectionValueChart history={{
+      ...history,
+      current_value_usd: "999999999999.99",
+      points: [{ ...history.points[1], estimated_value_usd: "999999999999.99" }],
+    }} />);
+    expect(screen.getByText("Scale: $0–$999,999,999,999")).toBeVisible();
+  });
+
+  it("shows the exact recorded price and time for the active point", () => {
+    render(<CollectionValueChart history={history} />);
+
+    expect(screen.getByRole("status", { name: /selected collection value/i })).toHaveTextContent(
+      /Aug 27, 2026.*12:00 PM.*\$125\.50/i,
+    );
+
+    const [first] = screen.getAllByRole("graphics-symbol");
+    fireEvent.mouseEnter(first);
+    expect(screen.getByRole("status", { name: /selected collection value/i })).toHaveTextContent(
+      /Aug 1, 2026.*12:00 PM.*\$100\.00/i,
+    );
+  });
+
+  it("uses time labels for an hourly view", () => {
+    render(<CollectionValueChart history={{
+      ...history,
+      range: "hour",
+      points: [
+        { ...history.points[0], timestamp: "2026-08-27T12:00:00Z" },
+        { ...history.points[1], timestamp: "2026-08-27T12:30:00Z" },
+      ],
+    }} />);
+
+    const timeline = screen.getByRole("group", { name: /collection value timeline/i });
+    expect(within(timeline).getByText("12:00 PM")).toBeVisible();
+    expect(within(timeline).getByText("12:30 PM")).toBeVisible();
+  });
+
   it("states when only one recorded value is available", () => {
     render(<CollectionValueChart history={{ ...history, change_usd: "0.00", change_percent: null, points: history.points.slice(1) }} />);
 
@@ -77,17 +136,17 @@ describe("CollectionValueChart", () => {
     expect(screen.getByText(/price source may be stale; oldest contributing price: aug 20, 2026/i)).toHaveClass("is-stale");
   });
 
-  it("maps value extrema and endpoint positions into the chart viewBox", () => {
+  it("maps zero-based values and endpoint positions into the chart viewBox", () => {
     render(<CollectionValueChart history={history} />);
 
     const [first, last] = screen.getAllByRole("graphics-symbol");
-    expect(first).toHaveAttribute("cx", "12");
-    expect(first).toHaveAttribute("cy", "112");
-    expect(last).toHaveAttribute("cx", "308");
-    expect(last).toHaveAttribute("cy", "8");
+    expect(first).toHaveAttribute("cx", "60");
+    expect(first).toHaveAttribute("cy", "173");
+    expect(last).toHaveAttribute("cx", "460");
+    expect(last).toHaveAttribute("cy", "168.665");
   });
 
-  it("centers flat and one-point histories instead of drawing them as a low value", () => {
+  it("keeps flat and one-point histories at their value above the zero baseline", () => {
     const flat = {
       ...history,
       points: history.points.map((point) => ({ ...point, estimated_value_usd: "100.00" })),
@@ -95,12 +154,12 @@ describe("CollectionValueChart", () => {
     const { rerender } = render(<CollectionValueChart history={flat} />);
 
     const [first, last] = screen.getAllByRole("graphics-symbol");
-    expect(first).toHaveAttribute("cy", "60");
-    expect(last).toHaveAttribute("cy", "60");
+    expect(first).toHaveAttribute("cy", "173");
+    expect(last).toHaveAttribute("cy", "173");
 
     rerender(<CollectionValueChart history={{ ...flat, points: flat.points.slice(0, 1) }} />);
     const [single] = screen.getAllByRole("graphics-symbol");
-    expect(single).toHaveAttribute("cx", "160");
-    expect(single).toHaveAttribute("cy", "60");
+    expect(single).toHaveAttribute("cx", "260");
+    expect(single).toHaveAttribute("cy", "173");
   });
 });

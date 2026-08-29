@@ -62,9 +62,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .brand > span:last-child { display: grid; line-height: 1; gap: .28rem; }
 .brand strong { font-size: .95rem; }
 .brand small { color: var(--blue); font-size: .58rem; letter-spacing: .32em; }
-.logo-mark { width: 40px; height: 40px; display: grid; place-items: center; position: relative; }
-.logo-card { position: absolute; width: 25px; height: 32px; border: 1px solid rgba(124,232,226,.55); border-radius: 6px; transform: rotate(-8deg); background: linear-gradient(145deg, rgba(120,183,255,.22), rgba(255,255,255,.02)); }
-.logo-flake { position: relative; color: var(--cyan); text-shadow: 0 0 18px rgba(124,232,226,.8); }
+.logo-mark { width: 40px; height: 40px; display: block; object-fit: contain; }
 .site-header nav { display: flex; gap: .35rem; align-items: center; }
 .primary-nav { flex-wrap: wrap; justify-content: flex-end; }
 .site-header nav a, .nav-button { display: inline-flex; min-height: var(--control-height); align-items: center; padding: .7rem .9rem; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: .84rem; border: 0; background: transparent; cursor: pointer; }

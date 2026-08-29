@@ -179,16 +179,20 @@ html[data-motion="reduced"] *::after {
 .collection-value-chart-metrics span { color: var(--muted); font-size: .72rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .collection-value-chart-metrics strong { font-size: 1rem; }
 .collection-value-chart-figure { display: grid; gap: .5rem; }
-.collection-value-chart svg { display: block; width: 100%; min-height: 10rem; overflow: visible; border: 1px solid var(--line); border-radius: var(--radius-md); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 88%, transparent), color-mix(in srgb, var(--panel) 72%, transparent)); }
+.collection-value-chart svg { display: block; width: 100%; min-height: 12rem; overflow: visible; border: 1px solid var(--line); border-radius: var(--radius-md); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 88%, transparent), color-mix(in srgb, var(--panel) 72%, transparent)); }
 .collection-value-chart-guide,
 .collection-value-chart-baseline { stroke: var(--line); stroke-width: 1; }
 .collection-value-chart-guide { stroke-dasharray: 3 5; opacity: .65; }
+.collection-value-chart-axis-label { fill: var(--muted); font-size: 11px; font-weight: 700; }
 .collection-value-chart-area { fill: url(#collection-value-chart-gradient); }
 .collection-value-chart-line { fill: none; stroke: var(--accent-link); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .collection-value-chart-point { fill: var(--panel-strong); stroke: var(--accent-link); stroke-width: 3; cursor: help; }
 .collection-value-chart-point.is-high { fill: var(--accent); stroke: var(--accent-ink); }
 .collection-value-chart-point.is-low { stroke-dasharray: 2 2; }
 .collection-value-chart-point:focus { outline: none; stroke: var(--ink); stroke-width: 4; }
+.collection-value-chart-selected { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: var(--control-height); padding: .65rem .85rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent-soft) 42%, var(--panel)); }
+.collection-value-chart-selected span { color: var(--muted); font-size: .8rem; }
+.collection-value-chart-selected strong { color: var(--accent-ink); font-size: 1.05rem; }
 .collection-value-chart-freshness { padding-left: .65rem; border-left: 3px solid var(--line); }
 .collection-value-chart-freshness:is(.is-stale, .is-unavailable) { border-left-color: var(--state-warning); background: color-mix(in srgb, var(--state-warning) 9%, transparent); }
 
@@ -196,6 +200,7 @@ html[data-motion="reduced"] *::after {
   .collection-value-chart-summary { grid-template-columns: 1fr; gap: .5rem; }
   .collection-value-chart-metrics { grid-template-columns: 1fr 1fr; }
   .collection-value-chart-metrics p:last-child { grid-column: 1 / -1; }
+  .collection-value-chart-selected { align-items: flex-start; flex-direction: column; gap: .2rem; }
 }
 
 .workspace-disclosure {
