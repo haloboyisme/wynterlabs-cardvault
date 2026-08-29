@@ -23,6 +23,49 @@ describe("uniqueDetectedPrintingId", () => {
     expect(uniqueDetectedPrintingId(candidates, {})).toBe("pip-232");
   });
 
+  it("preselects one Pokemon printing when OCR only changes title punctuation", () => {
+    const candidates = [
+      printing("pokemon-025", "SVP", "025", "Pikachu's Journey", "pokemon"),
+    ];
+
+    expect(uniqueDetectedPrintingId(candidates, {
+      name: "Pikachu s Journey",
+    })).toBe("pokemon-025");
+  });
+
+  it("preselects a Magic Adventure printing when recognition reads the front title", () => {
+    const candidates = [
+      printing("clb-173", "CLB", "173", "Fang Dragon // Forktail Sweep"),
+    ];
+
+    expect(uniqueDetectedPrintingId(candidates, {
+      name: "Fang Dragon", set: "clb", collector: "173/361",
+    })).toBe("clb-173");
+  });
+
+  it("preselects the unique collector match when two Magic printings remain", () => {
+    const candidates = [
+      printing("pip-232", "PIP", "232"),
+      printing("pip-760", "PIP", "760"),
+    ];
+
+    expect(uniqueDetectedPrintingId(candidates, {
+      name: "Black Lotus", collector: "0232/0760",
+    })).toBe("pip-232");
+  });
+
+  it("preselects the preferred-set suggestion when three printings remain", () => {
+    const candidates = [
+      printing("m10-146", "M10", "146"),
+      printing("pip-232", "PIP", "232"),
+      printing("lea-161", "LEA", "161"),
+    ];
+
+    expect(uniqueDetectedPrintingId(candidates, {
+      name: "Black Lotus",
+    }, "pip", "mtg")).toBe("pip-232");
+  });
+
   it("does not preselect from multiple printings when OCR hints are incomplete", () => {
     const candidates = [
       printing("pip-232", "PIP", "232"),
@@ -86,7 +129,7 @@ describe("uniqueDetectedPrintingId", () => {
       .toBe("");
   });
 
-  it("leaves duplicate exact title, set, and collector matches unselected", () => {
+  it("preselects the leading suggestion when duplicate exact matches remain", () => {
     const candidates = [
       printing("first", "PIP", "232"),
       printing("second", "PIP", "232"),
@@ -95,7 +138,7 @@ describe("uniqueDetectedPrintingId", () => {
     expect(uniqueDetectedPrintingId(candidates, {
       name: "Black Lotus", set: "pip", collector: "232",
     }))
-      .toBe("");
+      .toBe("first");
   });
 });
 

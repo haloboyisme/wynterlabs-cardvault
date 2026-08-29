@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json vite.config.ts index.html ./
 COPY src ./src
+COPY public ./public
 RUN npm run build
 RUN mkdir -p /app/dist/ocr \
  && cp node_modules/tesseract.js/dist/worker.min.js /app/dist/ocr/worker.min.js \

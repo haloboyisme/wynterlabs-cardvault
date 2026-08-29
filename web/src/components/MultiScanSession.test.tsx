@@ -232,7 +232,7 @@ it("uses a preferred set to lead while keeping other sets available for correcti
     expect.any(AbortSignal),
   );
   expect(await screen.findByRole("radio", { name: /black lotus.*cmm.*500/i }))
-    .not.toBeChecked();
+    .toBeChecked();
   expect(screen.getByRole("radio", { name: /black lotus.*lea.*233/i })).toBeVisible();
 });
 
@@ -378,7 +378,7 @@ it("shows every printing and filters the selected session card by set or collect
   render(<MultiScanSession />);
 
   await user.click(screen.getByRole("button", { name: "Capture test card" }));
-  expect(await screen.findByRole("radio", { name: /black lotus.*lea.*233/i })).not.toBeChecked();
+  expect(await screen.findByRole("radio", { name: /black lotus.*lea.*233/i })).toBeChecked();
   expect(screen.getByRole("radio", { name: /black lotus.*cmm.*500/i })).toBeVisible();
   await user.click(screen.getByRole("radio", { name: /black lotus.*lea.*233/i }));
   expect(screen.getByRole("group", { name: "Confirm collection details" })).toBeVisible();

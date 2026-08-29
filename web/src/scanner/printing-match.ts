@@ -8,7 +8,12 @@ const normalizedCollector = (value: string) => value
   .replace(/^0+(?=\d)/, "");
 
 const normalizedSet = (value?: string) => value?.trim().toLocaleLowerCase() ?? "";
-const normalizedTitle = (value?: string) => value?.trim().toLocaleLowerCase() ?? "";
+const normalizedTitle = (value?: string) => value
+  ?.normalize("NFKD")
+  .toLocaleLowerCase()
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim()
+  .replace(/\s+/g, " ") ?? "";
 
 export function rankScanCandidates(
   candidates: ScanCandidate[],
@@ -49,18 +54,34 @@ export function uniqueDetectedPrintingId(
   const ranked = rankScanCandidates(candidates, hints, preferredSet, preferredGame);
   if (ranked.length === 0) return "";
   const title = normalizedTitle(hints.name);
-  if (ranked.length === 1) {
-    return !title || normalizedTitle(ranked[0].name) === title
-      ? ranked[0].printing_id
-      : "";
-  }
+  const titleMatches = title
+    ? ranked.filter((candidate) => {
+        const candidateTitle = normalizedTitle(candidate.name);
+        return candidateTitle === title || candidateTitle.startsWith(`${title} `);
+      })
+    : ranked;
+  if (title && titleMatches.length === 0) return "";
+  if (titleMatches.length === 1) return titleMatches[0].printing_id;
+  if (!title) return ranked.length === 1 ? ranked[0].printing_id : "";
+
   const collector = hints.collector ? normalizedCollector(hints.collector) : "";
   const setCode = normalizedSet(hints.set);
-  if (!title || !setCode || !collector) return "";
-  const exactMatches = ranked.filter((candidate) =>
-    normalizedTitle(candidate.name) === title
-    && normalizedSet(candidate.set.code) === setCode
-    && normalizedCollector(candidate.collector_number) === collector,
+  const exactMatches = titleMatches.filter((candidate) =>
+    (!setCode || normalizedSet(candidate.set.code) === setCode)
+    && (!collector || normalizedCollector(candidate.collector_number) === collector)
   );
-  return exactMatches.length === 1 ? exactMatches[0].printing_id : "";
+  if ((setCode || collector) && exactMatches.length) {
+    return exactMatches[0].printing_id;
+  }
+
+  const preference = normalizedSet(preferredSet);
+  const preferredGameKey = normalizedSet(preferredGame);
+  const preferredMatches = titleMatches.filter((candidate) =>
+    preference
+    && normalizedSet(candidate.set.code) === preference
+    && (!preferredGameKey || normalizedSet(candidate.set.game) === preferredGameKey),
+  );
+  if (preferredMatches.length) return preferredMatches[0].printing_id;
+
+  return titleMatches[0]?.printing_id ?? "";
 }
