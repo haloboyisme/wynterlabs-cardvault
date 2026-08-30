@@ -56,6 +56,19 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
+## 🧪 Version 2 branch preview
+
+The `v2` branch is the active testing line. It expands the catalog foundation
+to Magic: The Gathering, Pokémon, Yu-Gi-Oh!, One Piece, Digimon, Star Wars:
+Unlimited, Union Arena, Disney Lorcana, and Riftbound. It also includes the
+private Brand Studio and ongoing scanner improvements, including conditional
+sideways-card recognition and labeled Digimon reference-artwork fallback when
+an exact provider image is unavailable.
+
+Version 2 is still a preview. Keep backups, review scanned printings before
+saving, and use the tagged Version 1 installer when stability matters more than
+testing new features.
+
 ## 🔐 Privacy and data boundaries
 
 - Collections, accounts, imports, exports, and backups remain under the
