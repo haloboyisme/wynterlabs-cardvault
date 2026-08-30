@@ -473,6 +473,14 @@ html[data-motion="reduced"] *::after {
 
 .account-page > .workspace-page-header { margin-bottom: 2.5rem; }
 .account-appearance-card { grid-column: 1 / -1; display: grid; gap: var(--workspace-gap); }
+.auto-scanner-settings-card { grid-column: 1 / -1; display: grid; gap: var(--workspace-gap); padding: 1.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.auto-scanner-settings-note { margin: 0; color: var(--muted); }
+.auto-scanner-settings-form { display: grid; gap: .85rem; }
+.auto-scanner-settings-form > label, .auto-scanner-settings-grid label { display: grid; gap: .35rem; color: var(--muted); font-size: .82rem; }
+.auto-scanner-settings-grid, .auto-scanner-settings-switches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; padding: 0; border: 0; }
+.auto-scanner-settings-grid legend, .auto-scanner-settings-switches legend { grid-column: 1 / -1; margin-bottom: .1rem; color: var(--muted); font-size: .76rem; font-weight: 750; }
+.auto-scanner-settings-switches label { display: flex; align-items: center; gap: .45rem; min-height: var(--control-height); }
+.auto-scanner-settings-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
 .personalization-preview { display: flex; align-items: center; gap: .75rem; padding: .9rem; border: 1px solid var(--line); border-radius: var(--radius-md); color: var(--accent-soft-ink); background: var(--accent-soft); }
 .personalization-preview > span:last-child { display: grid; gap: .2rem; }
 .personalization-preview small { color: inherit; }
@@ -514,6 +522,8 @@ html[data-motion="reduced"] *::after {
 .custom-accent-controls input[type="color"] { min-width: 3rem; min-height: var(--control-height); padding: .2rem; }
 .collection-display-settings { display: grid; gap: .75rem; }
 @media (max-width: 640px) {
+  .auto-scanner-settings-card { padding: 1rem; }
+  .auto-scanner-settings-grid, .auto-scanner-settings-switches { grid-template-columns: 1fr; }
   .custom-accent-controls { grid-template-columns: 1fr; }
   .custom-accent-hex { width: 100%; max-width: 100%; }
   .accent-swatch-grid { grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr)); }
@@ -1035,4 +1045,56 @@ html[data-motion="reduced"] *::after {
   .admin-operational-overview,
   .workspace-routine-actions,
   .workspace-danger-zone { transition: none !important; }
+}
+
+/* Private V2 workspace refinements consume the shared theme-safe polish tokens. */
+.site-header {
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 42%),
+    var(--surface-glass);
+  box-shadow: var(--shadow-premium);
+  transition: background-color var(--control-transition), border-color var(--control-transition), box-shadow var(--control-transition), transform var(--control-transition), opacity var(--control-transition);
+}
+.header-topline { padding-bottom: .75rem; }
+.workspace-page-header {
+  gap: var(--section-space);
+  margin-bottom: var(--section-space);
+  transition: gap var(--control-transition);
+}
+.workspace-page-header-actions { transition: gap var(--control-transition); }
+.workspace-feedback,
+.workspace-stat,
+.workspace-disclosure,
+.workspace-empty {
+  border-color: color-mix(in srgb, var(--line) 72%, transparent);
+  background: var(--surface-glass);
+  box-shadow: var(--shadow-premium);
+  transition-duration: 180ms;
+}
+.workspace-stat { padding: max(var(--space-4), 1.25rem); }
+.workspace-disclosure-content { padding-bottom: var(--space-4); }
+.workspace-empty { padding-block: clamp(2.5rem, 8vw, 4.5rem); }
+.workspace-routine-actions,
+.workspace-danger-zone { gap: var(--space-2); }
+.admin-operational-overview { gap: var(--section-space); transition: gap var(--control-transition); }
+.admin-card { border-color: color-mix(in srgb, var(--line) 72%, transparent); background: var(--surface-glass); box-shadow: var(--shadow-premium); }
+
+@media (max-width: 760px) {
+  .workspace-page-header-actions { width: 100%; justify-content: flex-start; }
+  .site-header .primary-nav { width: 100%; justify-content: flex-start; }
+  .brand-studio .admin-create-form { grid-template-columns: 1fr; }
+  .brand-studio-preview { min-height: 10rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .workspace-page-header,
+  .workspace-page-header-actions,
+  .workspace-feedback,
+  .workspace-stat,
+  .workspace-disclosure,
+  .workspace-empty,
+  .admin-operational-overview,
+  .brand-studio,
+  .brand-studio-preview { transition: none !important; transform: none !important; }
 }

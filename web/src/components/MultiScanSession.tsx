@@ -51,11 +51,15 @@ export function MultiScanSession({
   preferredSetGame = "",
   preferredGame = "",
   topControls,
+  stableFrameAutoCapture = true,
+  onCaptureAccepted,
 }: {
   preferredSet?: string;
   preferredSetGame?: string;
   preferredGame?: string;
   topControls?: ReactNode;
+  stableFrameAutoCapture?: boolean;
+  onCaptureAccepted?: () => void;
 }) {
   const [session, setSessionState] = useState(() => createMultiScanSession());
   const [retakeId, setRetakeId] = useState("");
@@ -202,6 +206,7 @@ export function MultiScanSession({
       }
       setRetakeId("");
       setSessionStatus("Replacement captured. Check the exact printing.");
+      onCaptureAccepted?.();
       enqueueRecognition(replacing, scan);
       return;
     }
@@ -228,6 +233,7 @@ export function MultiScanSession({
       error: "",
     }));
     setSessionStatus(`Card ${sessionRef.current.items.length + 1} captured.`);
+    onCaptureAccepted?.();
     enqueueRecognition(id, scan);
   };
 
@@ -338,6 +344,7 @@ export function MultiScanSession({
           </section>
         </>}
         continuous
+        stableFrameAutoCapture={stableFrameAutoCapture}
         captureCount={session.items.length}
         maximumCaptures={session.maximumItems}
         onResult={receiveScan}

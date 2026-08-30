@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../app/auth";
+import { useBranding } from "../app/branding";
 import { MEMBER_TRADING_ENABLED } from "../app/features";
 import { LogoMark } from "./LogoMark";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const { branding } = useBranding();
   const navigate = useNavigate();
   const [headerHidden, setHeaderHidden] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
@@ -80,9 +82,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
         <div className="header-topline">
-          <Link className="brand" to="/" aria-label="WynterLabs CardVault home">
-            <LogoMark />
-            <span><strong>WynterLabs</strong><small>CARDVAULT</small></span>
+          <Link className="brand" to="/" aria-label={`${branding.site_name} ${branding.product_name} home`}>
+            <LogoMark branding={branding} />
+            <span><strong>{branding.site_name}</strong><small>{branding.product_name.toUpperCase()}</small></span>
           </Link>
           <div className="header-account" aria-label="Current workspace">
             <span className="header-signal" aria-hidden="true" />
@@ -119,8 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main id="main">{children}</main>
       <footer className="site-footer">
-        <span>WynterLabs CardVault</span>
-        <span>Scan it. Sort it. Own your collection.</span>
+        <span>{branding.site_name} {branding.product_name}</span>
+        <span>{branding.tagline}</span>
       </footer>
     </div>
   );

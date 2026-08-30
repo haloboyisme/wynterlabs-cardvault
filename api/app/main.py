@@ -8,6 +8,7 @@ from app.routers import (
     account,
     admin,
     auth,
+    branding,
     catalog,
     collection,
     decks,
@@ -38,6 +39,7 @@ def create_app(
     app.state.session_factory = session_factory
     install_error_handlers(app)
     app.include_router(health.router)
+    app.include_router(branding.router)
     app.include_router(setup.router)
     app.include_router(scanner.router)
     app.include_router(catalog.router)

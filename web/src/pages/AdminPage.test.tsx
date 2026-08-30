@@ -19,6 +19,17 @@ vi.mock("../app/auth", () => ({
   }),
 }));
 
+vi.mock("../app/branding", () => ({
+  useBranding: () => ({
+    branding: {
+      site_name: "WynterLabs", product_name: "CardVault",
+      tagline: "Scan it. Sort it. Own your collection.",
+      has_custom_logo: false, logo_revision: null,
+    },
+    refreshBranding: vi.fn(),
+  }),
+}));
+
 const activeCatalog = {
   import_id: "11111111-1111-4111-8111-111111111111", status: "complete",
   source_updated_at: "2026-08-14T00:00:00Z", completed_at: "2026-08-14T00:05:00Z",
@@ -160,6 +171,7 @@ it("opens secondary catalog and owner maintenance details in Advanced mode", asy
 
 it("shows sanitized catalog status to an owner and reserves administrator management for the owner", async () => {
   render(<AdminPage />);
+  expect(screen.getByRole("heading", { name: "Brand Studio" })).toBeVisible();
   expect(await screen.findByRole("heading", { name: /catalog database/i })).toBeVisible();
   expect(screen.getByRole("heading", { name: /administrators/i })).toBeVisible();
   expect(screen.getAllByText("116,703", { selector: "strong" })).toHaveLength(2);
@@ -225,6 +237,7 @@ it("shows only catalog controls to an administrator and never requests or render
   authState.role = "admin";
   render(<AdminPage />);
   expect(await screen.findByRole("heading", { name: /catalog database/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Brand Studio" })).toBeVisible();
   const overview = screen.getByRole("region", { name: /operational overview/i });
   expect(within(overview).queryByText("Administrator count")).not.toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: /administrators/i })).not.toBeInTheDocument();

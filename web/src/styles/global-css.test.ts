@@ -519,3 +519,43 @@ it("defines shared scanner workspace regions that stay reachable without page ov
   expect(tablet).toMatch(/\.scanner-confirm-actions[^}]*position:\s*sticky/s);
   expect(css).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.scanner-capture-countdown[^}]*animation:\s*none/s);
 });
+
+it("defines the private Brand Studio shared polish contract", () => {
+  expect(css).toContain("--surface-glass:");
+  expect(css).toContain("--shadow-premium:");
+  expect(css).toContain(".brand-studio");
+  expect(css).toContain(".brand-preview");
+  expect(css).toContain("@media (max-width: 760px)");
+  expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+});
+
+it("keeps premium card and filter surfaces specific enough to override their base rules", () => {
+  const cardSurfaces = css.match(/:is\(\s*\.capability-card,[\s\S]*?\.scanner-result-toolbar\s*\)\s*\{[^}]*\}/)?.[0] ?? "";
+  const filterSurfaces = css.match(/:is\(\.catalog-filters, \.collection-filters, \.deck-filter-bar, \.scanner-result-toolbar, \.workspace-disclosure\)\s*\{[^}]*\}/)?.[0] ?? "";
+
+  expect(cardSurfaces).toMatch(/background:\s*var\(--surface-glass\)/);
+  expect(cardSurfaces).toMatch(/border-color:/);
+  expect(filterSurfaces).toMatch(/background:\s*var\(--surface-glass\)/);
+  expect(filterSurfaces).toMatch(/border-color:/);
+});
+
+it("keeps Brand Studio controls theme-safe and makes premium surfaces opaque in high contrast", () => {
+  const adminControls = css.match(/\.admin-create-form :where\(input, select, textarea\),[\s\S]*?\.admin-confirmation :where\(input, select, textarea\)\s*\{[^}]*\}/)?.[0] ?? "";
+  expect(adminControls).toMatch(/color:\s*var\(--ink\)/);
+  expect(adminControls).toMatch(/border:\s*1px solid var\(--control-border\)/);
+  expect(adminControls).toMatch(/background:\s*var\(--control-bg\)/);
+
+  const highContrast = css.match(/html\[data-contrast="high"\] :is\([\s\S]*?\.brand-studio-preview\s*\)\s*\{[^}]*\}/)?.[0] ?? "";
+  expect(highContrast).toMatch(/border-color:\s*var\(--ink\)/);
+  expect(highContrast).toMatch(/background:\s*var\(--panel-strong\)/);
+  expect(highContrast).toMatch(/box-shadow:\s*none/);
+});
+
+it("disables motion on capability, home, and shared interactive card descendants", () => {
+  const reducedMotion = css.match(/@media \(prefers-reduced-motion: reduce\)[\s\S]*$/)?.[0] ?? "";
+  expect(reducedMotion).toMatch(/\.capability-card,[\s\S]*\.home-quick-grid > \*/);
+  expect(reducedMotion).toMatch(/:where\(\s*\.capability-card,[\s\S]*?\.home-quick-grid > \*[\s\S]*?\) :where\(\*, \*::before, \*::after\)/);
+  expect(reducedMotion).toMatch(/animation:\s*none !important/);
+  expect(reducedMotion).toMatch(/transform:\s*none !important/);
+  expect(reducedMotion).toMatch(/transition:\s*none !important/);
+});

@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { CardImage } from "../components/CardImage";
+import { AutoScanWorkspace } from "../components/AutoScanWorkspace";
 import { CardScanner, type CapturedScan } from "../components/CardScanner";
 import { MultiScanSession } from "../components/MultiScanSession";
 import { ScanPreferenceSelector } from "../components/ScanPreferenceSelector";
@@ -33,7 +34,7 @@ function previewPrice(candidate: ScanCandidate, finish: string) {
   return Number.isFinite(amount) ? usd.format(amount) : null;
 }
 
-type ScannerMode = "single" | "multiple";
+type ScannerMode = "single" | "multiple" | "automatic";
 
 function ScanModeToggle({ mode, onChange, children }: {
   mode: ScannerMode;
@@ -54,6 +55,12 @@ function ScanModeToggle({ mode, onChange, children }: {
       checked={mode === "multiple"}
       onChange={() => onChange("multiple")}
     />Multiple cards (session)</label>
+    <label><input
+      type="radio"
+      name="scanner-mode"
+      checked={mode === "automatic"}
+      onChange={() => onChange("automatic")}
+    />Auto scanner (test)</label>
     {children}
   </fieldset>;
 }
@@ -295,6 +302,25 @@ export function ScannerPage() {
       </header>
       <p className="scanner-mode-note">This session stays only in this browser tab and holds a maximum of 250 captures. Photos are discarded when the session ends or the page reloads.</p>
       <MultiScanSession
+        preferredSet={preferredSetCode}
+        preferredSetGame={preferredSetGame}
+        preferredGame={preferredGame}
+        topControls={<ScanModeToggle mode={mode} onChange={setMode}>
+          <ScanPreferenceSelector
+            sets={catalogSets}
+            preferredGame={preferredGame}
+            preferredSet={preferredSet}
+            onPreferredGameChange={setPreferredGame}
+            onPreferredSetChange={setPreferredSet}
+          />
+        </ScanModeToggle>}
+      />
+    </article>;
+  }
+
+  if (mode === "automatic") {
+    return <article className="scanner-page">
+      <AutoScanWorkspace
         preferredSet={preferredSetCode}
         preferredSetGame={preferredSetGame}
         preferredGame={preferredGame}

@@ -66,6 +66,7 @@ interface Props {
   captureFrame?: typeof captureGuidedCardFrame;
   revokePreview?: (url: string) => void;
   continuous?: boolean;
+  stableFrameAutoCapture?: boolean;
   captureCount?: number;
   maximumCaptures?: number;
   sampleIntervalMs?: number;
@@ -136,6 +137,7 @@ export function CardScanner({
   onReset,
   nextCardSignal = 0,
   continuous = false,
+  stableFrameAutoCapture = true,
   captureCount = 0,
   maximumCaptures = 250,
   sampleIntervalMs = 750,
@@ -522,7 +524,7 @@ export function CardScanner({
   }, [camera, switchingCamera, captureCount, maximumCaptures, captureShortcut, capture]);
 
   useEffect(() => {
-    if (!continuous || !camera || captureCount >= maximumCaptures || autoCountdown !== null) return;
+    if (!continuous || !stableFrameAutoCapture || !camera || captureCount >= maximumCaptures || autoCountdown !== null) return;
     const timer = window.setInterval(() => {
       if (busyRef.current) return;
       try {
@@ -550,13 +552,14 @@ export function CardScanner({
     captureCameraCanvas,
     captureCount,
     continuous,
+    stableFrameAutoCapture,
     maximumCaptures,
     sampleFingerprint,
     sampleIntervalMs,
   ]);
 
   useEffect(() => {
-    if (!continuous || !camera || autoCountdown === null || captureCount >= maximumCaptures) return;
+    if (!continuous || !stableFrameAutoCapture || !camera || autoCountdown === null || captureCount >= maximumCaptures) return;
     const timer = window.setTimeout(() => {
       if (busyRef.current) {
         setAutoCountdown(null);
@@ -594,6 +597,7 @@ export function CardScanner({
     captureCameraCanvas,
     captureCount,
     continuous,
+    stableFrameAutoCapture,
     countdownStepMs,
     maximumCaptures,
     recognize,
@@ -663,7 +667,9 @@ export function CardScanner({
         <div className="scanner-live-feedback" aria-live="polite">
           {continuous && <p className="scanner-live-status" role="status">{captureCount >= maximumCaptures
             ? `Session limit reached (${maximumCaptures} cards).`
-            : autoStatus || "Hold one card steady inside the guide."}</p>}
+            : autoStatus || (stableFrameAutoCapture
+              ? "Hold one card steady inside the guide."
+              : "Choose Capture now when the card is in view.")}</p>}
           {captureStatus && <p className="scanner-live-status" role="status">{captureStatus}{busy && progress > 0 ? ` ${Math.round(progress * 100)}%` : ""}</p>}
           {cameraStatus && <p className="scanner-live-status" role="status">{cameraStatus}</p>}
         </div>
@@ -671,7 +677,7 @@ export function CardScanner({
       {camera && (
         <section className="scanner-camera-stage" aria-labelledby="live-camera-title">
           <h3 id="live-camera-title">Live camera</h3>
-          <p>{continuous
+          <p>{continuous && stableFrameAutoCapture
             ? "Keep one card inside the guide. It captures automatically when steady."
             : "Center one card inside the preview, then capture it."}</p>
           <fieldset className="scanner-camera-controls" aria-label="Camera controls">

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import { StrictMode, type ReactNode } from "react";
 
 import { addCollectionItem, getCollectionSummary } from "../lib/collection";
 import { expandScanCandidates, getAllCatalogSets, getScanCandidates } from "../lib/catalog";
@@ -172,6 +172,9 @@ it("shares game and preferred-set controls across single and multiple scan modes
   await user.click(screen.getByRole("radio", { name: "Multiple cards (session)" }));
   expect(screen.getByRole("combobox", { name: "Preferred set" })).toHaveValue("mtg:pip");
   expect(screen.getByRole("combobox", { name: "Game or brand" })).toHaveValue("mtg");
+  await user.click(screen.getByRole("radio", { name: "Auto scanner (test)" }));
+  expect(screen.getByRole("combobox", { name: "Preferred set" })).toHaveValue("mtg:pip");
+  expect(screen.getByRole("combobox", { name: "Game or brand" })).toHaveValue("mtg");
 });
 
 it("keeps Auto scanning open while a game-qualified preferred set guides ranking", async () => {
@@ -257,6 +260,50 @@ it("switches between manual and multiple-card scanning without hiding either wor
 
   await user.click(screen.getByRole("radio", { name: "Single card (manual)" }));
   expect(screen.getByTestId("scanner-session")).toBeVisible();
+});
+
+it("opens a private simulation-only Auto scanner mode without removing manual modes", async () => {
+  const user = userEvent.setup();
+  render(<ScannerPage />);
+
+  await user.click(screen.getByRole("radio", { name: "Auto scanner (test)" }));
+
+  expect(screen.getByRole("heading", { name: "Automatic card session" })).toBeVisible();
+  expect(screen.getByText(/simulation only/i)).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Card-by-card session" })).toBeVisible();
+  expect(screen.getByLabelText("Game or brand")).toBeVisible();
+  expect(screen.getByLabelText("Preferred set")).toBeVisible();
+  expect(screen.getByRole("radio", { name: "Single card (manual)" })).toBeVisible();
+  expect(screen.getByRole("radio", { name: "Multiple cards (session)" })).toBeVisible();
+});
+
+it("starts a fresh automatic simulator session after leaving the mode", async () => {
+  const user = userEvent.setup();
+  render(<ScannerPage />);
+
+  await user.click(screen.getByRole("radio", { name: "Auto scanner (test)" }));
+  await user.click(screen.getByRole("button", { name: "Connect simulator" }));
+  expect(await screen.findByRole("status", { name: "Controller status" })).toHaveTextContent(/ready/i);
+  expect(screen.getByText(/command history \(1\)/i)).toBeVisible();
+
+  await user.click(screen.getByRole("radio", { name: "Multiple cards (session)" }));
+  expect(screen.getByRole("heading", { name: "Card-by-card session" })).toBeVisible();
+  await user.click(screen.getByRole("radio", { name: "Auto scanner (test)" }));
+
+  expect(screen.getByRole("status", { name: "Controller status" })).toHaveTextContent(/disconnected/i);
+  expect(screen.getByText(/command history \(0\)/i)).toBeVisible();
+  expect(screen.getByRole("status", { name: "Multi-card scanning session" }))
+    .toHaveTextContent("Ready to capture cards.");
+});
+
+it("connects the automatic simulator after the StrictMode effect replay", async () => {
+  const user = userEvent.setup();
+  render(<StrictMode><ScannerPage /></StrictMode>);
+
+  await user.click(screen.getByRole("radio", { name: "Auto scanner (test)" }));
+  await user.click(screen.getByRole("button", { name: "Connect simulator" }));
+
+  expect(await screen.findByRole("status", { name: "Controller status" })).toHaveTextContent(/ready/i);
 });
 
 it("uses full single-card capture and review workspaces with an always-visible selected preview", async () => {

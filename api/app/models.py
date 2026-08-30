@@ -15,6 +15,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -41,6 +42,22 @@ class Role(str, enum.Enum):
     OWNER = "owner"
     ADMIN = "admin"
     MEMBER = "member"
+
+
+class SiteBranding(Base):
+    __tablename__ = "site_branding"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_site_branding_singleton"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    site_name: Mapped[str] = mapped_column(String(48))
+    product_name: Mapped[str] = mapped_column(String(48))
+    tagline: Mapped[str] = mapped_column(String(100))
+    logo_media_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    logo_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    logo_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class User(Base):

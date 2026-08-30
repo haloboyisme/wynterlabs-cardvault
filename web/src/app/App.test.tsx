@@ -76,14 +76,14 @@ afterEach(() => {
 it("renders the WynterLabs product homepage", async () => {
   renderAt("/");
   expect(
-    screen.getByRole("heading", { name: /your cards, clearly organized/i }),
+    screen.getByRole("heading", { name: /scan it\. sort it\. own your collection/i }),
   ).toBeVisible();
   expect(screen.getByText(/private card workspace built for real collections/i)).toBeVisible();
   const heroActions = within(document.querySelector(".hero-actions") as HTMLElement);
   expect(heroActions.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   expect(heroActions.getByRole("link", { name: /see what is new/i })).toHaveAttribute("href", "#whats-new");
 
-  const quickActions = screen.getByRole("navigation", { name: /explore wynterlabs cards/i });
+  const quickActions = screen.getByRole("navigation", { name: /explore wynterlabs cardvault/i });
   expect(within(quickActions).getByRole("link", { name: /browse cards/i })).toHaveAttribute("href", "/cards");
   expect(within(quickActions).getByRole("link", { name: /scan cards/i })).toHaveAttribute("href", "/scan");
   expect(screen.getByRole("heading", { name: /what's new in your workspace/i })).toBeVisible();
@@ -94,7 +94,7 @@ it("renders the WynterLabs product homepage", async () => {
   expect(screen.queryByText(/Phase 2/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 5/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 6/i)).not.toBeInTheDocument();
-  expect(screen.getByText("Private community collection workspace")).toBeVisible();
+  expect(within(document.querySelector(".site-footer") as HTMLElement).getByText("WynterLabs CardVault")).toBeVisible();
   expect(document.body.textContent).not.toContain("�");
   await waitFor(() => expect(fetch).toHaveBeenCalled());
 });
@@ -102,7 +102,7 @@ it("renders the WynterLabs product homepage", async () => {
 
 it("hides the header after eighteen idle seconds while the page is scrolled", async () => {
   renderAt("/");
-  await screen.findByRole("heading", { name: /your cards, clearly organized/i });
+  await screen.findByRole("heading", { name: /scan it\. sort it\. own your collection/i });
   const header = screen.getByRole("banner");
   Object.defineProperty(window, "scrollY", { configurable: true, value: 240, writable: true });
   vi.useFakeTimers();
@@ -118,7 +118,7 @@ it("hides the header after eighteen idle seconds while the page is scrolled", as
 
 it("reveals an idle-hidden header when the pointer reaches the top edge", async () => {
   renderAt("/");
-  await screen.findByRole("heading", { name: /your cards, clearly organized/i });
+  await screen.findByRole("heading", { name: /scan it\. sort it\. own your collection/i });
   const header = screen.getByRole("banner");
   Object.defineProperty(window, "scrollY", { configurable: true, value: 240, writable: true });
   vi.useFakeTimers();
@@ -134,7 +134,7 @@ it("reveals an idle-hidden header when the pointer reaches the top edge", async 
 
 it("keeps the scrolled header visible while hovered and restarts the timer on leave", async () => {
   renderAt("/");
-  await screen.findByRole("heading", { name: /your cards, clearly organized/i });
+  await screen.findByRole("heading", { name: /scan it\. sort it\. own your collection/i });
   const header = screen.getByRole("banner");
   Object.defineProperty(window, "scrollY", { configurable: true, value: 240, writable: true });
   vi.useFakeTimers();
@@ -152,7 +152,7 @@ it("keeps the scrolled header visible while hovered and restarts the timer on le
 
 it("reveals the hidden header for keyboard navigation", async () => {
   renderAt("/");
-  await screen.findByRole("heading", { name: /your cards, clearly organized/i });
+  await screen.findByRole("heading", { name: /scan it\. sort it\. own your collection/i });
   const header = screen.getByRole("banner");
   Object.defineProperty(window, "scrollY", { configurable: true, value: 240, writable: true });
   vi.useFakeTimers();
@@ -168,7 +168,7 @@ it("reveals the hidden header for keyboard navigation", async () => {
 
 it("reveals the hidden header from a touch at the top edge", async () => {
   renderAt("/");
-  await screen.findByRole("heading", { name: /your cards, clearly organized/i });
+  await screen.findByRole("heading", { name: /scan it\. sort it\. own your collection/i });
   const header = screen.getByRole("banner");
   Object.defineProperty(window, "scrollY", { configurable: true, value: 240, writable: true });
   vi.useFakeTimers();

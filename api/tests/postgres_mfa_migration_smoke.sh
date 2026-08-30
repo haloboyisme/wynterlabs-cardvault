@@ -26,16 +26,27 @@ alembic upgrade 0008_collection_manual_prices
 query "INSERT INTO users (id,email,email_normalized,display_name,display_name_normalized,password_hash,role,owner_slot,is_active,must_change_password,password_changed_at,created_at,updated_at) VALUES ('11111111-1111-1111-1111-111111111111','member-b1c04c27f9e3@example.invalid','member-ae3eb8b16a01@example.invalid','Owner','owner','hash','OWNER',1,true,false,now(),now(),now());"
 query "INSERT INTO sessions (id,user_id,token_hash,created_at,expires_at,last_seen_at,client_ip,user_agent) VALUES ('22222222-2222-2222-2222-222222222222','11111111-1111-1111-1111-111111111111','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',now(),now() + interval '1 hour',now(),'192.0.2.150','mfa migration smoke');"
 alembic upgrade head
-test "$(query "SELECT version_num FROM alembic_version")" = "0011_collection_value_history"
+test "$(query "SELECT version_num FROM alembic_version")" = "0012_site_branding"
 test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('mfa_credentials','mfa_login_challenges','mfa_recovery_codes','security_audit_events')")" = "4"
 test "$(query "SELECT count(*) FROM users WHERE owner_slot = 1")" = "1"
 test "$(query "SELECT count(*) FROM sessions WHERE id = '22222222-2222-2222-2222-222222222222'")" = "1"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'")" = "1"
+test "$(query "SELECT count(*) FROM pg_constraint WHERE conname = 'ck_site_branding_singleton'")" = "1"
+alembic downgrade 0011_collection_value_history
+test "$(query "SELECT version_num FROM alembic_version")" = "0011_collection_value_history"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'")" = "0"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('mfa_credentials','mfa_login_challenges','mfa_recovery_codes','security_audit_events')")" = "4"
+alembic upgrade head
+test "$(query "SELECT version_num FROM alembic_version")" = "0012_site_branding"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'")" = "1"
 alembic downgrade 0008_collection_manual_prices
 test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('mfa_credentials','mfa_login_challenges','mfa_recovery_codes','security_audit_events')")" = "0"
 test "$(query "SELECT count(*) FROM users WHERE owner_slot = 1")" = "1"
 test "$(query "SELECT count(*) FROM sessions WHERE id = '22222222-2222-2222-2222-222222222222'")" = "1"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'")" = "0"
 alembic upgrade head
 test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('mfa_credentials','mfa_login_challenges','mfa_recovery_codes','security_audit_events')")" = "4"
-test "$(query "SELECT version_num FROM alembic_version")" = "0011_collection_value_history"
+test "$(query "SELECT version_num FROM alembic_version")" = "0012_site_branding"
+test "$(query "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'")" = "1"
 test "$(query "SELECT count(*) FROM sessions WHERE id = '22222222-2222-2222-2222-222222222222'")" = "1"
 echo "ephemeral-postgres-mfa-migration-smoke-ok"

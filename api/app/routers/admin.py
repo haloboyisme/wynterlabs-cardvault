@@ -15,6 +15,8 @@ from app.admin_schemas import (
     CatalogRefreshOut,
     CatalogStatusOut,
 )
+from app.branding import branding_out, read_branding_for_update, validate_logo_data_url
+from app.branding_schemas import BrandingOut, BrandingUpdate
 from app.catalog.importer import CatalogImporter
 from app.catalog.status import read_catalog_status
 from app.collection_value import capture_collection_price_snapshots
@@ -28,10 +30,64 @@ from app.invitation_schemas import (
     InvitationRevokeRequest,
 )
 from app.invitations import invitation_status, no_store
-from app.models import AccountInvitation, Role, User
+from app.models import AccountInvitation, Role, SiteBranding, User
 from app.security import hash_invitation_token, hash_password, new_invitation_token
 
 router = APIRouter(prefix="/api/v1/admin", tags=["administration"])
+
+
+@router.put("/branding", response_model=BrandingOut)
+async def update_branding(
+    payload: BrandingUpdate,
+    _operator: CurrentAuth = Depends(require_catalog_operator),
+    database: AsyncSession = Depends(get_db),
+) -> BrandingOut:
+    logo = (
+        validate_logo_data_url(payload.logo_data_url) if payload.logo_data_url is not None else None
+    )
+    async with database.begin():
+        branding = await read_branding_for_update(database)
+        if branding is None:
+            branding = SiteBranding(
+                id=1,
+                site_name=payload.site_name,
+                product_name=payload.product_name,
+                tagline=payload.tagline,
+            )
+            database.add(branding)
+        else:
+            branding.site_name = payload.site_name
+            branding.product_name = payload.product_name
+            branding.tagline = payload.tagline
+        if logo is not None:
+            branding.logo_media_type, branding.logo_bytes, branding.logo_sha256 = logo
+    return branding_out(branding)
+
+
+@router.delete("/branding/logo", response_model=BrandingOut)
+async def delete_branding_logo(
+    _operator: CurrentAuth = Depends(require_catalog_operator),
+    database: AsyncSession = Depends(get_db),
+) -> BrandingOut:
+    async with database.begin():
+        branding = await read_branding_for_update(database)
+        if branding is not None:
+            branding.logo_media_type = None
+            branding.logo_bytes = None
+            branding.logo_sha256 = None
+    return branding_out(branding)
+
+
+@router.post("/branding/reset", response_model=BrandingOut)
+async def reset_branding(
+    _operator: CurrentAuth = Depends(require_catalog_operator),
+    database: AsyncSession = Depends(get_db),
+) -> BrandingOut:
+    async with database.begin():
+        branding = await read_branding_for_update(database)
+        if branding is not None:
+            await database.delete(branding)
+    return branding_out(None)
 
 
 def get_catalog_importer(request: Request) -> CatalogImporter:

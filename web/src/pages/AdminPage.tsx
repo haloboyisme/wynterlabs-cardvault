@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { TradeModerationPanel } from "../components/TradeModerationPanel";
+import { BrandStudio } from "../components/BrandStudio";
 import { DisclosurePanel } from "../components/workspace/DisclosurePanel";
 import { FeedbackBanner } from "../components/workspace/FeedbackBanner";
 import { PageHeader } from "../components/workspace/PageHeader";
@@ -304,6 +305,8 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
           </div>
         </section>
       )}
+
+      <BrandStudio />
 
       <div className="admin-grid">
         <section className="admin-card" aria-labelledby="catalog-admin-heading">

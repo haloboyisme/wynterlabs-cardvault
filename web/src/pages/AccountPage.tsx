@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../app/auth";
 import { FeedbackBanner } from "../components/workspace/FeedbackBanner";
+import { AutoScannerSettingsPanel } from "../components/AutoScannerSettings";
 import { MfaSettings } from "../components/MfaSettings";
 import { PageHeader } from "../components/workspace/PageHeader";
 import { ApiError, apiRequest } from "../lib/api";
@@ -335,6 +336,7 @@ export function AccountPage() {
             >Reset to Space</button>
           </div>
         </section>
+        {user && <AutoScannerSettingsPanel role={user.role} />}
         <section className="sessions-card">
           <div><p className="eyebrow">Active sessions</p><h2>Where you are signed in</h2></div>
           {loading && <p role="status">Loading account details&hellip;</p>}

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../app/auth";
+import { useBranding } from "../app/branding";
 
 const quickActions = [
   {
@@ -43,14 +44,15 @@ const roadmap = [
 
 export function HomePage() {
   const auth = useAuth();
+  const { branding } = useBranding();
   const signedIn = auth.status === "authenticated";
 
   return (
     <>
       <section className="hero home-hero">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="status-dot" /> WynterLabs CardVault · Private by design</p>
-          <h1>Scan it. Sort it. Own your collection.</h1>
+          <p className="eyebrow"><span className="status-dot" /> {branding.site_name} {branding.product_name} · Private by design</p>
+          <h1>{branding.tagline}</h1>
           <p className="hero-lede">
             A private card workspace built for real collections: fast enough
             for a new stack, detailed enough for every exact printing, and
@@ -98,7 +100,7 @@ export function HomePage() {
           </div>
           <p>Every major tool is one clear step away, with feedback that keeps you oriented.</p>
         </div>
-        <nav className="home-quick-grid" aria-label="Explore WynterLabs CardVault">
+        <nav className="home-quick-grid" aria-label={`Explore ${branding.site_name} ${branding.product_name}`}>
           {quickActions.map((item) => (
             <Link className="home-quick-card" to={item.to} key={item.title}>
               <span className="home-quick-code">{item.code}</span>

@@ -951,6 +951,32 @@ describe("guided live viewfinder", () => {
     await waitFor(() => expect(captureFrame).toHaveBeenCalledTimes(2));
   });
 
+  it("keeps stable-frame capture disabled when a continuous session requires explicit capture", async () => {
+    const user = userEvent.setup();
+    const active = cameraStream("iphone-id");
+    const captureFrame = vi.fn(() => document.createElement("canvas"));
+    const onResult = vi.fn();
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    render(<CardScanner
+      onResult={onResult}
+      continuous
+      stableFrameAutoCapture={false}
+      consentStore={consentStore("allow")}
+      startCamera={vi.fn(async () => active.stream)}
+      captureFrame={captureFrame}
+      sampleFingerprint={() => [0]}
+      sampleIntervalMs={10}
+    />);
+
+    await user.click(screen.getByRole("button", { name: "Start camera" }));
+    await screen.findByLabelText("Card camera preview");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(onResult).not.toHaveBeenCalled();
+    expect(captureFrame).not.toHaveBeenCalled();
+    expect(screen.getByText(/choose capture now/i)).toBeVisible();
+  });
+
   it("restores, rotates, and resets the browser-local camera view", async () => {
     localStorage.setItem(
       "wynterlabs.cards.camera-alignment.v2",

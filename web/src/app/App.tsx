@@ -22,12 +22,14 @@ import { ScannerPage } from "../pages/ScannerPage";
 import { SetupPage } from "../pages/SetupPage";
 import { TradingPage } from "../pages/TradingPage";
 import { AuthProvider } from "./auth";
+import { BrandProvider } from "./branding";
 import { MEMBER_TRADING_ENABLED } from "./features";
 
 export function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
+        <BrandProvider>
         <AppShell>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -69,6 +71,7 @@ export function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AppShell>
+        </BrandProvider>
       </AuthProvider>
     </BrowserRouter>
   );

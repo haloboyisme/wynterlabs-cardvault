@@ -150,7 +150,7 @@ EOF
 started=0
 trap - EXIT
 
-echo "WynterLabs CardVault is ready: $https_url/setup"
+echo "WynterLabs Cards is ready: $https_url/setup"
 echo "Trust this CA certificate: $public/wynterlabs-cards-root-ca.crt"
 echo "CA download: $http_url/wynterlabs-cards-root-ca.crt"
 echo "Read the one-time bootstrap secret locally from: $secrets/bootstrap_secret"
