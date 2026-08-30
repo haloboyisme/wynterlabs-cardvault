@@ -126,6 +126,8 @@ def validation_thresholds(settings: Settings, game: str) -> tuple[int, int]:
         return settings.catalog_yugioh_min_printings, settings.catalog_yugioh_min_sets
     if game == "onepiece":
         return settings.catalog_one_piece_min_printings, settings.catalog_one_piece_min_sets
+    if game in {"digimon", "starwars", "unionarena", "lorcana", "riftbound"}:
+        return settings.catalog_tcgjson_min_printings, settings.catalog_tcgjson_min_sets
     return settings.catalog_min_printings, settings.catalog_min_sets
 
 
@@ -457,11 +459,16 @@ class CatalogImporter:
 
             provider = self.providers.get(game) or YugiohClient(self.settings)
             normalizer = normalize_yugioh_card
-        else:
+        elif game == "onepiece":
             from app.catalog.one_piece import OnePieceClient, normalize_one_piece_card
 
             provider = self.providers.get(game) or OnePieceClient(self.settings)
             normalizer = normalize_one_piece_card
+        else:
+            from app.catalog.tcgjson import TcgJsonClient, catalog_url, normalize_tcgjson_card
+
+            provider = self.providers.get(game) or TcgJsonClient(self.settings, game)
+            normalizer = lambda record: normalize_tcgjson_card(record, game)
         metadata = BulkMetadata(
             uuid.uuid5(uuid.NAMESPACE_URL, f"wynterlabs:catalog:{game}"),
             datetime.now(UTC),
@@ -471,7 +478,11 @@ class CatalogImporter:
                 else (
                     "https://db.ygoprodeck.com/api/v7/cardinfo.php"
                     if game == "yugioh"
-                    else "https://github.com/HanClinto/tcgjson/releases/latest/download/one-piece.full.json.gz"
+                    else (
+                        "https://github.com/HanClinto/tcgjson/releases/latest/download/one-piece.full.json.gz"
+                        if game == "onepiece"
+                        else catalog_url(game)
+                    )
                 )
             ),
             0,

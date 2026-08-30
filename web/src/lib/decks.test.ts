@@ -27,6 +27,11 @@ it("limits non-Magic decks to their supported format choices", () => {
   expect(formatsForGame("pokemon")).toEqual(["standard", "expanded", "unlimited"]);
   expect(formatsForGame("yugioh")).toEqual(["advanced", "traditional", "unlimited"]);
   expect(formatsForGame("onepiece")).toEqual(["standard"]);
+  expect(formatsForGame("digimon")).toEqual(["standard"]);
+  expect(formatsForGame("starwars")).toEqual(["standard"]);
+  expect(formatsForGame("unionarena")).toEqual(["standard"]);
+  expect(formatsForGame("lorcana")).toEqual(["standard"]);
+  expect(formatsForGame("riftbound")).toEqual(["standard"]);
   expect(formatsForGame("mtg")).toEqual(DECK_FORMATS);
 });
 

@@ -241,6 +241,11 @@ def test_catalog_status_is_available_to_ready_owner_and_admin(request, client_fi
             "pokemon": {"active_catalog": None, "latest_attempt": None},
             "yugioh": {"active_catalog": None, "latest_attempt": None},
             "onepiece": {"active_catalog": None, "latest_attempt": None},
+            "digimon": {"active_catalog": None, "latest_attempt": None},
+            "starwars": {"active_catalog": None, "latest_attempt": None},
+            "unionarena": {"active_catalog": None, "latest_attempt": None},
+            "lorcana": {"active_catalog": None, "latest_attempt": None},
+            "riftbound": {"active_catalog": None, "latest_attempt": None},
         },
     }
 
@@ -287,7 +292,7 @@ def test_catalog_refresh_accepts_supported_games_and_rejects_unknown(
     dependency = _override_catalog_importer(app, importer)
     try:
         response = owner_client.post("/api/v1/admin/catalog/refresh?game=pokemon")
-        invalid = owner_client.post("/api/v1/admin/catalog/refresh?game=lorcana")
+        invalid = owner_client.post("/api/v1/admin/catalog/refresh?game=unsupported")
     finally:
         if dependency is not None:
             app.dependency_overrides.pop(dependency, None)

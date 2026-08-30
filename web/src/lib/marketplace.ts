@@ -15,6 +15,11 @@ const TCGPLAYER_PRODUCT_LINES: Record<string, string> = {
   pokemon: "pokemon",
   yugioh: "yugioh",
   onepiece: "one-piece-card-game",
+  digimon: "digimon-card-game",
+  starwars: "star-wars-unlimited",
+  unionarena: "union-arena",
+  lorcana: "lorcana-tcg",
+  riftbound: "riftbound",
 };
 
 export function marketplaceLinksForCard(card: MarketplaceCard): MarketplaceLink[] {

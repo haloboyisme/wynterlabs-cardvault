@@ -16,6 +16,11 @@ const GAME_FORMATS: Record<string, DeckFormat[]> = {
   pokemon: ["standard", "expanded", "unlimited"],
   yugioh: ["advanced", "traditional", "unlimited"],
   onepiece: ["standard"],
+  digimon: ["standard"],
+  starwars: ["standard"],
+  unionarena: ["standard"],
+  lorcana: ["standard"],
+  riftbound: ["standard"],
 };
 
 export function formatsForGame(game: string): DeckFormat[] {

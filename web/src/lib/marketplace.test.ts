@@ -27,6 +27,10 @@ it("uses each supported TCGplayer product line while preserving an eBay fallback
     .toBe("https://www.tcgplayer.com/search/yugioh/product?productLineName=yugioh&q=Dark+Magician+LOB+005&view=grid");
   expect(marketplaceLinksForCard({ game: "onepiece", name: "Roronoa Zoro", setCode: "OP01", collectorNumber: "OP01-001" })[0].href)
     .toBe("https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q=Roronoa+Zoro+OP01+OP01-001&view=grid");
+  for (const game of ["digimon", "starwars", "unionarena", "lorcana", "riftbound"]) {
+    expect(marketplaceLinksForCard({ game, name: "Test Card", setCode: "SET", collectorNumber: "1" })[0].label)
+      .toBe("Search TCGplayer");
+  }
   expect(marketplaceLinksForCard({ game: "future-game", name: "Future Card", setCode: "FUT", collectorNumber: "1" }))
     .toEqual([{
       label: "Search eBay",

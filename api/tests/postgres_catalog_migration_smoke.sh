@@ -78,16 +78,16 @@ run_alembic upgrade 0002_catalog
 query "INSERT INTO users (id, email, email_normalized, display_name, display_name_normalized, password_hash, role, owner_slot, is_active, password_changed_at, created_at, updated_at) VALUES ('11111111-1111-1111-1111-111111111111', 'member-1ab00d0915ec@example.invalid', 'member-aa67ef8b1ad6@example.invalid', 'Wynter Owner', 'wynter owner', 'not-a-real-password-hash', 'OWNER', 1, TRUE, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');"
 run_alembic upgrade head
 
-expect "t" "SELECT version_num = '0013_one_piece_catalog' FROM alembic_version;"
+expect "t" "SELECT version_num = '0014_more_tcgjson_games' FROM alembic_version;"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'site_branding';"
 expect "1" "SELECT count(*) FROM pg_constraint WHERE conname = 'ck_site_branding_singleton';"
-expect "2" "SELECT count(*) FROM pg_constraint WHERE conname IN ('ck_catalog_imports_game','ck_decks_game') AND pg_get_constraintdef(oid) LIKE '%onepiece%';"
+expect "2" "SELECT count(*) FROM pg_constraint WHERE conname IN ('ck_catalog_imports_game','ck_decks_game') AND pg_get_constraintdef(oid) LIKE '%riftbound%';"
 run_alembic downgrade 0011_collection_value_history
 expect "0011_collection_value_history" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'site_branding';"
 expect "1" "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'collection_items' AND column_name = 'manual_price_usd' AND data_type = 'numeric';"
 run_alembic upgrade head
-expect "t" "SELECT version_num = '0013_one_piece_catalog' FROM alembic_version;"
+expect "t" "SELECT version_num = '0014_more_tcgjson_games' FROM alembic_version;"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'site_branding';"
 expect "1" "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'collection_items' AND column_name = 'manual_price_usd' AND data_type = 'numeric';"
 expect "1" "SELECT count(*) FROM pg_constraint WHERE conname = 'ck_collection_items_manual_price_usd';"
@@ -171,7 +171,7 @@ if [[ "$(cat "${migration_status}")" == "0" ]]; then
   echo "catalog migration smoke assertion failed: concurrent administrator slipped between downgrade check and schema change" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "3" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 expect "1" "SELECT count(*) FROM users WHERE role = 'ADMIN';"
 query "DELETE FROM users WHERE role = 'ADMIN';"
@@ -180,7 +180,7 @@ if run_alembic downgrade 0002_catalog; then
   echo "catalog migration smoke assertion failed: downgrade accepted forced-password state" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "3" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 expect "t" "SELECT must_change_password FROM users WHERE owner_slot = 1;"
 query "UPDATE users SET must_change_password = FALSE WHERE owner_slot = 1;"
@@ -189,7 +189,7 @@ expect "0002_catalog" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 expect "1" "SELECT count(*) FROM users WHERE owner_slot = 1;"
 run_alembic upgrade head
-expect "t" "SELECT version_num = '0013_one_piece_catalog' FROM alembic_version;"
+expect "t" "SELECT version_num = '0014_more_tcgjson_games' FROM alembic_version;"
 expect "t" "SELECT must_change_password = FALSE FROM users WHERE owner_slot = 1;"
 run_alembic downgrade 0001_identity
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('catalog_imports','card_sets','oracle_cards','card_printings','card_faces');"
@@ -197,61 +197,61 @@ expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 
 run_alembic upgrade head
 expect "5" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('catalog_imports','card_sets','oracle_cards','card_printings','card_faces');"
 expect "5" "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('ix_oracle_cards_legalities_gin','ix_card_printings_finishes_gin','ix_card_printings_games_gin','ix_card_printings_colors_gin','ix_card_printings_color_identity_gin') AND indexdef LIKE '%USING gin%';"
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "3" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 query "INSERT INTO account_invitations (id, token_hash, created_by_user_id, expires_at, revoked_at, used_at, used_by_user_id, revision, created_at, updated_at) VALUES ('66666666-6666-6666-6666-666666666666', repeat('c', 64), '11111111-1111-1111-1111-111111111111', '2026-01-08T00:00:00Z', NULL, NULL, NULL, 1, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');"
 if run_alembic downgrade 0005_collection_imports; then
   echo "catalog migration smoke assertion failed: Phase 5B downgrade accepted an invitation" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "1" "SELECT count(*) FROM account_invitations;"
 query "DELETE FROM account_invitations WHERE id = '66666666-6666-6666-6666-666666666666';"
 run_alembic downgrade 0005_collection_imports
 expect "0005_collection_imports" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'account_invitations';"
 run_alembic upgrade head
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 
 query "INSERT INTO collection_import_previews (id, user_id, source_sha256, rows, summary, collection_digest, revision, expires_at, confirmed_at, created_at, updated_at) VALUES ('55555555-5555-5555-5555-555555555555', '11111111-1111-1111-1111-111111111111', repeat('a', 64), '[]'::jsonb, '{}'::jsonb, repeat('b', 64), 1, '2026-01-02T00:00:00Z', NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');"
 if run_alembic downgrade 0004_collections_decks; then
   echo "catalog migration smoke assertion failed: Phase 5A downgrade accepted an import preview" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "1" "SELECT count(*) FROM collection_import_previews;"
 query "DELETE FROM collection_import_previews WHERE id = '55555555-5555-5555-5555-555555555555';"
 run_alembic downgrade 0004_collections_decks
 expect "0004_collections_decks" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'collection_import_previews';"
 run_alembic upgrade head
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 query "INSERT INTO decks (id, user_id, name, name_normalized, format, description, revision, created_at, updated_at) VALUES ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'Phase Four Smoke', 'phase four smoke', 'modern', NULL, 1, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');"
 if run_alembic downgrade 0003_admin_controls; then
   echo "catalog migration smoke assertion failed: Phase 4 downgrade accepted nonempty private data" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 query "DELETE FROM decks WHERE id = '33333333-3333-3333-3333-333333333333';"
 run_alembic downgrade 0003_admin_controls
 expect "0003_admin_controls" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 run_alembic upgrade head
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "3" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('collection_items','decks','deck_cards');"
 query "INSERT INTO trading_accounts (id, user_id, status, active_strikes, revision, suspended_at, created_at, updated_at) VALUES ('77777777-7777-7777-7777-777777777777', '11111111-1111-1111-1111-111111111111', 'active', 0, 1, NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');"
 if run_alembic downgrade 0006_account_invitations; then
   echo "catalog migration smoke assertion failed: Phase 5D downgrade accepted trading data" >&2
   exit 1
 fi
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 expect "1" "SELECT count(*) FROM trading_accounts;"
 query "DELETE FROM trading_accounts WHERE id = '77777777-7777-7777-7777-777777777777';"
 run_alembic downgrade 0006_account_invitations
 expect "0006_account_invitations" "SELECT version_num FROM alembic_version;"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('trading_accounts','trade_listings','want_listings','trade_reports','trade_strikes','trade_moderation_events');"
 run_alembic upgrade head
-expect "0013_one_piece_catalog" "SELECT version_num FROM alembic_version;"
+expect "0014_more_tcgjson_games" "SELECT version_num FROM alembic_version;"
 
 expect "2" "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('ix_oracle_cards_type_line_trgm','ix_card_printings_collector_lower');"
 echo "ephemeral-postgres-catalog-migration-smoke-ok"

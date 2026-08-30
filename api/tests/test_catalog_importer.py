@@ -55,6 +55,8 @@ def settings_for(path):
         catalog_yugioh_min_sets=1,
         catalog_one_piece_min_printings=1,
         catalog_one_piece_min_sets=1,
+        catalog_tcgjson_min_printings=1,
+        catalog_tcgjson_min_sets=1,
         catalog_max_rejected_records=10,
         catalog_max_rejected_ratio=0.5,
         catalog_max_download_bytes=1000000,
@@ -246,6 +248,34 @@ def test_one_piece_normalization_keeps_don_cards_without_printed_numbers():
 
     assert card.printing.collector_number == "TCG-456059"
     assert card.printing.finishes == ["foil"]
+
+
+def test_shared_tcgjson_registry_and_normalizer_support_five_more_games():
+    from app.catalog.tcgjson import TCGJSON_GAMES, normalize_tcgjson_card
+
+    assert {key: value.slug for key, value in TCGJSON_GAMES.items()} == {
+        "onepiece": "one-piece",
+        "digimon": "digimon-card-game",
+        "starwars": "star-wars-unlimited",
+        "unionarena": "union-arena",
+        "lorcana": "lorcana",
+        "riftbound": "riftbound",
+    }
+    for game in ("digimon", "starwars", "unionarena", "lorcana", "riftbound"):
+        card = normalize_tcgjson_card({
+            "productId": 123,
+            "name": "Test Card (001)",
+            "collectorNumber": "001",
+            "rarity": "Rare",
+            "foilings": ["Normal"],
+            "imageUrls": ["https://tcgplayer-cdn.tcgplayer.com/product/123_in_1000x1000.jpg"],
+            "metadata": {"cardTypes": ["Character"]},
+            "_set": {"setId": 10, "name": "First Set", "abbreviation": "FS1"},
+        }, game)
+        assert card.card_set.game == game
+        assert card.oracle.game == game
+        assert card.printing.game == game
+        assert card.printing.source_uri == "https://www.tcgplayer.com/product/123"
 
 
 def test_normalization_allows_only_https_scryfall_source_uris():
@@ -734,6 +764,27 @@ def test_all_refresh_runs_each_game_under_one_refresh_lock(tmp_path):
                     "metadata": {},
                     "_set": {"setId": 3188, "name": "Romance Dawn", "abbreviation": "OP01"},
                 }]),
+                **{
+                    game: Provider([{
+                        "productId": index,
+                        "name": f"{game} test card",
+                        "setId": index,
+                        "collectorNumber": "001",
+                        "rarity": "Rare",
+                        "foilings": ["Normal"],
+                        "imageUrls": [],
+                        "metadata": {},
+                        "_set": {
+                            "setId": index,
+                            "name": f"{game} test set",
+                            "abbreviation": f"T{index}",
+                        },
+                    }])
+                    for index, game in enumerate(
+                        ("digimon", "starwars", "unionarena", "lorcana", "riftbound"),
+                        start=500,
+                    )
+                },
             },
         ).refresh("all")
         async with factory() as session:
@@ -747,7 +798,17 @@ def test_all_refresh_runs_each_game_under_one_refresh_lock(tmp_path):
                 ).all()
             )
         assert result.status == "complete"
-        assert active_games == ["mtg", "onepiece", "pokemon", "yugioh"]
+        assert active_games == [
+            "digimon",
+            "lorcana",
+            "mtg",
+            "onepiece",
+            "pokemon",
+            "riftbound",
+            "starwars",
+            "unionarena",
+            "yugioh",
+        ]
         await engine.dispose()
 
     asyncio.run(exercise())
@@ -768,6 +829,11 @@ def test_game_thresholds_keep_magic_strict_and_free_provider_fixtures_activatabl
     assert validation_thresholds(settings, "pokemon") == (1_000, 10)
     assert validation_thresholds(settings, "yugioh") == (1_000, 10)
     assert validation_thresholds(settings, "onepiece") == (1_000, 10)
+    assert validation_thresholds(settings, "digimon") == (500, 5)
+    assert validation_thresholds(settings, "starwars") == (500, 5)
+    assert validation_thresholds(settings, "unionarena") == (500, 5)
+    assert validation_thresholds(settings, "lorcana") == (500, 5)
+    assert validation_thresholds(settings, "riftbound") == (500, 5)
 
 
 def test_catalog_import_downgrade_drops_catalog_import_game_column_in_alembic_order():

@@ -108,7 +108,10 @@ async def catalog_status(
 @router.post("/catalog/refresh", response_model=CatalogRefreshOut)
 async def refresh_catalog(
     request: Request,
-    game: str | None = Query(default=None, pattern="^(mtg|pokemon|yugioh|onepiece|all)$"),
+    game: str | None = Query(
+        default=None,
+        pattern="^(mtg|pokemon|yugioh|onepiece|digimon|starwars|unionarena|lorcana|riftbound|all)$",
+    ),
     _operator: CurrentAuth = Depends(require_catalog_operator),
     importer: CatalogImporter = Depends(get_catalog_importer),
 ) -> CatalogRefreshOut:

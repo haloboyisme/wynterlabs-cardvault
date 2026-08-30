@@ -1,5 +1,15 @@
 CURRENT_GAME_KEY = "mtg"
-SUPPORTED_GAME_KEYS = ("mtg", "pokemon", "yugioh", "onepiece")
+SUPPORTED_GAME_KEYS = (
+    "mtg",
+    "pokemon",
+    "yugioh",
+    "onepiece",
+    "digimon",
+    "starwars",
+    "unionarena",
+    "lorcana",
+    "riftbound",
+)
 
 
 def normalize_game(value: str | None) -> str | None:

@@ -5,6 +5,11 @@ export const CATALOG_GAMES = [
   { id: "pokemon", name: "Pokémon" },
   { id: "yugioh", name: "Yu-Gi-Oh!" },
   { id: "onepiece", name: "One Piece Card Game" },
+  { id: "digimon", name: "Digimon Card Game" },
+  { id: "starwars", name: "Star Wars: Unlimited" },
+  { id: "unionarena", name: "Union Arena" },
+  { id: "lorcana", name: "Disney Lorcana" },
+  { id: "riftbound", name: "Riftbound" },
 ] as const;
 
 function normalizeCatalogGame(game: string): string {
