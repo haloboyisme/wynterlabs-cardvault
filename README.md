@@ -103,6 +103,10 @@ fun project—not a commitment to update the software forever.
   choices if the hobby project grows enough to justify them.
 
 Roadmap items are ideas, not promised dates or guaranteed features.
+Possible Version 3 experiments include an easy owner-managed Custom
+Collectibles workflow for cards without a dependable public catalog and staged
+Magic/Pokémon tabletop play, beginning with solo camera-assisted practice and
+only considering multiplayer much later.
 
 ## ⚖️ License and card-data notice
 
