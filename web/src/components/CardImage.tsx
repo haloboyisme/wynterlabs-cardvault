@@ -22,7 +22,8 @@ function approvedCardImage(value: string | undefined): string | undefined {
       url.hostname === "cards.scryfall.io" ||
       url.hostname === "images.pokemontcg.io" ||
       url.hostname === "images.ygoprodeck.com" ||
-      url.hostname === "tcgplayer-cdn.tcgplayer.com"
+      url.hostname === "tcgplayer-cdn.tcgplayer.com" ||
+      url.hostname === "images.digimoncard.io"
     ) {
       return `/api/v1/catalog/media?source=${encodeURIComponent(value)}`;
     }
@@ -33,15 +34,20 @@ function approvedCardImage(value: string | undefined): string | undefined {
 }
 
 export function CardImage({ name, imageUris, className }: CardImageProps) {
-  const [failed, setFailed] = useState(false);
-  const source = approvedCardImage(
-    imageUris.normal ?? imageUris.large ?? imageUris.small,
-  );
+  const sources = ["normal", "large", "small", "reference"]
+    .map((kind) => ({ kind, source: approvedCardImage(imageUris[kind]) }))
+    .filter((item): item is { kind: string; source: string } => Boolean(item.source))
+    .filter((item, index, items) => (
+      items.findIndex((candidate) => candidate.source === item.source) === index
+    ));
+  const sourceKey = sources.map((item) => `${item.kind}:${item.source}`).join("|");
+  const [sourceIndex, setSourceIndex] = useState(0);
   useEffect(() => {
-    setFailed(false);
-  }, [source]);
+    setSourceIndex(0);
+  }, [sourceKey]);
+  const selected = sources[sourceIndex];
 
-  if (!source || failed) {
+  if (!selected) {
     return (
       <div
         className={className}
@@ -52,13 +58,19 @@ export function CardImage({ name, imageUris, className }: CardImageProps) {
       </div>
     );
   }
-  return (
+  const reference = selected.kind === "reference";
+  return <>
     <img
       className={className}
-      src={source}
-      alt={`${name} card`}
+      src={selected.source}
+      alt={`${name} ${reference ? "reference artwork" : "card"}`}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setSourceIndex((current) => current + 1)}
     />
-  );
+    {reference ? (
+      <span className="card-image-reference-note">
+        Reference artwork — verify exact printing
+      </span>
+    ) : null}
+  </>;
 }

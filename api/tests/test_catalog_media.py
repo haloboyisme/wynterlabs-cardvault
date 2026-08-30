@@ -152,6 +152,12 @@ def test_accepts_one_piece_tcgplayer_cdn_image_source():
     ) == "https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"
 
 
+def test_accepts_digimon_reference_image_source():
+    assert _approved_source(
+        "https://images.digimoncard.io/images/cards/BT19-044.webp"
+    ) == "https://images.digimoncard.io/images/cards/BT19-044.webp"
+
+
 def test_rejects_non_numeric_provider_queries(tmp_path):
     async def exercise():
         with pytest.raises(ValueError, match="query"):

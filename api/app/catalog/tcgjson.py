@@ -17,6 +17,7 @@ from app.catalog.providers import approved_https_url
 from app.config import Settings
 
 TCGJSON_IMAGE_HOST = "tcgplayer-cdn.tcgplayer.com"
+DIGIMON_REFERENCE_IMAGE_HOST = "images.digimoncard.io"
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,20 @@ def normalize_tcgjson_card(record: dict[str, Any], game: str) -> NormalizedCard:
         ),
         None,
     )
+    image_uris = {"normal": image} if image else {}
+    if game == "digimon":
+        reference_number = re.search(
+            r"\b([A-Z]{1,8}\d{0,2}-\d{2,4})\b",
+            printed_number.upper(),
+        )
+        if reference_number:
+            reference = approved_https_url(
+                f"https://{DIGIMON_REFERENCE_IMAGE_HOST}/images/cards/"
+                f"{reference_number.group(1)}.webp",
+                DIGIMON_REFERENCE_IMAGE_HOST,
+            )
+            if reference:
+                image_uris["reference"] = reference
     released_at = _date(card_set.get("releaseDate") or custom.get("releaseDate"))
     updated_at = _timestamp(record.get("_catalog_generated_at"))
     canonical_name = re.sub(r"\s+\(\d{3}\)$", "", name).strip() or name
@@ -161,7 +176,7 @@ def normalize_tcgjson_card(record: dict[str, Any], game: str) -> NormalizedCard:
             None,
             None,
             f"https://www.tcgplayer.com/product/{product_id}",
-            {"normal": image} if image else {},
+            image_uris,
             {},
             _finishes(record.get("foilings")),
             [game],

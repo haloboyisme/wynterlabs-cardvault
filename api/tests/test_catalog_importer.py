@@ -278,6 +278,28 @@ def test_shared_tcgjson_registry_and_normalizer_support_five_more_games():
         assert card.printing.source_uri == "https://www.tcgplayer.com/product/123"
 
 
+def test_digimon_normalizer_adds_same_number_reference_artwork_fallback():
+    from app.catalog.tcgjson import normalize_tcgjson_card
+
+    card = normalize_tcgjson_card({
+        "productId": 618951,
+        "name": "Terriermon",
+        "collectorNumber": "BT19-044 U",
+        "rarity": "Uncommon",
+        "foilings": ["Normal"],
+        "imageUrls": [
+            "https://tcgplayer-cdn.tcgplayer.com/product/618951_in_1000x1000.jpg"
+        ],
+        "metadata": {"cardTypes": ["Digimon"]},
+        "_set": {"setId": 10, "name": "Xros Evolution", "abbreviation": "BT19"},
+    }, "digimon")
+
+    assert card.printing.image_uris == {
+        "normal": "https://tcgplayer-cdn.tcgplayer.com/product/618951_in_1000x1000.jpg",
+        "reference": "https://images.digimoncard.io/images/cards/BT19-044.webp",
+    }
+
+
 def test_normalization_allows_only_https_scryfall_source_uris():
     record = json.loads(FIXTURE.read_text().splitlines()[0])
     record["scryfall_uri"] = "https://scryfall.com/card/tst/1"

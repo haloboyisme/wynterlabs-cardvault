@@ -50,3 +50,17 @@ it.each([
     `/api/v1/catalog/media?source=${encodeURIComponent(source)}`,
   );
 });
+
+it("uses labeled Digimon reference artwork when the exact printing image fails", () => {
+  const exact = "https://tcgplayer-cdn.tcgplayer.com/product/618951_in_1000x1000.jpg";
+  const reference = "https://images.digimoncard.io/images/cards/BT19-044.webp";
+  render(<CardImage name="Terriermon" imageUris={{ normal: exact, reference }} />);
+
+  fireEvent.error(screen.getByRole("img", { name: "Terriermon card" }));
+
+  expect(screen.getByRole("img", { name: "Terriermon reference artwork" })).toHaveAttribute(
+    "src",
+    `/api/v1/catalog/media?source=${encodeURIComponent(reference)}`,
+  );
+  expect(screen.getByText("Reference artwork — verify exact printing")).toBeVisible();
+});

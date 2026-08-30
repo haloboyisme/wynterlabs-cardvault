@@ -220,21 +220,41 @@ class RapidCardOcr:
         height, width = image.shape[:2]
         if width * height > 20_000_000:
             raise ScannerOcrError("The uploaded image dimensions are too large.")
-        with self._lock:
-            result = self._load_engine()(image)
-        texts = result.txts if result.txts is not None else []
-        scores = result.scores if result.scores is not None else []
-        boxes = result.boxes if result.boxes is not None else []
-        lines = [
-            DetectedLine(
-                text=str(text),
-                score=float(score),
-                y=min(float(point[1]) for point in box),
-                x=min(float(point[0]) for point in box),
-            )
-            for text, score, box in zip(texts, scores, boxes, strict=False)
+        candidates = [
+            image,
+            cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE),
+            cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE),
         ]
-        return hints_from_lines(lines, image_height=height, image_width=width)
+        best: ScannerOcrHints | None = None
+        with self._lock:
+            engine = self._load_engine()
+            for candidate in candidates:
+                candidate_height, candidate_width = candidate.shape[:2]
+                result = engine(candidate)
+                texts = result.txts if result.txts is not None else []
+                scores = result.scores if result.scores is not None else []
+                boxes = result.boxes if result.boxes is not None else []
+                lines = [
+                    DetectedLine(
+                        text=str(text),
+                        score=float(score),
+                        y=min(float(point[1]) for point in box),
+                        x=min(float(point[0]) for point in box),
+                    )
+                    for text, score, box in zip(texts, scores, boxes, strict=False)
+                ]
+                hints = hints_from_lines(
+                    lines,
+                    image_height=candidate_height,
+                    image_width=candidate_width,
+                )
+                if best is None or len(hints.title_candidates) > len(best.title_candidates):
+                    best = hints
+                # Upright cards remain a single pass. Sideways retries happen
+                # only when the current orientation has no usable title.
+                if hints.name:
+                    return hints
+        return best or hints_from_lines([], image_height=height, image_width=width)
 
 
 scanner_ocr = RapidCardOcr()

@@ -1878,3 +1878,11 @@ html[data-contrast="high"] :is(.header-topline, .site-footer) { border-color: va
     transition: none !important;
   }
 }
+.card-image-reference-note {
+  display: block;
+  padding: 0.35rem 0.55rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  text-align: center;
+}

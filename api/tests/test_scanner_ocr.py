@@ -1,13 +1,16 @@
 import uuid
+import sys
 from collections.abc import Iterator
+from types import SimpleNamespace
 
+import numpy as np
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from test_admin_api import _authenticated_client
 
 from app.models import Role
-from app.scanner_ocr import DetectedLine, hints_from_lines
+from app.scanner_ocr import DetectedLine, RapidCardOcr, hints_from_lines
 
 
 class FakeScannerOcr:
@@ -163,3 +166,46 @@ def test_private_ocr_ignores_split_copyright_noise_below_codsworth_number() -> N
     assert hints.name == "Codsworth, Handy Helper"
     assert hints.set == "pip"
     assert hints.collector == "0366"
+
+
+def test_private_ocr_retries_a_sideways_room_card_only_after_upright_text_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    image = np.zeros((200, 100, 3), dtype=np.uint8)
+    fake_cv2 = SimpleNamespace(
+        IMREAD_COLOR=1,
+        ROTATE_90_CLOCKWISE=0,
+        ROTATE_90_COUNTERCLOCKWISE=1,
+        imdecode=lambda *_args, **_kwargs: image,
+        rotate=lambda candidate, _direction: np.swapaxes(candidate, 0, 1),
+    )
+    monkeypatch.setitem(sys.modules, "cv2", fake_cv2)
+
+    results = iter(
+        [
+            SimpleNamespace(txts=[], scores=[], boxes=[]),
+            SimpleNamespace(
+                txts=["Surgical Suite", "DSK 34"],
+                scores=[0.98, 0.96],
+                boxes=[
+                    [[8, 6], [150, 6], [150, 20], [8, 20]],
+                    [[8, 82], [80, 82], [80, 96], [8, 96]],
+                ],
+            ),
+        ]
+    )
+    calls: list[tuple[int, int]] = []
+
+    def engine(candidate):
+        calls.append(candidate.shape[:2])
+        return next(results)
+
+    service = RapidCardOcr()
+    service._engine = engine
+
+    hints = service.recognize(b"sideways-room-card")
+
+    assert calls == [(200, 100), (100, 200)]
+    assert hints.name == "Surgical Suite"
+    assert hints.set == "dsk"
+    assert hints.collector == "34"
