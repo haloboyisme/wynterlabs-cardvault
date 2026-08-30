@@ -240,6 +240,7 @@ def test_catalog_status_is_available_to_ready_owner_and_admin(request, client_fi
             "mtg": {"active_catalog": None, "latest_attempt": None},
             "pokemon": {"active_catalog": None, "latest_attempt": None},
             "yugioh": {"active_catalog": None, "latest_attempt": None},
+            "onepiece": {"active_catalog": None, "latest_attempt": None},
         },
     }
 

@@ -4,6 +4,7 @@ export const CATALOG_GAMES = [
   { id: "mtg", name: "Magic: The Gathering" },
   { id: "pokemon", name: "Pokémon" },
   { id: "yugioh", name: "Yu-Gi-Oh!" },
+  { id: "onepiece", name: "One Piece Card Game" },
 ] as const;
 
 function normalizeCatalogGame(game: string): string {

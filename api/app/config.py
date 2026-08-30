@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     catalog_pokemon_min_sets: int = Field(default=10, ge=1)
     catalog_yugioh_min_printings: int = Field(default=1_000, ge=1)
     catalog_yugioh_min_sets: int = Field(default=10, ge=1)
+    catalog_one_piece_min_printings: int = Field(default=1_000, ge=1)
+    catalog_one_piece_min_sets: int = Field(default=10, ge=1)
     catalog_max_rejected_records: int = Field(default=1000, ge=0)
     catalog_max_rejected_ratio: float = Field(default=0.02, ge=0, le=1)
     catalog_max_provider_response_bytes: int = Field(default=25_000_000, ge=1024, le=100_000_000)

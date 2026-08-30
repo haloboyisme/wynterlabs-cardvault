@@ -218,7 +218,7 @@ class CatalogImport(Base):
             name="ck_catalog_imports_status",
         ),
         CheckConstraint(
-            "game IN ('mtg', 'pokemon', 'yugioh')",
+            "game IN ('mtg', 'pokemon', 'yugioh', 'onepiece')",
             name="ck_catalog_imports_game",
         ),
         CheckConstraint(
@@ -572,7 +572,7 @@ class Deck(Base):
         CheckConstraint(
             "description IS NULL OR length(description) <= 2000", name="ck_decks_description"
         ),
-        CheckConstraint("game IN ('mtg', 'pokemon', 'yugioh')", name="ck_decks_game"),
+        CheckConstraint("game IN ('mtg', 'pokemon', 'yugioh', 'onepiece')", name="ck_decks_game"),
         CheckConstraint("revision >= 1", name="ck_decks_revision"),
         Index("ix_decks_user_updated", "user_id", "updated_at"),
         Index("ix_decks_user_format", "user_id", "format"),

@@ -12,7 +12,7 @@ from urllib.parse import urlsplit, urlunsplit
 import httpx
 
 APPROVED_IMAGE_HOSTS = frozenset(
-    {"cards.scryfall.io", "images.pokemontcg.io", "images.ygoprodeck.com"}
+    {"cards.scryfall.io", "images.pokemontcg.io", "images.ygoprodeck.com", "tcgplayer-cdn.tcgplayer.com"}
 )
 IMAGE_TYPES = {
     "image/gif": ".gif",

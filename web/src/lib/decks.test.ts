@@ -23,9 +23,10 @@ it("maps formats to only API-supported sections", () => {
   ]);
 });
 
-it("limits Pokémon and Yu-Gi-Oh! decks to their supported format choices", () => {
+it("limits non-Magic decks to their supported format choices", () => {
   expect(formatsForGame("pokemon")).toEqual(["standard", "expanded", "unlimited"]);
   expect(formatsForGame("yugioh")).toEqual(["advanced", "traditional", "unlimited"]);
+  expect(formatsForGame("onepiece")).toEqual(["standard"]);
   expect(formatsForGame("mtg")).toEqual(DECK_FORMATS);
 });
 

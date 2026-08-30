@@ -30,6 +30,7 @@ it("defaults legacy sets without game metadata to Magic: The Gathering", () => {
     { id: "mtg", name: "Magic: The Gathering" },
     { id: "pokemon", name: "Pokémon" },
     { id: "yugioh", name: "Yu-Gi-Oh!" },
+    { id: "onepiece", name: "One Piece Card Game" },
   ]);
   expect(gameForSet(magicSet)).toBe("mtg");
   expect(gameForSet({ ...magicSet, game: " " })).toBe("mtg");
@@ -49,6 +50,7 @@ it("uses the shared Magic label and keeps unknown game labels readable", () => {
   expect(catalogGameName(" mtg ")).toBe("Magic: The Gathering");
   expect(catalogGameName("pokemon")).toBe("Pokémon");
   expect(catalogGameName("yugioh")).toBe("Yu-Gi-Oh!");
+  expect(catalogGameName("onepiece")).toBe("One Piece Card Game");
   expect(catalogGameName("pokemon-tcg")).toBe("pokemon-tcg");
   expect(catalogGameName(" ")).not.toBe("Magic: The Gathering");
 });

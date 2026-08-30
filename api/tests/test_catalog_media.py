@@ -3,7 +3,7 @@ import asyncio
 import httpx
 import pytest
 
-from app.catalog.media import cache_remote_image
+from app.catalog.media import _approved_source, cache_remote_image
 
 
 def test_caches_allowed_pokemon_image_and_reuses_local_copy(tmp_path):
@@ -144,6 +144,12 @@ def test_preserves_scryfall_numeric_cache_busters(tmp_path):
         assert calls == 1
 
     asyncio.run(exercise())
+
+
+def test_accepts_one_piece_tcgplayer_cdn_image_source():
+    assert _approved_source(
+        "https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"
+    ) == "https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"
 
 
 def test_rejects_non_numeric_provider_queries(tmp_path):

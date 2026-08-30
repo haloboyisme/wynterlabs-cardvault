@@ -14,6 +14,7 @@ const TCGPLAYER_PRODUCT_LINES: Record<string, string> = {
   mtg: "magic",
   pokemon: "pokemon",
   yugioh: "yugioh",
+  onepiece: "one-piece-card-game",
 };
 
 export function marketplaceLinksForCard(card: MarketplaceCard): MarketplaceLink[] {

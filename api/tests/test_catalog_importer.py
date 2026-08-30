@@ -21,6 +21,7 @@ from app.catalog.importer import (
     normalize_card,
 )
 from app.catalog.pokemon import PokemonClient, _cards_from_archive, normalize_pokemon_card
+from app.catalog.one_piece import OnePieceClient, normalize_one_piece_card
 from app.catalog.scryfall import BULK_METADATA_URL, BulkMetadata, ScryfallClient
 from app.catalog.status import read_catalog_status
 from app.catalog.yugioh import YugiohClient, normalize_yugioh_card
@@ -52,6 +53,8 @@ def settings_for(path):
         catalog_pokemon_min_sets=1,
         catalog_yugioh_min_printings=1,
         catalog_yugioh_min_sets=1,
+        catalog_one_piece_min_printings=1,
+        catalog_one_piece_min_sets=1,
         catalog_max_rejected_records=10,
         catalog_max_rejected_ratio=0.5,
         catalog_max_download_bytes=1000000,
@@ -163,6 +166,86 @@ def test_yugioh_client_pages_with_documented_num_and_offset(tmp_path):
         ("1", "0"),
         ("1", "1"),
     ]
+
+
+def test_one_piece_client_reads_bounded_tcgjson_catalog(tmp_path):
+    catalog = {
+        "meta": {"object": "tcgjson_catalog", "generatedAt": "2026-08-24T10:53:52Z"},
+        "sets": [{
+            "setId": 3188, "name": "Romance Dawn", "abbreviation": "OP01",
+            "releaseDate": "2022-12-02T00:00:00", "productCount": 1,
+        }],
+        "products": [{
+            "productId": 454512, "name": "Roronoa Zoro (001)", "setId": 3188,
+            "collectorNumber": "OP01-001", "rarity": "Leader", "foilings": ["Normal"],
+            "imageUrls": ["https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"],
+            "metadata": {"rulesText": "All Characters gain +1000 power.", "colors": ["Red"]},
+        }],
+    }
+    payload = gzip.compress(json.dumps(catalog).encode())
+
+    async def exercise():
+        transport = httpx.MockTransport(lambda _request: httpx.Response(
+            200, content=payload, headers={"content-type": "application/octet-stream"},
+        ))
+        async with httpx.AsyncClient(transport=transport) as http:
+            return await OnePieceClient(settings_for(tmp_path), http_client=http).fetch_cards()
+
+    rows = asyncio.run(exercise())
+    assert rows[0]["_set"]["name"] == "Romance Dawn"
+    assert rows[0]["_catalog_generated_at"] == "2026-08-24T10:53:52Z"
+
+
+def test_one_piece_normalization_preserves_printing_identity_and_image():
+    card = normalize_one_piece_card({
+        "productId": 454512,
+        "name": "Roronoa Zoro (001)",
+        "setId": 3188,
+        "collectorNumber": "OP01-001",
+        "rarity": "Leader",
+        "foilings": ["Normal"],
+        "imageUrls": ["https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"],
+        "metadata": {
+            "rulesText": "All Characters gain +1000 power.",
+            "colors": ["Red"],
+            "cardTypes": ["Leader"],
+            "customAttributes": {"subtypes": ["Straw Hat Crew"]},
+        },
+        "_set": {
+            "setId": 3188,
+            "name": "Romance Dawn",
+            "abbreviation": "OP01",
+            "releaseDate": "2022-12-02T00:00:00",
+            "productCount": 154,
+        },
+        "_catalog_generated_at": "2026-08-24T10:53:52Z",
+    })
+    assert card.card_set.game == card.oracle.game == card.printing.game == "onepiece"
+    assert card.card_set.code == "OP01"
+    assert card.printing.collector_number == "OP01-001"
+    assert card.printing.finishes == ["nonfoil"]
+    assert card.printing.image_uris == {
+        "normal": "https://tcgplayer-cdn.tcgplayer.com/product/454512_in_1000x1000.jpg"
+    }
+    assert card.oracle.type_line == "Leader"
+    assert card.oracle.keywords == ["Straw Hat Crew"]
+
+
+def test_one_piece_normalization_keeps_don_cards_without_printed_numbers():
+    card = normalize_one_piece_card({
+        "productId": 456059,
+        "name": "DON!! Card (Manga) (Alternate Art)",
+        "setId": 3188,
+        "collectorNumber": "",
+        "rarity": "DON!!",
+        "foilings": ["Foil"],
+        "imageUrls": [],
+        "metadata": {"cardTypes": ["DON!!"]},
+        "_set": {"setId": 3188, "name": "Romance Dawn", "abbreviation": "OP01"},
+    })
+
+    assert card.printing.collector_number == "TCG-456059"
+    assert card.printing.finishes == ["foil"]
 
 
 def test_normalization_allows_only_https_scryfall_source_uris():
@@ -637,7 +720,21 @@ def test_all_refresh_runs_each_game_under_one_refresh_lock(tmp_path):
             settings,
             factory,
             source=Source(),
-            providers={"pokemon": Provider(pokemon), "yugioh": Provider(yugioh)},
+            providers={
+                "pokemon": Provider(pokemon),
+                "yugioh": Provider(yugioh),
+                "onepiece": Provider([{
+                    "productId": 454512,
+                    "name": "Roronoa Zoro (001)",
+                    "setId": 3188,
+                    "collectorNumber": "OP01-001",
+                    "rarity": "Leader",
+                    "foilings": ["Normal"],
+                    "imageUrls": [],
+                    "metadata": {},
+                    "_set": {"setId": 3188, "name": "Romance Dawn", "abbreviation": "OP01"},
+                }]),
+            },
         ).refresh("all")
         async with factory() as session:
             active_games = list(
@@ -650,7 +747,7 @@ def test_all_refresh_runs_each_game_under_one_refresh_lock(tmp_path):
                 ).all()
             )
         assert result.status == "complete"
-        assert active_games == ["mtg", "pokemon", "yugioh"]
+        assert active_games == ["mtg", "onepiece", "pokemon", "yugioh"]
         await engine.dispose()
 
     asyncio.run(exercise())
@@ -670,6 +767,7 @@ def test_game_thresholds_keep_magic_strict_and_free_provider_fixtures_activatabl
     assert validation_thresholds(settings, "mtg") == (100_000, 500)
     assert validation_thresholds(settings, "pokemon") == (1_000, 10)
     assert validation_thresholds(settings, "yugioh") == (1_000, 10)
+    assert validation_thresholds(settings, "onepiece") == (1_000, 10)
 
 
 def test_catalog_import_downgrade_drops_catalog_import_game_column_in_alembic_order():
