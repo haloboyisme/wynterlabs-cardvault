@@ -21,7 +21,8 @@ function approvedCardImage(value: string | undefined): string | undefined {
     if (
       url.hostname === "cards.scryfall.io" ||
       url.hostname === "images.pokemontcg.io" ||
-      url.hostname === "images.ygoprodeck.com"
+      url.hostname === "images.ygoprodeck.com" ||
+      url.hostname === "tcgplayer-cdn.tcgplayer.com"
     ) {
       return `/api/v1/catalog/media?source=${encodeURIComponent(value)}`;
     }

@@ -41,6 +41,7 @@ it.each([
   "https://cards.scryfall.io/normal/front/a/b/card.jpg",
   "https://images.pokemontcg.io/base1/4_hires.png",
   "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+  "https://tcgplayer-cdn.tcgplayer.com/product/677463_in_1000x1000.jpg",
 ])("loads third-party catalog images through the local authenticated cache: %s", (source) => {
   render(<CardImage name="Cached" imageUris={{ normal: source }} />);
   const image = screen.getByRole("img", { name: "Cached card" });
