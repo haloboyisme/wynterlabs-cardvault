@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 it("captures and clears the fragment, accepts chosen credentials, and clears the secret", async () => {
-  window.history.replaceState({}, "", "/accept-invitation#token=private-link-token")
+  window.history.replaceState({}, "", "/signup#token=private-link-token")
   const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({
     id: "member-id",
     email: "member@example.com",
@@ -32,7 +32,8 @@ it("captures and clears the fragment, accepts chosen credentials, and clears the
   await user.type(screen.getByLabelText(/display name/i), "Member Player")
   await user.type(screen.getByLabelText(/^password$/i), "a ready winter password")
   await user.type(screen.getByLabelText(/confirm password/i), "a ready winter password")
-  await user.click(screen.getByRole("button", { name: /accept invitation/i }))
+  expect(screen.getByRole("heading", { name: /create your account/i })).toBeVisible()
+  await user.click(screen.getByRole("button", { name: /create account/i }))
 
   await waitFor(() => expect(refresh).toHaveBeenCalled())
   const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
@@ -44,7 +45,8 @@ it("captures and clears the fragment, accepts chosen credentials, and clears the
 it("rejects mismatched passwords locally and handles a missing link", async () => {
   const user = userEvent.setup()
   const missing = render(<AcceptInvitationPage />)
-  expect(screen.getByRole("alert")).toHaveTextContent(/missing or no longer available/i)
+  expect(screen.getByText(/owner invitation is required/i)).toBeVisible()
+  expect(screen.getByRole("link", { name: /sign in instead/i })).toHaveAttribute("href", "/login")
   missing.unmount()
   window.history.replaceState({}, "", "/accept-invitation#token=private-link-token")
   render(<AcceptInvitationPage />)
@@ -52,6 +54,6 @@ it("rejects mismatched passwords locally and handles a missing link", async () =
   await user.type(screen.getByLabelText(/display name/i), "Member Player")
   await user.type(screen.getByLabelText(/^password$/i), "a ready winter password")
   await user.type(screen.getByLabelText(/confirm password/i), "different winter password")
-  await user.click(screen.getByRole("button", { name: /accept invitation/i }))
+  await user.click(screen.getByRole("button", { name: /create account/i }))
   expect(screen.getByRole("alert")).toHaveTextContent(/passwords must match/i)
 })

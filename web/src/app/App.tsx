@@ -36,6 +36,7 @@ export function App() {
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/mfa-challenge" element={<MfaChallengePage />} />
+            <Route path="/signup" element={<AcceptInvitationPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route
               path="/change-password"

@@ -56,7 +56,8 @@ export function LoginPage() {
         <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         <button className="button primary wide" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</button>
-        <p className="form-note">First visit? <Link to="/setup">Complete owner setup</Link></p>
+        <p className="form-note">Have an invitation? <Link to="/signup">Create account</Link></p>
+        <p className="form-note">Setting up a new server? <Link to="/setup">Complete owner setup</Link></p>
       </form>
     </section>
   );

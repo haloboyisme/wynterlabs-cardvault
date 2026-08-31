@@ -43,6 +43,7 @@ it("creates a one-time copy field, clears it after copy, and revision-revokes", 
   expect(await screen.findByText(/active/i)).toBeVisible()
   await user.click(screen.getByRole("button", { name: /create invitation link/i }))
   const field = await screen.findByLabelText(/new invitation link/i)
+  expect((field as HTMLInputElement).value).toContain("/signup#token=")
   expect((field as HTMLInputElement).value).toContain("#token=one-time-private-token")
   await user.click(screen.getByRole("button", { name: /copy invitation link/i }))
   expect(copySpy).toHaveBeenCalled()

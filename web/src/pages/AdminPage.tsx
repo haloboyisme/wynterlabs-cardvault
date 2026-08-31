@@ -517,7 +517,7 @@ export function OwnerInvitationPanel() {
       const { raw_token: rawToken, ...invitation } = created;
       setInvitations((current) => [invitation, ...current]);
       setOneTimeLink(
-        `${window.location.origin}/accept-invitation#token=${encodeURIComponent(rawToken)}`,
+        `${window.location.origin}/signup#token=${encodeURIComponent(rawToken)}`,
       );
     } catch {
       setError("The invitation link could not be created. Try again.");
