@@ -56,7 +56,7 @@ expect() {
 alembic upgrade 0010_multi_game_catalog
 query "INSERT INTO users (id,email,email_normalized,display_name,display_name_normalized,password_hash,role,owner_slot,is_active,must_change_password,password_changed_at,created_at,updated_at) VALUES ('11111111-1111-1111-1111-111111111111','member-b84e8dda5ae1@example.invalid','member-3e40761622bd@example.invalid','Owner','owner','hash','OWNER',1,true,false,now(),now(),now());"
 alembic upgrade head
-expect "0015_open_signup_role_authority" "SELECT version_num FROM alembic_version"
+expect "0016_trusted_mfa_browser" "SELECT version_num FROM alembic_version"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'collection_value_snapshots'"
 expect "1" "SELECT count(*) FROM pg_constraint WHERE conname = 'uq_collection_value_snapshots_user_minute'"
 expect "1" "SELECT count(*) FROM pg_indexes WHERE indexname = 'ix_collection_value_snapshots_user_captured'"
@@ -69,14 +69,14 @@ expect "0011_collection_value_history" "SELECT version_num FROM alembic_version"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'"
 expect "1" "SELECT count(*) FROM collection_value_snapshots"
 alembic upgrade head
-expect "0015_open_signup_role_authority" "SELECT version_num FROM alembic_version"
+expect "0016_trusted_mfa_browser" "SELECT version_num FROM alembic_version"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'"
 alembic downgrade 0010_multi_game_catalog
 expect "0010_multi_game_catalog" "SELECT version_num FROM alembic_version"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'collection_value_snapshots'"
 expect "0" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'"
 alembic upgrade head
-expect "0015_open_signup_role_authority" "SELECT version_num FROM alembic_version"
+expect "0016_trusted_mfa_browser" "SELECT version_num FROM alembic_version"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'collection_value_snapshots'"
 expect "1" "SELECT count(*) FROM information_schema.tables WHERE table_name = 'site_branding'"
 echo "ephemeral-postgres-collection-value-history-migration-smoke-ok"

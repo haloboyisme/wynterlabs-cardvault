@@ -8,12 +8,14 @@ interface ProtectedRouteProps {
   children: ReactNode;
   roles?: User["role"][];
   allowPasswordChange?: boolean;
+  allowMfaSetup?: boolean;
 }
 
 export function ProtectedRoute({
   children,
   roles,
   allowPasswordChange = false,
+  allowMfaSetup = false,
 }: ProtectedRouteProps) {
   const auth = useAuth();
   const location = useLocation();
@@ -55,6 +57,9 @@ export function ProtectedRoute({
   }
   if (!auth.user.must_change_password && allowPasswordChange) {
     return <Navigate to="/dashboard" replace />;
+  }
+  if (auth.user.must_setup_mfa && !allowMfaSetup) {
+    return <Navigate to="/account" replace />;
   }
   if (roles && !roles.includes(auth.user.role)) {
     return (

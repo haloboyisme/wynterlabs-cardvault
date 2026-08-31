@@ -409,6 +409,7 @@ const readyUser = (role: "owner" | "super_admin" | "admin" | "member") => ({
   display_name: role === "owner" ? "Owner" : role === "super_admin" ? "Super administrator" : role === "admin" ? "Administrator" : "Member",
   role,
   must_change_password: false,
+  must_setup_mfa: false,
   created_at: "2026-08-14T00:00:00Z",
 });
 
@@ -491,6 +492,19 @@ it("redirects a forced administrator from Cards to password setup", async () => 
   for (const name of ["Dashboard", "Cards", "Collection", "Decks", "Account", "Admin"]) {
     expect(screen.queryByRole("link", { name })).not.toBeInTheDocument();
   }
+});
+
+it("redirects a privileged account awaiting MFA from Cards to Account", async () => {
+  stubAuthenticatedUser({
+    ...readyUser("admin"),
+    must_setup_mfa: true,
+  });
+
+  renderAt("/cards");
+
+  expect(await screen.findByRole("heading", { name: /administrator/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Two-step verification" })).toBeVisible();
+  expect(screen.getByText(/required for administrator accounts/i)).toBeVisible();
 });
 
 it("redirects a ready user away from the password-change route", async () => {

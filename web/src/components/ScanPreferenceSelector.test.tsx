@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { CardSet } from "../lib/types";
+import { CATALOG_GAMES } from "../scanner/catalog-games";
 import { ScanPreferenceSelector } from "./ScanPreferenceSelector";
 
 const magicSet: CardSet = {
@@ -45,7 +46,8 @@ it("shows every supported game from the shared registry", () => {
   expect(screen.getByRole("option", { name: "Magic: The Gathering" })).toBeVisible();
   expect(screen.getByRole("option", { name: "Pokémon" })).toBeVisible();
   expect(screen.getByRole("option", { name: "Yu-Gi-Oh!" })).toBeVisible();
-  expect(screen.getAllByRole("option")).toHaveLength(7);
+  const gameSelect = screen.getByRole("combobox", { name: "Game or brand" });
+  expect(gameSelect.querySelectorAll("option")).toHaveLength(CATALOG_GAMES.length + 1);
 });
 
 it("filters set options to the selected game", async () => {

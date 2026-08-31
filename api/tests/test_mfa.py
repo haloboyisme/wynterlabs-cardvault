@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 from cryptography.exceptions import InvalidTag
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import select
 
 from app.config import Settings
 from app.database import Base
-from app.errors import AppError
 from app.mfa import (
     decrypt_totp_secret,
     encrypt_totp_secret,
@@ -34,6 +34,7 @@ from app.models import (
     MfaCredential,
     MfaLoginChallenge,
     MfaRecoveryCode,
+    MfaTrustedBrowser,
     Role,
     SecurityAuditEvent,
     User,
@@ -114,8 +115,13 @@ def test_mfa_models_are_in_metadata() -> None:
         "mfa_credentials",
         "mfa_login_challenges",
         "mfa_recovery_codes",
+        "mfa_trusted_browsers",
         "security_audit_events",
     } <= set(Base.metadata.tables)
+
+
+def test_users_expose_privileged_mfa_onboarding_state() -> None:
+    assert hasattr(User, "must_setup_mfa")
 
 
 async def _enrolled_owner(app, *, active: bool = True) -> tuple[User, str, bytes]:
@@ -227,7 +233,7 @@ def test_enrolled_privileged_login_uses_only_a_scoped_pre_auth_cookie(app, clien
     assert asyncio.run(sessions()) == 0
 
 
-def test_totp_success_consumes_challenge_and_rejects_replay(app, client) -> None:
+def test_totp_success_trusts_browser_for_same_browser_login_and_rejects_replay(app, client) -> None:
     _, _, secret = asyncio.run(_enrolled_owner(app))
     credentials = {"email": "member-7e3a6b1979df@example.invalid", "password": "test-only-credential-b0acde2364fa"}
     now = datetime.now(UTC)
@@ -236,7 +242,9 @@ def test_totp_success_consumes_challenge_and_rejects_replay(app, client) -> None
     completed = client.post("/api/v1/auth/mfa/totp", json={"code": code})
     assert completed.status_code == 200
     assert "Max-Age=0" in completed.headers["set-cookie"]
-    assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "mfa_required"
+    assert "wynterlabs_mfa_trust=" in completed.headers["set-cookie"]
+    assert client.post("/api/v1/auth/logout").status_code == 204
+    assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "authenticated"
     replay = client.post("/api/v1/auth/mfa/totp", json={"code": code})
     assert replay.status_code == 401
     assert replay.json()["error"]["code"] == "mfa_challenge_invalid"
@@ -302,7 +310,7 @@ def test_regeneration_invalidates_all_old_recovery_codes(app) -> None:
     )
 
 
-def test_audit_event_allowlist_and_member_mfa_status_are_enforced(app) -> None:
+def test_audit_event_allowlist_and_member_mfa_status_are_supported(app) -> None:
     with pytest.raises(ValueError):
         new_security_audit_event(
             user_id=uuid.uuid4(),
@@ -334,9 +342,7 @@ def test_audit_event_allowlist_and_member_mfa_status_are_enforced(app) -> None:
             )
             database.add(member)
             await database.commit()
-            with pytest.raises(AppError) as error:
-                await mfa_status(database, member)
-            assert error.value.status_code == 403
+            assert await mfa_status(database, member) == (True, False, 0)
 
     asyncio.run(status_for_member())
 
@@ -473,3 +479,70 @@ def test_owner_enrollment_activates_encrypted_secret_and_returns_codes_once(app,
             return credential.enabled_at is not None, credential.pending_expires_at is None, events
 
     assert asyncio.run(state()) == (True, True, 1)
+
+
+def test_new_owner_is_restricted_until_mfa_enrollment(app, client) -> None:
+    created = client.post(
+        "/api/v1/setup/owner",
+        json={
+            "email": "owner-required@example.com",
+            "display_name": "Required Owner",
+            "password": "correct horse winter battery",
+        },
+        headers={"X-Bootstrap-Secret": "winter-bootstrap-secret-for-tests"},
+    )
+    assert created.status_code == 201
+    assert created.json()["must_setup_mfa"] is True
+    login = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "owner-required@example.com",
+            "password": "correct horse winter battery",
+        },
+    )
+    assert login.json()["user"]["must_setup_mfa"] is True
+    blocked = client.get("/api/v1/account/sessions")
+    assert blocked.status_code == 403
+    assert blocked.json()["error"]["code"] == "mfa_setup_required"
+    assert client.get("/api/v1/account/mfa").status_code == 200
+
+
+def test_member_can_enroll_in_optional_mfa(app, client) -> None:
+    registered = client.post(
+        "/api/v1/registration",
+        json={
+            "email": "optional-mfa@example.com",
+            "display_name": "Optional MFA",
+            "password": "correct horse winter battery",
+        },
+    )
+    assert registered.status_code == 201
+    assert registered.json()["must_setup_mfa"] is False
+    status = client.get("/api/v1/account/mfa")
+    assert status.status_code == 200
+    assert status.json() == {"eligible": True, "enabled": False, "recovery_codes_remaining": 0}
+
+
+def test_trusted_mfa_is_browser_specific_and_expires_without_sliding(app, client) -> None:
+    _, _, secret = asyncio.run(_enrolled_owner(app))
+    credentials = {"email": "mfa-owner@wynterlabs.com", "password": "mfa owner password"}
+    assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "mfa_required"
+    code = totp_at(secret, int(datetime.now(UTC).timestamp()))
+    assert client.post("/api/v1/auth/mfa/totp", json={"code": code}).status_code == 200
+
+    with TestClient(app) as other_browser:
+        assert (
+            other_browser.post("/api/v1/auth/login", json=credentials).json()["status"]
+            == "mfa_required"
+        )
+
+    async def expire_trust() -> None:
+        async with app.state.session_factory() as database:
+            trust = await database.scalar(select(MfaTrustedBrowser))
+            assert trust is not None
+            trust.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+            await database.commit()
+
+    asyncio.run(expire_trust())
+    assert client.post("/api/v1/auth/logout").status_code == 204
+    assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "mfa_required"

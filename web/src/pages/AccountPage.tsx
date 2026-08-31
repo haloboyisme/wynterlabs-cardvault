@@ -58,7 +58,7 @@ function roleLabel(role: string | undefined) {
 }
 
 export function AccountPage() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const request = useRef<AbortController | null>(null);
   const revokeRequest = useRef<AbortController | null>(null);
   const generation = useRef(0);
@@ -80,6 +80,13 @@ export function AccountPage() {
   const [choosingCaptureShortcut, setChoosingCaptureShortcut] = useState(false);
 
   const load = useCallback(async () => {
+    if (user?.must_setup_mfa) {
+      setSessions([]);
+      setTrading(null);
+      setError("");
+      setLoading(false);
+      return;
+    }
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -101,7 +108,7 @@ export function AccountPage() {
     } finally {
       if (current === generation.current) setLoading(false);
     }
-  }, []);
+  }, [user?.must_setup_mfa]);
 
   useEffect(() => {
     void load();
@@ -350,7 +357,7 @@ export function AccountPage() {
             </article>
           ))}
         </section>
-        {user && <MfaSettings role={user.role} />}
+        {user && <MfaSettings role={user.role} required={user.must_setup_mfa} onEnrollmentComplete={refresh} />}
         {trading && (
           <section className={`account-trading-card ${trading.status}`} aria-labelledby="account-trading-heading">
             <p className="eyebrow">Community safety</p>

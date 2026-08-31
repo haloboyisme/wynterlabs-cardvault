@@ -39,6 +39,7 @@ class UserOut(BaseModel):
     display_name: str
     role: Role
     must_change_password: bool
+    must_setup_mfa: bool
     created_at: datetime
 
 

@@ -68,6 +68,24 @@ async def require_ready_auth(
             "password_change_required",
             "Change your temporary password to continue.",
         )
+    if auth.user.must_setup_mfa:
+        raise AppError(
+            403,
+            "mfa_setup_required",
+            "Set up two-step verification to continue.",
+        )
+    return auth
+
+
+async def require_password_ready_auth(
+    auth: CurrentAuth = Depends(require_auth),
+) -> CurrentAuth:
+    if auth.user.must_change_password:
+        raise AppError(
+            403,
+            "password_change_required",
+            "Change your temporary password to continue.",
+        )
     return auth
 
 

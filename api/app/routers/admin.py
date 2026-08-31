@@ -30,7 +30,7 @@ from app.dependencies import (
     require_role_manager,
 )
 from app.errors import AppError
-from app.identity import revoke_user_sessions
+from app.identity import revoke_mfa_trust, revoke_user_sessions
 from app.invitation_schemas import (
     InvitationCreateOut,
     InvitationCreateRequest,
@@ -38,7 +38,7 @@ from app.invitation_schemas import (
     InvitationRevokeRequest,
 )
 from app.invitations import invitation_status, no_store
-from app.models import AccountInvitation, Role, SiteBranding, User
+from app.models import AccountInvitation, MfaCredential, Role, SiteBranding, User
 from app.security import hash_invitation_token, hash_password, new_invitation_token
 
 router = APIRouter(prefix="/api/v1/admin", tags=["administration"])
@@ -169,9 +169,7 @@ async def list_administrators(
     database: AsyncSession = Depends(get_db),
 ) -> list[User]:
     result = await database.scalars(
-        select(User)
-        .where(User.role != Role.OWNER)
-        .order_by(User.created_at, User.id)
+        select(User).where(User.role != Role.OWNER).order_by(User.created_at, User.id)
     )
     return list(result.all())
 
@@ -193,6 +191,7 @@ async def create_administrator(
         owner_slot=None,
         is_active=True,
         must_change_password=True,
+        must_setup_mfa=True,
     )
     database.add(user)
     try:
@@ -256,7 +255,18 @@ async def update_user_role(
             )
         if user.role is not payload.role:
             user.role = payload.role
-            await revoke_user_sessions(database, user.id, datetime.now(UTC))
+            now = datetime.now(UTC)
+            credential = await database.scalar(
+                select(MfaCredential).where(
+                    MfaCredential.user_id == user.id,
+                    MfaCredential.enabled_at.is_not(None),
+                )
+            )
+            user.must_setup_mfa = bool(
+                payload.role in (Role.SUPER_ADMIN, Role.ADMIN) and credential is None
+            )
+            await revoke_user_sessions(database, user.id, now)
+            await revoke_mfa_trust(database, user.id, now)
     await database.refresh(user)
     return user
 
@@ -271,7 +281,9 @@ async def update_administrator_status(
     admin = await _get_admin(database, user_id)
     admin.is_active = payload.is_active
     if not payload.is_active:
-        await revoke_user_sessions(database, admin.id, datetime.now(UTC))
+        now = datetime.now(UTC)
+        await revoke_user_sessions(database, admin.id, now)
+        await revoke_mfa_trust(database, admin.id, now)
     await database.commit()
     await database.refresh(admin)
     return admin
@@ -290,6 +302,7 @@ async def reset_administrator_password(
     admin.must_change_password = True
     admin.password_changed_at = now
     await revoke_user_sessions(database, admin.id, now)
+    await revoke_mfa_trust(database, admin.id, now)
     await database.commit()
     await database.refresh(admin)
     return admin

@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.database import get_db
-from app.dependencies import CurrentAuth, get_settings, require_ready_auth
+from app.dependencies import CurrentAuth, get_settings, require_password_ready_auth
 from app.errors import AppError
+from app.identity import create_mfa_trust
 from app.mfa_schemas import (
     MfaEnrollmentOut,
     MfaEnrollmentRequest,
@@ -62,9 +63,22 @@ def clear_pre_auth_cookie(response: Response, settings: Settings) -> None:
     )
 
 
+def _set_mfa_trust_cookie(response: Response, settings: Settings, raw: str) -> None:
+    response.set_cookie(
+        "wynterlabs_mfa_trust",
+        raw,
+        max_age=18000,
+        httponly=True,
+        secure=settings.environment == "production",
+        samesite="strict",
+        path="/api/v1/auth",
+    )
+
+
 @router.get("/account/mfa", response_model=MfaStatusOut)
 async def status(
-    auth: CurrentAuth = Depends(require_ready_auth), database: AsyncSession = Depends(get_db)
+    auth: CurrentAuth = Depends(require_password_ready_auth),
+    database: AsyncSession = Depends(get_db),
 ) -> MfaStatusOut:
     eligible, enabled, remaining = await mfa_status(database, auth.user)
     return MfaStatusOut(eligible=eligible, enabled=enabled, recovery_codes_remaining=remaining)
@@ -73,7 +87,7 @@ async def status(
 @router.post("/account/mfa/enrollment", response_model=MfaEnrollmentOut)
 async def begin(
     payload: MfaEnrollmentRequest,
-    auth: CurrentAuth = Depends(require_ready_auth),
+    auth: CurrentAuth = Depends(require_password_ready_auth),
     database: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> MfaEnrollmentOut:
@@ -87,7 +101,7 @@ async def begin(
 @router.post("/account/mfa/enrollment/confirm", response_model=MfaRecoveryCodesOut)
 async def confirm(
     payload: MfaTotpRequest,
-    auth: CurrentAuth = Depends(require_ready_auth),
+    auth: CurrentAuth = Depends(require_password_ready_auth),
     database: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> MfaRecoveryCodesOut:
@@ -99,7 +113,7 @@ async def confirm(
 @router.post("/account/mfa/recovery-codes", response_model=MfaRecoveryCodesOut)
 async def regenerate(
     payload: MfaRecoveryRegenerateRequest,
-    auth: CurrentAuth = Depends(require_ready_auth),
+    auth: CurrentAuth = Depends(require_password_ready_auth),
     database: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> MfaRecoveryCodesOut:
@@ -129,6 +143,10 @@ async def _complete(
             request.client.host if request.client else "unknown",
             request.headers.get("user-agent", "unknown"),
         )
+        trust, trust_raw = create_mfa_trust(
+            user, settings, datetime.now(UTC), request.headers.get("user-agent", "unknown")
+        )
+        database.add(trust)
         await database.commit()
     except AppError:
         # The service attaches deletion only to consumed, expired, disabled, or
@@ -137,6 +155,7 @@ async def _complete(
         raise
     clear_pre_auth_cookie(response, settings)
     _set_session_cookie(response, settings, session_raw)
+    _set_mfa_trust_cookie(response, settings, trust_raw)
     return UserOut.model_validate(user)
 
 

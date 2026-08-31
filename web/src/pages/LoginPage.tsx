@@ -1,8 +1,8 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../app/auth";
-import { ApiError } from "../lib/api";
+import { ApiError, apiRequest } from "../lib/api";
 
 export function LoginPage() {
   const auth = useAuth();
@@ -12,6 +12,15 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [setupAvailable, setSetupAvailable] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void apiRequest<{ available: boolean }>("/api/v1/setup/status")
+      .then((result) => { if (active) setSetupAvailable(result.available); })
+      .catch(() => { if (active) setSetupAvailable(false); });
+    return () => { active = false; };
+  }, []);
 
   const message = (location.state as { message?: string } | null)?.message;
 
@@ -57,7 +66,7 @@ export function LoginPage() {
         <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         <button className="button primary wide" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</button>
         <p className="form-note">Have an invitation? <Link to="/signup">Create account</Link></p>
-        <p className="form-note">Setting up a new server? <Link to="/setup">Complete owner setup</Link></p>
+        {setupAvailable && <p className="form-note">Setting up a new server? <Link to="/setup">Complete owner setup</Link></p>}
       </form>
     </section>
   );

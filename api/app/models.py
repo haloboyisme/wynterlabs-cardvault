@@ -74,6 +74,7 @@ class User(Base):
     owner_slot: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
+    must_setup_mfa: Mapped[bool] = mapped_column(Boolean, default=False)
     password_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -144,6 +145,20 @@ class MfaLoginChallenge(Base):
     client_ip: Mapped[str] = mapped_column(String(64))
     user_agent: Mapped[str] = mapped_column(String(256))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class MfaTrustedBrowser(Base):
+    __tablename__ = "mfa_trusted_browsers"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    user_agent: Mapped[str] = mapped_column(String(256))
 
 
 class MfaRecoveryCode(Base):

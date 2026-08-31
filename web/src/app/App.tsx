@@ -43,7 +43,7 @@ export function App() {
               element={<ProtectedRoute allowPasswordChange><ChangePasswordPage /></ProtectedRoute>}
             />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute allowMfaSetup><AccountPage /></ProtectedRoute>} />
             <Route path="/cards" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
             <Route path="/cards/:printingId" element={<ProtectedRoute><CardDetailPage /></ProtectedRoute>} />
             <Route path="/collection" element={<ProtectedRoute><CollectionPage /></ProtectedRoute>} />

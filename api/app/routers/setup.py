@@ -46,6 +46,7 @@ async def create_owner(
         password_hash=hash_password(payload.password),
         role=Role.OWNER,
         owner_slot=1,
+        must_setup_mfa=True,
     )
     database.add(user)
     try:

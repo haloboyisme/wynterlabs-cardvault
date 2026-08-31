@@ -48,6 +48,7 @@ class AdminUserOut(BaseModel):
     role: Role
     is_active: bool
     must_change_password: bool
+    must_setup_mfa: bool
     created_at: datetime
     updated_at: datetime
 

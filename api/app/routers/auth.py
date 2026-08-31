@@ -10,9 +10,14 @@ from app.config import Settings
 from app.database import get_db
 from app.dependencies import CurrentAuth, get_settings, require_auth
 from app.errors import AppError
-from app.identity import lock_user_credentials, revoke_user_sessions
+from app.identity import (
+    lock_user_credentials,
+    revoke_mfa_trust,
+    revoke_user_sessions,
+    trusted_mfa_user,
+)
 from app.mfa_service import create_full_session, create_mfa_challenge
-from app.models import LoginAttempt, MfaCredential, Role, User
+from app.models import LoginAttempt, MfaCredential, User
 from app.retention import cleanup_identity_history
 from app.schemas import ChangePasswordRequest, LoginRequest, LoginResult, UserOut
 from app.security import (
@@ -105,13 +110,20 @@ async def login(
             MfaCredential.enabled_at.is_not(None),
         )
     )
-    if enrolled and user.role in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN):
+    if enrolled and not await trusted_mfa_user(
+        database,
+        request.cookies.get("wynterlabs_mfa_trust"),
+        user.id,
+        settings,
+        now,
+    ):
         challenge, raw = create_mfa_challenge(
             user, settings, now, ip, request.headers.get("user-agent", "unknown")
         )
         database.add(challenge)
         await database.commit()
         response.delete_cookie(settings.cookie_name, path="/")
+        response.delete_cookie("wynterlabs_mfa_trust", path="/api/v1/auth", samesite="strict")
         _set_pre_auth_cookie(response, settings, raw)
         return LoginResult(status="mfa_required", challenge_expires_at=challenge.expires_at)
     session, raw = create_full_session(
@@ -145,6 +157,7 @@ async def change_password(
     user.must_change_password = False
     user.password_changed_at = now
     await revoke_user_sessions(database, user.id, now)
+    await revoke_mfa_trust(database, user.id, now)
     await database.commit()
     response.delete_cookie(settings.cookie_name, path="/")
 

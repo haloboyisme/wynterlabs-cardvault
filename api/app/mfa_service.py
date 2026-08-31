@@ -26,7 +26,6 @@ from app.models import (
     MfaCredential,
     MfaLoginChallenge,
     MfaRecoveryCode,
-    Role,
     SecurityAuditEvent,
     User,
     UserSession,
@@ -83,11 +82,6 @@ class EnrollmentMaterial:
     expires_at: datetime
 
 
-def require_privileged_mfa_role(user: User) -> None:
-    if user.role not in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN):
-        raise AppError(403, "admin_required", "Administrator access is required.")
-
-
 async def _locked_user(database: AsyncSession, user_id) -> User:
     user = await database.scalar(select(User).where(User.id == user_id).with_for_update())
     if user is None or not user.is_active:
@@ -124,7 +118,6 @@ async def _replace_recovery_codes(
 
 async def mfa_status(database: AsyncSession, user: User) -> tuple[bool, bool, int]:
     locked = await _locked_user(database, user.id)
-    require_privileged_mfa_role(locked)
     credential = await _locked_credential(database, locked.id)
     enabled = bool(credential and credential.enabled_at)
     if not enabled:
@@ -141,7 +134,6 @@ async def begin_enrollment(
     database: AsyncSession, user: User, password: str, settings: Settings, now: datetime
 ) -> EnrollmentMaterial:
     locked = await _locked_user(database, user.id)
-    require_privileged_mfa_role(locked)
     if not verify_password(password, locked.password_hash):
         raise AppError(400, "current_password_invalid", "Current password is incorrect.")
     credential = await _locked_credential(database, locked.id)
@@ -172,7 +164,6 @@ async def confirm_enrollment(
     database: AsyncSession, user: User, code: str, settings: Settings, now: datetime
 ) -> list[str]:
     locked = await _locked_user(database, user.id)
-    require_privileged_mfa_role(locked)
     credential = await _locked_credential(database, locked.id)
     if (
         not credential
@@ -191,6 +182,7 @@ async def confirm_enrollment(
     credential.enabled_at = now
     credential.pending_expires_at = None
     credential.last_totp_counter = counter
+    locked.must_setup_mfa = False
     codes = await _replace_recovery_codes(database, locked.id, 1, now)
     database.add(
         new_security_audit_event(
@@ -207,7 +199,6 @@ async def regenerate_recovery_codes(
     database: AsyncSession, user: User, password: str, code: str, settings: Settings, now: datetime
 ) -> list[str]:
     locked = await _locked_user(database, user.id)
-    require_privileged_mfa_role(locked)
     if not verify_password(password, locked.password_hash):
         raise AppError(400, "current_password_invalid", "Current password is incorrect.")
     credential = await _locked_credential(database, locked.id)
@@ -383,9 +374,10 @@ async def complete_recovery_challenge(
         _invalid_challenge(challenge, now, settings)
     matched.used_at = now
     challenge.consumed_at = now
-    from app.identity import revoke_user_sessions
+    from app.identity import revoke_mfa_trust, revoke_user_sessions
 
     revoked = await revoke_user_sessions(database, user.id, now)
+    await revoke_mfa_trust(database, user.id, now)
     session, session_raw = create_full_session(user, settings, now, client_ip, user_agent)
     database.add(session)
     database.add(

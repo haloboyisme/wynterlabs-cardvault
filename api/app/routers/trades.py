@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.dependencies import CurrentAuth, require_catalog_operator, require_ready_auth
 from app.errors import AppError
-from app.identity import revoke_user_sessions
+from app.identity import revoke_mfa_trust, revoke_user_sessions
 from app.models import (
     CardPrinting,
     CardSet,
@@ -845,7 +845,9 @@ async def set_member_account_status(
         raise AppError(404, "member_not_found", "Member was not found.")
     user.is_active = payload.is_active
     if not payload.is_active:
-        await revoke_user_sessions(database, user.id, datetime.now(UTC))
+        now = datetime.now(UTC)
+        await revoke_user_sessions(database, user.id, now)
+        await revoke_mfa_trust(database, user.id, now)
     database.add(
         TradeModerationEvent(
             target_user_id=user.id,

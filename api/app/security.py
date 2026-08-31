@@ -34,6 +34,10 @@ def new_mfa_challenge_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def new_mfa_trust_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
 def hash_token(raw: str, pepper: str) -> str:
     return hmac.new(pepper.encode(), raw.encode(), hashlib.sha256).hexdigest()
 

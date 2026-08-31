@@ -5,6 +5,7 @@ export interface User {
   role: "owner" | "super_admin" | "admin" | "member";
   created_at: string;
   must_change_password: boolean;
+  must_setup_mfa: boolean;
 }
 
 export type LoginResult =

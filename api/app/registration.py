@@ -74,6 +74,7 @@ async def _create_user_and_session(
         owner_slot=None,
         is_active=True,
         must_change_password=False,
+        must_setup_mfa=role in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN),
         password_changed_at=now,
     )
     try:

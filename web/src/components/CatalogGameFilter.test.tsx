@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 
 import { CatalogGameFilter } from "./CatalogGameFilter";
+import { CATALOG_GAMES } from "../scanner/catalog-games";
 
 it("labels the native game filter and emits the selected catalog game", () => {
   const onChange = vi.fn();
@@ -11,9 +12,7 @@ it("labels the native game filter and emits the selected catalog game", () => {
   expect(Array.from(select.querySelectorAll("option"), (option) => [option.value, option.textContent]))
     .toEqual([
       ["", "Auto — all supported games"],
-      ["mtg", "Magic: The Gathering"],
-      ["pokemon", "Pokémon"],
-      ["yugioh", "Yu-Gi-Oh!"],
+      ...CATALOG_GAMES.map((game) => [game.id, game.name]),
     ]);
 
   fireEvent.change(select, { target: { value: "mtg" } });

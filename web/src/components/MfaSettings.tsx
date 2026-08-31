@@ -22,7 +22,15 @@ function EnrollmentQrCode({ uri }: { uri: string }) {
   return <div className="mfa-qr-panel"><p><strong>Scan with your authenticator app</strong></p>{source ? <img className="mfa-qr-code" src={source} alt="Authenticator setup QR code" /> : <p role="status">Creating secure QR code…</p>}<p className="muted">The QR code is created only in this browser and disappears when setup ends.</p></div>;
 }
 
-export function MfaSettings({ role }: { role: "owner" | "super_admin" | "admin" | "member" }) {
+export function MfaSettings({
+  role,
+  required = false,
+  onEnrollmentComplete,
+}: {
+  role: "owner" | "super_admin" | "admin" | "member";
+  required?: boolean;
+  onEnrollmentComplete?: () => Promise<void>;
+}) {
   const [status, setStatus] = useState<MfaStatus | null>(null);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -39,10 +47,8 @@ export function MfaSettings({ role }: { role: "owner" | "super_admin" | "admin" 
   }
 
   useEffect(() => {
-    if (role === "member") return;
     void apiRequest<MfaStatus>("/api/v1/account/mfa").then(setStatus).catch(() => setError("Two-step verification settings could not be loaded."));
   }, [role]);
-  if (role === "member") return null;
 
   async function begin(event: FormEvent) {
     event.preventDefault(); setError(""); clearOneTimeMaterial();
@@ -51,7 +57,7 @@ export function MfaSettings({ role }: { role: "owner" | "super_admin" | "admin" 
   }
   async function confirm(event: FormEvent) {
     event.preventDefault(); setError("");
-    try { const result = await apiRequest<{ recovery_codes: string[] }>("/api/v1/account/mfa/enrollment/confirm", { method: "POST", body: JSON.stringify({ code }) }); setRecoveryCodes(result.recovery_codes); setEnrollment(null); setCode(""); setStatus(await apiRequest<MfaStatus>("/api/v1/account/mfa")); }
+    try { const result = await apiRequest<{ recovery_codes: string[] }>("/api/v1/account/mfa/enrollment/confirm", { method: "POST", body: JSON.stringify({ code }) }); setRecoveryCodes(result.recovery_codes); setEnrollment(null); setCode(""); setStatus(await apiRequest<MfaStatus>("/api/v1/account/mfa")); await onEnrollmentComplete?.(); }
     catch (reason) { setCode(""); setError(reason instanceof ApiError ? reason.message : "Authenticator code could not be verified."); }
   }
   async function copyProvisioningUri() {
@@ -68,7 +74,8 @@ export function MfaSettings({ role }: { role: "owner" | "super_admin" | "admin" 
     catch (reason) { setCode(""); setError(reason instanceof ApiError ? reason.message : "Recovery codes could not be replaced."); }
   }
 
-  return <section className="sessions-card" aria-labelledby="mfa-heading"><div><p className="eyebrow">Privileged account</p><h2 id="mfa-heading">Two-step verification</h2></div>
+  const privileged = role !== "member";
+  return <section className="sessions-card" aria-labelledby="mfa-heading"><div><p className="eyebrow">Account security</p><h2 id="mfa-heading">Two-step verification</h2><p>{privileged || required ? "Required for administrator accounts." : "Optional for member accounts."}</p>{required && <p role="status">Finish setup here to unlock the rest of the workspace.</p>}</div>
     {error && <p role="alert">{error}</p>}
     {status?.enabled && <p role="status">Enabled. {status.recovery_codes_remaining} recovery codes remain.</p>}
     {!status?.enabled && !enrollment && <form onSubmit={(event) => void begin(event)}><label>Current password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label><button className="button ghost">Set up two-step verification</button></form>}

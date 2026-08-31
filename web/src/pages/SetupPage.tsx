@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { ApiError, apiRequest } from "../lib/api";
 import type { User } from "../lib/types";
@@ -17,9 +17,15 @@ export function SetupPage() {
 
   useEffect(() => {
     apiRequest<{ available: boolean }>("/api/v1/setup/status")
-      .then((result) => setAvailable(result.available))
+      .then((result) => {
+        if (!result.available) {
+          navigate("/login", { replace: true, state: { message: "Setup is already complete." } });
+          return;
+        }
+        setAvailable(true);
+      })
       .catch(() => setError("Setup status is unavailable."));
-  }, []);
+  }, [navigate]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -41,17 +47,6 @@ export function SetupPage() {
     } finally {
       setBusy(false);
     }
-  }
-
-  if (available === false) {
-    return (
-      <section className="state-panel">
-        <p className="eyebrow">Setup complete</p>
-        <h1>Your owner account is ready.</h1>
-        <p>The one-time setup gate is now closed.</p>
-        <Link className="button primary" to="/login">Continue to sign in</Link>
-      </section>
-    );
   }
 
   return (

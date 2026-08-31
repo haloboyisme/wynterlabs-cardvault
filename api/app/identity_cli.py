@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import Settings
 from app.database import create_engine, create_session_factory
-from app.identity import revoke_user_sessions
+from app.identity import revoke_mfa_trust, revoke_user_sessions
 from app.mfa_service import AUDIT_OWNER_MFA_BREAK_GLASS, new_security_audit_event
 from app.models import MfaCredential, MfaLoginChallenge, MfaRecoveryCode, Role, User
 
@@ -71,6 +71,8 @@ async def reset_owner_mfa(
     await database.execute(delete(MfaRecoveryCode).where(MfaRecoveryCode.user_id == owner.id))
     await database.execute(delete(MfaCredential).where(MfaCredential.user_id == owner.id))
     revoked = await revoke_user_sessions(database, owner.id, now)
+    await revoke_mfa_trust(database, owner.id, now)
+    owner.must_setup_mfa = True
     database.add(
         new_security_audit_event(
             user_id=owner.id,

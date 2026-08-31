@@ -66,6 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const forcedPasswordChange =
     auth.status === "authenticated" && Boolean(auth.user?.must_change_password);
+  const forcedMfaSetup =
+    auth.status === "authenticated" && Boolean(auth.user?.must_setup_mfa);
   const canAdminister =
     auth.user?.role === "owner" || auth.user?.role === "super_admin" || auth.user?.role === "admin";
   const workspaceRole = auth.user?.role === "super_admin"
@@ -102,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavLink to="/">Home</NavLink>
           {auth.status === "authenticated" ? (
             <>
-              {!forcedPasswordChange && (
+              {!forcedPasswordChange && !forcedMfaSetup && (
                 <>
                   <NavLink to="/dashboard">Dashboard</NavLink>
                   <NavLink to="/cards">Cards</NavLink>
@@ -114,6 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {canAdminister && <NavLink to="/admin">Admin</NavLink>}
                 </>
               )}
+              {forcedMfaSetup && <NavLink to="/account">Account</NavLink>}
               <button className="nav-button" onClick={() => void signOut()}>Sign out</button>
             </>
           ) : (

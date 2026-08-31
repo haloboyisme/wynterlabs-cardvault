@@ -31,9 +31,10 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-it("does not render account MFA controls for members", () => {
+it("renders optional account MFA controls for members", async () => {
   render(<MfaSettings role="member" />);
-  expect(screen.queryByRole("heading", { name: "Two-step verification" })).toBeNull();
+  expect(await screen.findByRole("heading", { name: "Two-step verification" })).toBeVisible();
+  expect(screen.getByText(/optional for member accounts/i)).toBeVisible();
 });
 
 it("loads privileged MFA controls for super administrators", async () => {
