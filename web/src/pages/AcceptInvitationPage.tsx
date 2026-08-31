@@ -96,7 +96,7 @@ export function AcceptInvitationPage() {
         <h1>Create your account</h1>
         {complete ? (
           <>
-            <p className="form-success" role="status">Your member account is ready.</p>
+            <p className="form-success" role="status">Your account is ready.</p>
             <a className="button" href="/dashboard">Continue to dashboard</a>
           </>
         ) : (

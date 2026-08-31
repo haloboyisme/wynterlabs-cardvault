@@ -216,14 +216,37 @@ async def update_user_role(
     database: AsyncSession = Depends(get_db),
 ) -> User:
     async with database.begin():
+        actor = await database.scalar(
+            select(User)
+            .where(User.id == manager.user.id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if actor is None or not actor.is_active:
+            raise AppError(401, "not_authenticated", "Sign in to continue.")
+        if actor.must_change_password:
+            raise AppError(
+                403,
+                "password_change_required",
+                "Change your temporary password to continue.",
+            )
+        if actor.role not in (Role.OWNER, Role.SUPER_ADMIN):
+            raise AppError(
+                403,
+                "role_manager_required",
+                "Owner or super administrator access is required.",
+            )
         user = await database.scalar(
-            select(User).where(User.id == user_id).with_for_update()
+            select(User)
+            .where(User.id == user_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if user is None:
             raise AppError(404, "user_not_found", "User was not found.")
         if user.role is Role.OWNER:
             raise AppError(403, "role_target_protected", "The owner role cannot be changed.")
-        if manager.user.role is Role.SUPER_ADMIN and (
+        if actor.role is Role.SUPER_ADMIN and (
             user.role is Role.SUPER_ADMIN or payload.role is Role.SUPER_ADMIN
         ):
             raise AppError(

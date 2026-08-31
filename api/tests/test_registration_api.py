@@ -2,8 +2,11 @@ import asyncio
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import LoginAttempt, User, UserSession
+from app.security import identifier_hash
 
 
 def _payload(marker: str) -> dict[str, str]:
@@ -110,3 +113,79 @@ def test_public_registration_rate_limits_the_eleventh_attempt(app) -> None:
             )
 
     assert asyncio.run(attempts()) == 10
+
+
+def test_public_registration_rate_limits_same_normalized_identity_across_ips(app) -> None:
+    for index in range(10):
+        client = TestClient(app, client=(f"198.51.100.{index + 1}", 50000 + index))
+        response = client.post(
+            "/api/v1/registration",
+            json={
+                **_payload("CrossIp" if index == 0 else "crossip"),
+                "display_name": f"Cross IP Member {index}",
+            },
+        )
+        if index == 0:
+            assert response.status_code == 201
+        else:
+            _error(response, 409, "registration_identity_conflict")
+
+    final = TestClient(app, client=("203.0.113.250", 60000)).post(
+        "/api/v1/registration",
+        json={**_payload("crossip"), "display_name": "Cross IP Final Member"},
+    )
+    _error(final, 429, "rate_limited")
+
+    async def identity_attempts() -> int:
+        async with app.state.session_factory() as database:
+            identity = identifier_hash(
+                "registration:crossip@example.com",
+                app.state.settings.session_pepper,
+            )
+            return (
+                await database.scalar(
+                    select(func.count(LoginAttempt.id)).where(
+                        LoginAttempt.identifier_hash == identity
+                    )
+                )
+                or 0
+            )
+
+    assert asyncio.run(identity_attempts()) == 10
+
+
+def test_registration_uniqueness_race_preserves_failed_attempt(app, monkeypatch) -> None:
+    original_flush = AsyncSession.flush
+
+    async def lose_identity_race(database: AsyncSession, objects=None) -> None:
+        if any(
+            isinstance(item, User) and item.email_normalized == "raced@example.com"
+            for item in database.new
+        ):
+            raise IntegrityError("INSERT INTO users", {}, Exception("unique constraint"))
+        await original_flush(database, objects)
+
+    monkeypatch.setattr(AsyncSession, "flush", lose_identity_race)
+    response = TestClient(app, client=("198.51.100.44", 50044)).post(
+        "/api/v1/registration",
+        json=_payload("raced"),
+    )
+    _error(response, 409, "registration_identity_conflict")
+
+    async def state() -> tuple[int, list[LoginAttempt]]:
+        async with app.state.session_factory() as database:
+            users = await database.scalar(
+                select(func.count(User.id)).where(User.email_normalized == "raced@example.com")
+            )
+            result = await database.scalars(select(LoginAttempt))
+            return users or 0, list(result.all())
+
+    users, attempts = asyncio.run(state())
+    assert users == 0
+    assert len(attempts) == 1
+    assert attempts[0].client_ip == "registration:198.51.100.44"
+    assert attempts[0].identifier_hash == identifier_hash(
+        "registration:raced@example.com",
+        app.state.settings.session_pepper,
+    )
+    assert attempts[0].succeeded is False

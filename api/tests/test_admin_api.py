@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from fastapi import FastAPI
@@ -10,6 +11,7 @@ from sqlalchemy import select
 from test_catalog_api import BOLT_PRINTING_ID, _seed_catalog
 
 from app.catalog.importer import ImportOutcome
+from app.dependencies import CurrentAuth
 from app.models import (
     CardPrinting,
     CollectionItem,
@@ -676,7 +678,10 @@ def test_owner_can_grant_and_remove_super_administrator_and_revokes_target_sessi
     assert promoted.status_code == 200
     assert promoted.json()["role"] == "super_admin"
     assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.SUPER_ADMIN
-    assert all(revoked_at is not None for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID)))
+    assert all(
+        revoked_at is not None
+        for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID))
+    )
 
     asyncio.run(_create_session(app, MEMBER_ID))
     demoted = owner_client.patch(
@@ -687,7 +692,10 @@ def test_owner_can_grant_and_remove_super_administrator_and_revokes_target_sessi
     assert demoted.status_code == 200
     assert demoted.json()["role"] == "member"
     assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.MEMBER
-    assert all(revoked_at is not None for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID)))
+    assert all(
+        revoked_at is not None
+        for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID))
+    )
 
 
 def test_super_administrator_can_promote_members_and_demote_administrators(
@@ -783,3 +791,99 @@ def test_role_route_rejects_owner_and_protects_the_owner(owner_client: TestClien
 
     _assert_error(owner_role, 422, "validation_error")
     _assert_error(owner_target, 403, "role_target_protected")
+
+
+@pytest.mark.parametrize(
+    ("stored_role", "is_active", "status_code", "error_code"),
+    [
+        (Role.ADMIN, True, 403, "role_manager_required"),
+        (Role.SUPER_ADMIN, False, 401, "not_authenticated"),
+    ],
+)
+def test_role_mutation_revalidates_actor_state_inside_transaction(
+    app: FastAPI,
+    stored_role: Role,
+    is_active: bool,
+    status_code: int,
+    error_code: str,
+) -> None:
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=SUPER_ADMIN_ID,
+            role=stored_role,
+            email="changed-manager@wynterlabs.com",
+            display_name="Changed Manager",
+        )
+    )
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=MEMBER_ID,
+            role=Role.MEMBER,
+            email="managed-member@wynterlabs.com",
+            display_name="Managed Member",
+        )
+    )
+
+    if not is_active:
+        async def deactivate_actor() -> None:
+            async with app.state.session_factory() as database:
+                actor = await database.get(User, SUPER_ADMIN_ID)
+                assert actor is not None
+                actor.is_active = False
+                await database.commit()
+
+        asyncio.run(deactivate_actor())
+
+    stale_auth = CurrentAuth(
+        user=SimpleNamespace(id=SUPER_ADMIN_ID, role=Role.SUPER_ADMIN),
+        session=SimpleNamespace(),
+    )
+    app.dependency_overrides[admin_router.require_role_manager] = lambda: stale_auth
+    try:
+        response = TestClient(app).patch(
+            f"/api/v1/admin/users/{MEMBER_ID}/role",
+            json={"role": "admin"},
+        )
+    finally:
+        app.dependency_overrides.pop(admin_router.require_role_manager, None)
+
+    _assert_error(response, status_code, error_code)
+    assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.MEMBER
+
+
+def test_role_mutation_uses_locked_owner_role_for_super_admin_transition(app: FastAPI) -> None:
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=OWNER_ID,
+            role=Role.OWNER,
+            email="current-owner@wynterlabs.com",
+            display_name="Current Owner",
+        )
+    )
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=MEMBER_ID,
+            role=Role.MEMBER,
+            email="owner-managed-member@wynterlabs.com",
+            display_name="Owner Managed Member",
+        )
+    )
+    stale_auth = CurrentAuth(
+        user=SimpleNamespace(id=OWNER_ID, role=Role.SUPER_ADMIN),
+        session=SimpleNamespace(),
+    )
+    app.dependency_overrides[admin_router.require_role_manager] = lambda: stale_auth
+    try:
+        response = TestClient(app).patch(
+            f"/api/v1/admin/users/{MEMBER_ID}/role",
+            json={"role": "super_admin"},
+        )
+    finally:
+        app.dependency_overrides.pop(admin_router.require_role_manager, None)
+
+    assert response.status_code == 200
+    assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.SUPER_ADMIN

@@ -42,7 +42,12 @@ it("creates a member account from /signup without sending an invitation token or
     display_name: "Member Player",
     password: "a ready winter password",
   })
-  expect(screen.getByRole("status")).toHaveTextContent(/member account is ready/i)
+  expect(screen.getByRole("status")).toHaveTextContent(/^Your account is ready\.$/)
+  expect(screen.getByRole("status")).not.toHaveTextContent(/member|admin/i)
+  expect(screen.getByRole("link", { name: /continue to dashboard/i })).toHaveAttribute(
+    "href",
+    "/dashboard",
+  )
 })
 
 it("captures and clears the fragment, accepts chosen credentials, and clears the secret", async () => {
@@ -51,7 +56,7 @@ it("captures and clears the fragment, accepts chosen credentials, and clears the
     id: "member-id",
     email: "member@example.com",
     display_name: "Member Player",
-    role: "member",
+    role: "admin",
     must_change_password: false,
     created_at: "2026-08-15T00:00:00Z",
   }), { status: 201, headers: { "content-type": "application/json" } }))
@@ -73,6 +78,12 @@ it("captures and clears the fragment, accepts chosen credentials, and clears the
   expect(body.token).toBe("private-link-token")
   expect(document.body).not.toHaveTextContent("private-link-token")
   expect(window.location.href).not.toContain("private-link-token")
+  expect(screen.getByRole("status")).toHaveTextContent(/^Your account is ready\.$/)
+  expect(screen.getByRole("status")).not.toHaveTextContent(/member|admin/i)
+  expect(screen.getByRole("link", { name: /continue to dashboard/i })).toHaveAttribute(
+    "href",
+    "/dashboard",
+  )
 })
 
 it("keeps a failed token submission in invitation mode on repeated submit", async () => {

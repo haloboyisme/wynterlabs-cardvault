@@ -76,11 +76,11 @@ async def _create_user_and_session(
         must_change_password=False,
         password_changed_at=now,
     )
-    database.add(user)
     try:
-        await database.flush()
+        async with database.begin_nested():
+            database.add(user)
+            await database.flush()
     except IntegrityError as exc:
-        await database.rollback()
         raise _identity_conflict(conflict_code) from exc
 
     raw_session = new_session_token()
@@ -108,7 +108,11 @@ async def register(
     now = datetime.now(UTC)
     ip = _client_ip(request)
     rate_ip = f"registration:{ip}"
-    attempt_key = identifier_hash(rate_ip, settings.session_pepper)
+    email_normalized = str(payload.email).casefold()
+    attempt_key = identifier_hash(
+        f"registration:{email_normalized}",
+        settings.session_pepper,
+    )
     cutoff = now - timedelta(minutes=WINDOW_MINUTES)
     attempt_count = await database.scalar(
         select(func.count(LoginAttempt.id)).where(
