@@ -256,7 +256,7 @@ def test_acceptance_validates_identity_password_and_rate_limit(
     created = _create(owner)
     weak = TestClient(app).post(
         "/api/v1/invitations/accept",
-        json={**_payload(created["raw_token"], "weak"), "password": "test-only-credential-a793c9a1ca16"},
+        json={**_payload(created["raw_token"], "weak"), "password": "too-short"},
     )
     assert weak.status_code == 422
     owner_user = owner.get("/api/v1/auth/me").json()

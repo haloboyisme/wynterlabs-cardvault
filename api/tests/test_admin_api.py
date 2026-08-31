@@ -493,13 +493,13 @@ def test_owner_creates_lists_disables_reactivates_and_resets_admin(
     created = owner_client.post(
         "/api/v1/admin/users",
         json={
-            "email": "member-cf6df92bcb2d@example.invalid",
+            "email": "catalog-admin@example.com",
             "display_name": "  Catalog   Admin  ",
             "temporary_password": first_password,
         },
     )
     assert created.status_code == 201
-    assert created.json()["email"] == "member-ac766466aaa6@example.invalid"
+    assert created.json()["email"] == "catalog-admin@example.com"
     assert created.json()["display_name"] == "Catalog Admin"
     assert created.json()["role"] == "admin"
     assert created.json()["is_active"] is True
@@ -562,7 +562,7 @@ def test_normalized_admin_identity_conflicts_and_weak_passwords_are_controlled(
     owner_client: TestClient,
 ) -> None:
     payload = {
-        "email": "member-12e43ef62fc1@example.invalid",
+        "email": "catalog-admin@example.com",
         "display_name": "Catalog Admin",
         "temporary_password": "test-only-credential-9a3d1eaaf7b2",
     }
@@ -570,7 +570,7 @@ def test_normalized_admin_identity_conflicts_and_weak_passwords_are_controlled(
 
     duplicate_email = owner_client.post(
         "/api/v1/admin/users",
-        json={**payload, "email": "member-75b92f708745@example.invalid", "display_name": "Other Admin"},
+        json={**payload, "email": "CATALOG-ADMIN@example.com", "display_name": "Other Admin"},
     )
     _assert_error(duplicate_email, 409, "admin_identity_conflict")
 
@@ -578,7 +578,7 @@ def test_normalized_admin_identity_conflicts_and_weak_passwords_are_controlled(
         "/api/v1/admin/users",
         json={
             **payload,
-            "email": "member-2f39a37ba301@example.invalid",
+            "email": "other-admin@example.com",
             "display_name": "  CATALOG   ADMIN ",
         },
     )
@@ -586,7 +586,7 @@ def test_normalized_admin_identity_conflicts_and_weak_passwords_are_controlled(
 
     weak = owner_client.post(
         "/api/v1/admin/users",
-        json={**payload, "email": "member-e0580bbdda09@example.invalid", "temporary_password": "test-only-credential-116db0267378"},
+        json={**payload, "email": "weak-admin@example.com", "temporary_password": "too-short"},
     )
     _assert_error(weak, 422, "validation_error")
 
@@ -601,7 +601,7 @@ def test_regular_administrators_and_members_cannot_use_owner_account_operations(
         client.post(
             "/api/v1/admin/users",
             json={
-                "email": "member-d7627c756253@example.invalid",
+                "email": "new-admin@example.com",
                 "display_name": "New Administrator",
                 "temporary_password": "test-only-credential-388b2e1c70cf",
             },
