@@ -8,7 +8,7 @@ from app.models import LoginAttempt, User, UserSession
 
 def _payload(marker: str) -> dict[str, str]:
     return {
-        "email": f"{marker}@example.test",
+        "email": f"{marker}@example.com",
         "display_name": f"{marker.title()} Member",
         "password": "a long private password",
     }
@@ -42,6 +42,18 @@ def test_public_registration_rejects_role_input(app) -> None:
     _error(response, 422, "validation_error")
 
 
+def test_public_registration_uses_secure_cookie_in_production(app) -> None:
+    app.state.settings.environment = "production"
+    response = TestClient(app).post("/api/v1/registration", json=_payload("productionmember"))
+
+    assert response.status_code == 201
+    cookie = response.headers["set-cookie"].lower()
+    assert "secure" in cookie
+    assert "httponly" in cookie
+    assert "samesite=lax" in cookie
+    assert "path=/" in cookie
+
+
 def test_duplicate_registration_preserves_existing_account_and_session(app) -> None:
     with TestClient(app) as client:
         created = client.post("/api/v1/registration", json=_payload("duplicate"))
@@ -56,12 +68,12 @@ def test_duplicate_registration_preserves_existing_account_and_session(app) -> N
     async def state() -> tuple[int, int]:
         async with app.state.session_factory() as database:
             users = await database.scalar(
-                select(func.count(User.id)).where(User.email_normalized == "duplicate@example.test")
+                select(func.count(User.id)).where(User.email_normalized == "duplicate@example.com")
             )
             sessions = await database.scalar(
                 select(func.count(UserSession.id))
                 .join(User)
-                .where(User.email_normalized == "duplicate@example.test")
+                .where(User.email_normalized == "duplicate@example.com")
             )
             return users or 0, sessions or 0
 
