@@ -64,7 +64,7 @@ export function App() {
             <Route
               path="/admin"
               element={(
-                <ProtectedRoute roles={["owner", "admin"]}>
+                <ProtectedRoute roles={["owner", "super_admin", "admin"]}>
                   <AdminPage />
                 </ProtectedRoute>
               )}

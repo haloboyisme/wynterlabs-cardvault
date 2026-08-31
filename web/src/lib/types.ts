@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   display_name: string;
-  role: "owner" | "admin" | "member";
+  role: "owner" | "super_admin" | "admin" | "member";
   created_at: string;
   must_change_password: boolean;
 }

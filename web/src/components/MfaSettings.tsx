@@ -22,7 +22,7 @@ function EnrollmentQrCode({ uri }: { uri: string }) {
   return <div className="mfa-qr-panel"><p><strong>Scan with your authenticator app</strong></p>{source ? <img className="mfa-qr-code" src={source} alt="Authenticator setup QR code" /> : <p role="status">Creating secure QR code…</p>}<p className="muted">The QR code is created only in this browser and disappears when setup ends.</p></div>;
 }
 
-export function MfaSettings({ role }: { role: "owner" | "admin" | "member" }) {
+export function MfaSettings({ role }: { role: "owner" | "super_admin" | "admin" | "member" }) {
   const [status, setStatus] = useState<MfaStatus | null>(null);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");

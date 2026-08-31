@@ -2,11 +2,11 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-import { createAdministrator, resetAdministratorPassword, setAdministratorStatus } from "../lib/admin";
+import { type Administrator, createAdministrator, resetAdministratorPassword, setAdministratorStatus, setUserRole } from "../lib/admin";
 import { APPEARANCE_STORAGE_KEY, DEFAULT_APPEARANCE } from "../lib/appearance";
 import { AdminPage } from "./AdminPage";
 
-const authState = vi.hoisted(() => ({ role: "owner" as "owner" | "admin" | "member" }));
+const authState = vi.hoisted(() => ({ role: "owner" as "owner" | "super_admin" | "admin" | "member" }));
 
 vi.mock("../app/auth", () => ({
   useAuth: () => ({
@@ -65,6 +65,20 @@ const secondAdmin = {
   email: "member-41d3c9af55cf@example.invalid",
   display_name: "Second Admin",
 };
+const member = {
+  ...firstAdmin,
+  id: "66666666-6666-4666-8666-666666666666",
+  email: "member@wynterlabs.com",
+  display_name: "Collection Member",
+  role: "member" as const,
+};
+const superAdministrator = {
+  ...firstAdmin,
+  id: "77777777-7777-4777-8777-777777777777",
+  email: "super-admin@wynterlabs.com",
+  display_name: "Super Administrator",
+  role: "super_admin" as const,
+};
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -79,7 +93,7 @@ function errorJson(code: string, message: string, status: number) {
   return json({ error: { code, message, fields: null, request_id: "test-request" } }, status);
 }
 function requestPath(input: RequestInfo | URL) { return String(input); }
-let administrators = [firstAdmin];
+let administrators: Administrator[] = [firstAdmin];
 
 beforeEach(() => {
   authState.role = "owner";
@@ -127,7 +141,7 @@ it("derives the owner operational overview only from loaded catalog and administ
   expect(within(overview).getByText(/aug 14, 2026, 12:00 am/i, { selector: "strong" })).toBeVisible();
   expect(within(overview).getByText("Printings")).toBeVisible();
   expect(within(overview).getByText("116,703", { selector: "strong" })).toBeVisible();
-  expect(within(overview).getByText("Administrator count")).toBeVisible();
+  expect(within(overview).getByText("Account count")).toBeVisible();
   expect(within(overview).getByText("1", { selector: "strong" })).toBeVisible();
 });
 
@@ -173,7 +187,7 @@ it("shows sanitized catalog status to an owner and reserves administrator manage
   render(<AdminPage />);
   expect(screen.getByRole("heading", { name: "Brand Studio" })).toBeVisible();
   expect(await screen.findByRole("heading", { name: /catalog database/i })).toBeVisible();
-  expect(screen.getByRole("heading", { name: /administrators/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: /account access/i })).toBeVisible();
   expect(screen.getAllByText("116,703", { selector: "strong" })).toHaveLength(2);
   expect(screen.getByText("38,626", { selector: "strong" })).toBeVisible();
   expect(screen.getByText("1,047", { selector: "strong" })).toBeVisible();
@@ -233,17 +247,39 @@ it("keeps the sanitized latest attempt visible when no active catalog exists", a
   expect(screen.queryByText(/secret-user|secret-password|postgresql:/i)).not.toBeInTheDocument();
 });
 
-it("shows only catalog controls to an administrator and never requests or renders users", async () => {
+it("shows no account-access controls to a regular administrator", async () => {
   authState.role = "admin";
   render(<AdminPage />);
   expect(await screen.findByRole("heading", { name: /catalog database/i })).toBeVisible();
   expect(screen.getByRole("heading", { name: "Brand Studio" })).toBeVisible();
   const overview = screen.getByRole("region", { name: /operational overview/i });
-  expect(within(overview).queryByText("Administrator count")).not.toBeInTheDocument();
-  expect(screen.queryByRole("heading", { name: /administrators/i })).not.toBeInTheDocument();
+  expect(within(overview).queryByText("Account count")).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: /account access/i })).not.toBeInTheDocument();
   expect(screen.queryByText("Owner maintenance")).not.toBeInTheDocument();
   expect(screen.queryByText(firstAdmin.email)).not.toBeInTheDocument();
   expect(vi.mocked(fetch).mock.calls.some(([input]) => requestPath(input).includes("/admin/users"))).toBe(false);
+});
+
+it("shows Super Admin and Administrator role actions to the owner", async () => {
+  administrators = [member, firstAdmin, superAdministrator];
+  render(<AdminPage />);
+
+  const memberRow = (await screen.findByText(member.email)).closest("li");
+  expect(memberRow).not.toBeNull();
+  expect(within(memberRow!).getByRole("button", { name: /make collection member a super administrator/i })).toBeVisible();
+  expect(within(memberRow!).getByRole("button", { name: /make collection member an administrator/i })).toBeVisible();
+});
+
+it("shows only Administrator role actions to a super administrator", async () => {
+  authState.role = "super_admin";
+  administrators = [member, firstAdmin, superAdministrator];
+  render(<AdminPage />);
+
+  const memberRow = (await screen.findByText(member.email)).closest("li");
+  expect(memberRow).not.toBeNull();
+  expect(within(memberRow!).getByRole("button", { name: /make collection member an administrator/i })).toBeVisible();
+  expect(within(memberRow!).queryByRole("button", { name: /super administrator/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /make super administrator/i })).not.toBeInTheDocument();
 });
 
 it("does not render or request private page data when the route guard supplies a member", () => {
@@ -488,9 +524,11 @@ it("uses encoded user IDs and snake_case bodies in the typed client", async () =
   await createAdministrator({ email: "member-8f75b0025e4d@example.invalid", display_name: "Catalog Admin", temporary_password: "TemporaryPassphrase!23" });
   await setAdministratorStatus("admin/id", false);
   await resetAdministratorPassword("admin/id", "AnotherTemporaryPass!23");
-  expect(fetch).toHaveBeenNthCalledWith(1, "/api/v1/admin/users", expect.objectContaining({ method: "POST", body: JSON.stringify({ email: "member-d0e98d21c8cd@example.invalid", display_name: "Catalog Admin", temporary_password: "TemporaryPassphrase!23" }) }));
+  await setUserRole("admin/id", "super_admin");
+  expect(fetch).toHaveBeenNthCalledWith(1, "/api/v1/admin/users", expect.objectContaining({ method: "POST", body: JSON.stringify({ email: "member-8f75b0025e4d@example.invalid", display_name: "Catalog Admin", temporary_password: "TemporaryPassphrase!23" }) }));
   expect(fetch).toHaveBeenNthCalledWith(2, "/api/v1/admin/users/admin%2Fid/status", expect.objectContaining({ method: "PATCH", body: JSON.stringify({ is_active: false }) }));
   expect(fetch).toHaveBeenNthCalledWith(3, "/api/v1/admin/users/admin%2Fid/reset-password", expect.objectContaining({ method: "POST", body: JSON.stringify({ temporary_password: "AnotherTemporaryPass!23" }) }));
+  expect(fetch).toHaveBeenNthCalledWith(4, "/api/v1/admin/users/admin%2Fid/role", expect.objectContaining({ method: "PATCH", body: JSON.stringify({ role: "super_admin" }) }));
 });
 
 it("renders controlled loading errors as alerts", async () => {

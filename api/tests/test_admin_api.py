@@ -30,6 +30,7 @@ OWNER_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
 ADMIN_ID = uuid.UUID("22222222-2222-2222-2222-222222222222")
 FORCED_ADMIN_ID = uuid.UUID("33333333-3333-3333-3333-333333333333")
 MEMBER_ID = uuid.UUID("44444444-4444-4444-4444-444444444444")
+SUPER_ADMIN_ID = uuid.UUID("55555555-5555-5555-5555-555555555555")
 
 
 async def _create_authenticated_user(
@@ -143,6 +144,18 @@ def member_client(app: FastAPI) -> Iterator[TestClient]:
         role=Role.MEMBER,
         email="member-d5489ea81c72@example.invalid",
         display_name="Wynter Member",
+    ) as client:
+        yield client
+
+
+@pytest.fixture
+def super_admin_client(app: FastAPI) -> Iterator[TestClient]:
+    with _authenticated_client(
+        app,
+        user_id=SUPER_ADMIN_ID,
+        role=Role.SUPER_ADMIN,
+        email="super-admin@wynterlabs.com",
+        display_name="Wynter Super Administrator",
     ) as client:
         yield client
 
@@ -577,13 +590,12 @@ def test_normalized_admin_identity_conflicts_and_weak_passwords_are_controlled(
 
 
 @pytest.mark.parametrize("client_fixture", ["admin_client", "member_client"])
-def test_non_owners_are_denied_every_account_management_endpoint(
+def test_regular_administrators_and_members_cannot_use_owner_account_operations(
     request, client_fixture: str
 ) -> None:
     client = request.getfixturevalue(client_fixture)
     target_id = uuid.uuid4()
     responses = [
-        client.get("/api/v1/admin/users"),
         client.post(
             "/api/v1/admin/users",
             json={
@@ -600,6 +612,7 @@ def test_non_owners_are_denied_every_account_management_endpoint(
     ]
     for response in responses:
         _assert_error(response, 403, "owner_required")
+    _assert_error(client.get("/api/v1/admin/users"), 403, "role_manager_required")
 
 
 def test_forced_and_unauthenticated_users_cannot_manage_accounts(
@@ -638,4 +651,122 @@ def test_owner_and_member_targets_are_indistinguishable_from_missing(
 
     listed = owner_client.get("/api/v1/admin/users")
     assert listed.status_code == 200
-    assert listed.json() == []
+    assert [item["id"] for item in listed.json()] == [str(MEMBER_ID)]
+
+
+def test_owner_can_grant_and_remove_super_administrator_and_revokes_target_sessions(
+    owner_client: TestClient, app: FastAPI
+) -> None:
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=MEMBER_ID,
+            role=Role.MEMBER,
+            email="member@wynterlabs.com",
+            display_name="Wynter Member",
+        )
+    )
+    asyncio.run(_create_session(app, MEMBER_ID))
+
+    promoted = owner_client.patch(
+        f"/api/v1/admin/users/{MEMBER_ID}/role",
+        json={"role": "super_admin"},
+    )
+
+    assert promoted.status_code == 200
+    assert promoted.json()["role"] == "super_admin"
+    assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.SUPER_ADMIN
+    assert all(revoked_at is not None for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID)))
+
+    asyncio.run(_create_session(app, MEMBER_ID))
+    demoted = owner_client.patch(
+        f"/api/v1/admin/users/{MEMBER_ID}/role",
+        json={"role": "member"},
+    )
+
+    assert demoted.status_code == 200
+    assert demoted.json()["role"] == "member"
+    assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.MEMBER
+    assert all(revoked_at is not None for revoked_at in asyncio.run(_session_revocations(app, MEMBER_ID)))
+
+
+def test_super_administrator_can_promote_members_and_demote_administrators(
+    super_admin_client: TestClient, app: FastAPI
+) -> None:
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=MEMBER_ID,
+            role=Role.MEMBER,
+            email="member@wynterlabs.com",
+            display_name="Wynter Member",
+        )
+    )
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=ADMIN_ID,
+            role=Role.ADMIN,
+            email="admin@wynterlabs.com",
+            display_name="Wynter Administrator",
+        )
+    )
+
+    promoted = super_admin_client.patch(
+        f"/api/v1/admin/users/{MEMBER_ID}/role",
+        json={"role": "admin"},
+    )
+    demoted = super_admin_client.patch(
+        f"/api/v1/admin/users/{ADMIN_ID}/role",
+        json={"role": "member"},
+    )
+
+    assert promoted.status_code == 200
+    assert demoted.status_code == 200
+    assert asyncio.run(_admin_state(app, MEMBER_ID)).role is Role.ADMIN
+    assert asyncio.run(_admin_state(app, ADMIN_ID)).role is Role.MEMBER
+
+
+def test_super_administrator_cannot_alter_super_administrator(
+    super_admin_client: TestClient, app: FastAPI
+) -> None:
+    target_id = uuid.uuid4()
+    asyncio.run(
+        _create_authenticated_user(
+            app,
+            user_id=target_id,
+            role=Role.SUPER_ADMIN,
+            email="other-super-admin@wynterlabs.com",
+            display_name="Other Super Administrator",
+        )
+    )
+
+    response = super_admin_client.patch(
+        f"/api/v1/admin/users/{target_id}/role",
+        json={"role": "admin"},
+    )
+
+    _assert_error(response, 403, "role_transition_forbidden")
+    assert asyncio.run(_admin_state(app, target_id)).role is Role.SUPER_ADMIN
+
+
+def test_regular_administrator_cannot_change_account_roles(admin_client: TestClient) -> None:
+    response = admin_client.patch(
+        f"/api/v1/admin/users/{MEMBER_ID}/role",
+        json={"role": "admin"},
+    )
+    _assert_error(response, 403, "role_manager_required")
+
+
+def test_role_route_rejects_owner_and_protects_the_owner(owner_client: TestClient) -> None:
+    owner_role = owner_client.patch(
+        f"/api/v1/admin/users/{MEMBER_ID}/role",
+        json={"role": "owner"},
+    )
+    owner_target = owner_client.patch(
+        f"/api/v1/admin/users/{OWNER_ID}/role",
+        json={"role": "admin"},
+    )
+
+    _assert_error(owner_role, 422, "validation_error")
+    _assert_error(owner_target, 403, "role_target_protected")

@@ -9,6 +9,7 @@ export interface Invitation {
   used_by_user_id: string | null
   revision: number
   created_at: string
+  target_role: "member" | "admin"
   status: "active" | "used" | "revoked" | "expired"
 }
 
@@ -27,8 +28,11 @@ export function listInvitations(signal?: AbortSignal) {
   return apiRequest<Invitation[]>("/api/v1/admin/invitations", { signal })
 }
 
-export function createInvitation() {
-  return apiRequest<CreatedInvitation>("/api/v1/admin/invitations", { method: "POST" })
+export function createInvitation(targetRole: Invitation["target_role"]) {
+  return apiRequest<CreatedInvitation>("/api/v1/admin/invitations", {
+    method: "POST",
+    body: JSON.stringify({ target_role: targetRole }),
+  })
 }
 
 export function revokeInvitation(id: string, expectedRevision: number) {

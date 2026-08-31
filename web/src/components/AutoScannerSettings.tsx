@@ -13,7 +13,7 @@ import {
   writeAutoScannerSettings,
 } from "../scanner/auto-scanner-settings";
 
-type Role = "owner" | "admin" | "member";
+type Role = "owner" | "super_admin" | "admin" | "member";
 type PinName = keyof AutoScannerSettings["pins"];
 type NumericField = "stepsPerCard" | "speedPercent" | "accelerationPercent" | "settleDelayMs" | "countdownSeconds" | "recognitionTimeoutSeconds" | "retryLimit";
 

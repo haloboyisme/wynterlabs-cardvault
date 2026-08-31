@@ -24,6 +24,17 @@ class AdminStatusRequest(BaseModel):
     is_active: bool
 
 
+class AdminRoleRequest(BaseModel):
+    role: Role
+
+    @field_validator("role")
+    @classmethod
+    def allow_managed_roles(cls, value: Role) -> Role:
+        if value is Role.OWNER:
+            raise ValueError("The owner role cannot be assigned here")
+        return value
+
+
 class AdminResetPasswordRequest(BaseModel):
     temporary_password: str = Field(min_length=12, max_length=256)
 

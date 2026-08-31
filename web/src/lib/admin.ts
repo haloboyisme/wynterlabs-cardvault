@@ -35,7 +35,7 @@ export interface Administrator {
   id: string;
   email: string;
   display_name: string;
-  role: "admin";
+  role: "member" | "admin" | "super_admin";
   is_active: boolean;
   must_change_password: boolean;
   created_at: string;
@@ -81,5 +81,12 @@ export function resetAdministratorPassword(userId: string, temporaryPassword: st
   return apiRequest<Administrator>(
     `/api/v1/admin/users/${encodeURIComponent(userId)}/reset-password`,
     { method: "POST", body: JSON.stringify({ temporary_password: temporaryPassword }) },
+  );
+}
+
+export function setUserRole(userId: string, role: Administrator["role"]) {
+  return apiRequest<Administrator>(
+    `/api/v1/admin/users/${encodeURIComponent(userId)}/role`,
+    { method: "PATCH", body: JSON.stringify({ role }) },
   );
 }

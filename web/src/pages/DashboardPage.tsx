@@ -184,7 +184,7 @@ export function DashboardPage() {
       ? valueHistoryState.data.points
       : [];
   const emptyWorkspace = summary?.total_copies === 0 && recentDecks?.length === 0;
-  const canAdmin = user?.role === "owner" || user?.role === "admin";
+  const canAdmin = user?.role === "owner" || user?.role === "super_admin" || user?.role === "admin";
   const priceSnapshot = summary ? priceSnapshotView(summary.price_snapshot_at) : null;
 
   return (

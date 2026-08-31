@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.admin_schemas import (
     AdminCreateRequest,
     AdminResetPasswordRequest,
+    AdminRoleRequest,
     AdminStatusRequest,
     AdminUserOut,
     CatalogRefreshOut,
@@ -164,11 +165,13 @@ async def _get_admin(database: AsyncSession, user_id: uuid.UUID) -> User:
 
 @router.get("/users", response_model=list[AdminUserOut])
 async def list_administrators(
-    _owner: CurrentAuth = Depends(require_owner),
+    _manager: CurrentAuth = Depends(require_role_manager),
     database: AsyncSession = Depends(get_db),
 ) -> list[User]:
     result = await database.scalars(
-        select(User).where(User.role == Role.ADMIN).order_by(User.created_at, User.id)
+        select(User)
+        .where(User.role != Role.OWNER)
+        .order_by(User.created_at, User.id)
     )
     return list(result.all())
 
@@ -201,6 +204,36 @@ async def create_administrator(
             "admin_identity_conflict",
             "An administrator with that identity already exists.",
         ) from exc
+    await database.refresh(user)
+    return user
+
+
+@router.patch("/users/{user_id}/role", response_model=AdminUserOut)
+async def update_user_role(
+    user_id: uuid.UUID,
+    payload: AdminRoleRequest,
+    manager: CurrentAuth = Depends(require_role_manager),
+    database: AsyncSession = Depends(get_db),
+) -> User:
+    async with database.begin():
+        user = await database.scalar(
+            select(User).where(User.id == user_id).with_for_update()
+        )
+        if user is None:
+            raise AppError(404, "user_not_found", "User was not found.")
+        if user.role is Role.OWNER:
+            raise AppError(403, "role_target_protected", "The owner role cannot be changed.")
+        if manager.user.role is Role.SUPER_ADMIN and (
+            user.role is Role.SUPER_ADMIN or payload.role is Role.SUPER_ADMIN
+        ):
+            raise AppError(
+                403,
+                "role_transition_forbidden",
+                "Super administrators can manage only member and administrator roles.",
+            )
+        if user.role is not payload.role:
+            user.role = payload.role
+            await revoke_user_sessions(database, user.id, datetime.now(UTC))
     await database.refresh(user)
     return user
 

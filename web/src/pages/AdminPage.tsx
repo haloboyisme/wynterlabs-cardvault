@@ -17,6 +17,7 @@ import {
   refreshAdminCatalog,
   resetAdministratorPassword,
   setAdministratorStatus,
+  setUserRole,
 } from "../lib/admin";
 import { readAppearance } from "../lib/appearance";
 import { CATALOG_GAMES, catalogGameName } from "../scanner/catalog-games";
@@ -46,17 +47,38 @@ function formatStatus(value: string) {
 
 interface AdministratorRowProps {
   administrator: Administrator;
+  managerRole: "owner" | "super_admin";
   onUpdated: () => Promise<void>;
 }
 
-function AdministratorRow({ administrator, onUpdated }: AdministratorRowProps) {
-  const [confirmation, setConfirmation] = useState<"disable" | "reactivate" | "reset" | null>(null);
+function roleName(role: Administrator["role"]) {
+  if (role === "super_admin") return "Super Administrator";
+  if (role === "admin") return "Administrator";
+  return "Member";
+}
+
+function availableRoles(
+  managerRole: "owner" | "super_admin",
+  currentRole: Administrator["role"],
+): Administrator["role"][] {
+  if (managerRole === "owner") {
+    return (["member", "admin", "super_admin"] as const).filter((role) => role !== currentRole);
+  }
+  if (currentRole === "member") return ["admin"];
+  if (currentRole === "admin") return ["member"];
+  return [];
+}
+
+function AdministratorRow({ administrator, managerRole, onUpdated }: AdministratorRowProps) {
+  const [confirmation, setConfirmation] = useState<"disable" | "reactivate" | "reset" | "role" | null>(null);
+  const [nextRole, setNextRole] = useState<Administrator["role"] | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function changeConfirmation(next: typeof confirmation) {
     if (confirmation === "reset" && next !== "reset") setTemporaryPassword("");
+    if (confirmation === "role" && next !== "role") setNextRole(null);
     setConfirmation(next);
   }
 
@@ -90,6 +112,21 @@ function AdministratorRow({ administrator, onUpdated }: AdministratorRowProps) {
     }
   }
 
+  async function updateRole() {
+    if (nextRole === null) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await setUserRole(administrator.id, nextRole);
+      await onUpdated();
+      changeConfirmation(null);
+    } catch {
+      setError("The account role could not be updated. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function cancelConfirmation() {
     changeConfirmation(null);
     setError(null);
@@ -100,22 +137,50 @@ function AdministratorRow({ administrator, onUpdated }: AdministratorRowProps) {
       <div>
         <strong>{administrator.display_name}</strong>
         <span>{administrator.email}</span>
+        <span>{roleName(administrator.role)}</span>
         <span>{administrator.is_active ? "Active" : "Disabled"}</span>
         {administrator.must_change_password && <span>Permanent password required</span>}
       </div>
       <div className="admin-actions workspace-danger-zone">
-        <button
-          className={administrator.is_active ? "admin-destructive" : ""}
-          type="button"
-          onClick={() => changeConfirmation(administrator.is_active ? "disable" : "reactivate")}
-          disabled={busy}
-        >
-          {administrator.is_active ? `Disable ${administrator.display_name}` : `Reactivate ${administrator.display_name}`}
-        </button>
-        <button type="button" onClick={() => changeConfirmation("reset")} disabled={busy}>
-          Reset password for {administrator.display_name}
-        </button>
+        {availableRoles(managerRole, administrator.role).map((role) => (
+          <button
+            key={role}
+            type="button"
+            onClick={() => {
+              setNextRole(role);
+              changeConfirmation("role");
+            }}
+            disabled={busy}
+          >
+            Make {administrator.display_name} {role === "admin" ? "an" : "a"} {roleName(role)}
+          </button>
+        ))}
+        {managerRole === "owner" && administrator.role === "admin" && <>
+          <button
+            className={administrator.is_active ? "admin-destructive" : ""}
+            type="button"
+            onClick={() => changeConfirmation(administrator.is_active ? "disable" : "reactivate")}
+            disabled={busy}
+          >
+            {administrator.is_active ? `Disable ${administrator.display_name}` : `Reactivate ${administrator.display_name}`}
+          </button>
+          <button type="button" onClick={() => changeConfirmation("reset")} disabled={busy}>
+            Reset password for {administrator.display_name}
+          </button>
+        </>}
       </div>
+
+      {confirmation === "role" && nextRole !== null && (
+        <div className="admin-confirmation admin-warning">
+          <p>Make {administrator.display_name} {nextRole === "admin" ? "an" : "a"} {roleName(nextRole)}? Their active sessions will be revoked.</p>
+          <div className="admin-actions workspace-danger-zone">
+            <button type="button" onClick={() => void updateRole()} disabled={busy}>
+              {busy ? "Updating account role" : `Confirm ${roleName(nextRole)}`}
+            </button>
+            <button type="button" onClick={() => changeConfirmation(null)} disabled={busy}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {(confirmation === "disable" || confirmation === "reactivate") && (
         <div className="admin-confirmation admin-warning">
@@ -165,7 +230,9 @@ function AdministratorRow({ administrator, onUpdated }: AdministratorRowProps) {
   );
 }
 
-function AdminContents({ isOwner }: { isOwner: boolean }) {
+function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
+  const isOwner = role === "owner";
+  const isRoleManager = role === "owner" || role === "super_admin";
   const [catalog, setCatalog] = useState<AdminCatalogStatus | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
@@ -201,7 +268,7 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
   }, []);
 
   const loadAdministrators = useCallback(async () => {
-    if (!isOwner) return;
+    if (!isRoleManager) return;
     administratorsController.current?.abort();
     const controller = new AbortController();
     const generation = ++administratorsGeneration.current;
@@ -219,18 +286,18 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
     } finally {
       if (generation === administratorsGeneration.current) administratorsController.current = null;
     }
-  }, [isOwner]);
+  }, [isRoleManager]);
 
   useEffect(() => {
     void loadCatalog();
-    if (isOwner) void loadAdministrators();
+    if (isRoleManager) void loadAdministrators();
     return () => {
       ++catalogGeneration.current;
       catalogController.current?.abort();
       ++administratorsGeneration.current;
       administratorsController.current?.abort();
     };
-  }, [isOwner, loadAdministrators, loadCatalog]);
+  }, [isRoleManager, loadAdministrators, loadCatalog]);
 
   const advanced = readAppearance().complexity === "advanced";
 
@@ -270,7 +337,7 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
         Admin controls
       </PageHeader>
 
-      {(catalog || (isOwner && administratorsLoaded)) && (
+      {(catalog || (isRoleManager && administratorsLoaded)) && (
         <section className="admin-operational-section" aria-labelledby="admin-operational-heading">
           <h2 id="admin-operational-heading">Operational overview</h2>
           <div className="admin-operational-overview">
@@ -295,11 +362,11 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
                 detail="In the active catalog"
               />
             )}
-            {isOwner && administratorsLoaded && (
+            {isRoleManager && administratorsLoaded && (
               <StatTile
-                label="Administrator count"
+                label="Account count"
                 value={formatCount(administrators.length)}
-                detail="Owner-authorized accounts"
+                detail="Managed accounts"
               />
             )}
           </div>
@@ -385,18 +452,19 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
         </section>
 
         <TradeModerationPanel />
-        {isOwner && (
+        {isRoleManager && (
           <DisclosurePanel
-            title="Owner maintenance"
+            title={isOwner ? "Owner maintenance" : "Account access"}
             defaultOpen={advanced}
             className="admin-owner-maintenance"
           >
             <div className="admin-owner-maintenance-grid">
-              <OwnerInvitationPanel />
-              <OwnerAdministratorPanel
+              {isOwner && <OwnerInvitationPanel />}
+              <AccountAccessPanel
                 administrators={administrators}
                 loadAdministrators={loadAdministrators}
                 loadError={usersError}
+                managerRole={role}
               />
             </div>
           </DisclosurePanel>
@@ -406,13 +474,14 @@ function AdminContents({ isOwner }: { isOwner: boolean }) {
   );
 }
 
-interface OwnerAdministratorPanelProps {
+interface AccountAccessPanelProps {
   administrators: Administrator[];
   loadAdministrators: () => Promise<void>;
   loadError: string | null;
+  managerRole: "owner" | "super_admin" | "admin";
 }
 
-function OwnerAdministratorPanel({ administrators, loadAdministrators, loadError }: OwnerAdministratorPanelProps) {
+function AccountAccessPanel({ administrators, loadAdministrators, loadError, managerRole }: AccountAccessPanelProps) {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [temporaryPassword, setTemporaryPassword] = useState("");
@@ -438,20 +507,20 @@ function OwnerAdministratorPanel({ administrators, loadAdministrators, loadError
 
   return (
     <section className="admin-card" aria-labelledby="administrator-heading">
-      <p className="eyebrow">Owner only</p>
-      <h2 id="administrator-heading">Administrators</h2>
-      <p>Create and maintain administrator access. New administrators must replace their temporary password after signing in.</p>
-      <form className="admin-create-form workspace-routine-actions" onSubmit={(event) => void create(event)}>
+      <p className="eyebrow">{managerRole === "owner" ? "Owner access" : "Super administrator access"}</p>
+      <h2 id="administrator-heading">Account access</h2>
+      <p>Maintain roles and account status. Role changes revoke active sessions.</p>
+      {managerRole === "owner" && <form className="admin-create-form workspace-routine-actions" onSubmit={(event) => void create(event)}>
         <label>Administrator email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
         <label>Administrator display name<input type="text" minLength={2} maxLength={64} autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} required /></label>
         <label>Temporary password<input type="password" minLength={12} maxLength={256} autoComplete="new-password" value={temporaryPassword} onChange={(event) => setTemporaryPassword(event.target.value)} required /></label>
         <button type="submit" disabled={submitting}>{submitting ? "Creating administrator" : "Create administrator"}</button>
-      </form>
+      </form>}
       {formError && <FeedbackBanner tone="error" className="form-error">{formError}</FeedbackBanner>}
       {loadError && <FeedbackBanner tone="error" className="form-error">{loadError}</FeedbackBanner>}
-      <ul className="admin-user-list" aria-label="Administrator accounts">
+      <ul className="admin-user-list" aria-label="Managed accounts">
         {administrators.map((administrator) => (
-          <AdministratorRow key={administrator.id} administrator={administrator} onUpdated={loadAdministrators} />
+          <AdministratorRow key={administrator.id} administrator={administrator} managerRole={managerRole as "owner" | "super_admin"} onUpdated={loadAdministrators} />
         ))}
       </ul>
     </section>
@@ -460,8 +529,8 @@ function OwnerAdministratorPanel({ administrators, loadAdministrators, loadError
 
 export function AdminPage() {
   const { user } = useAuth();
-  if (user?.role !== "owner" && user?.role !== "admin") return null;
-  return <AdminContents isOwner={user.role === "owner"} />;
+  if (user?.role !== "owner" && user?.role !== "super_admin" && user?.role !== "admin") return null;
+  return <AdminContents role={user.role} />;
 }
 import {
   type Invitation,
@@ -475,6 +544,7 @@ export function OwnerInvitationPanel() {
   const [oneTimeLink, setOneTimeLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [targetRole, setTargetRole] = useState<Invitation["target_role"]>("member");
   const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
@@ -513,7 +583,7 @@ export function OwnerInvitationPanel() {
     setCopied(false);
     setOneTimeLink("");
     try {
-      const created = await createInvitation();
+      const created = await createInvitation(targetRole);
       const { raw_token: rawToken, ...invitation } = created;
       setInvitations((current) => [invitation, ...current]);
       setOneTimeLink(
@@ -559,9 +629,16 @@ export function OwnerInvitationPanel() {
       <p className="eyebrow">Owner only</p>
       <div className="admin-card-header workspace-routine-actions">
         <div>
-          <h2 id="invitation-heading">Member invitations</h2>
+          <h2 id="invitation-heading">Account invitations</h2>
           <p>Create a private single-use link that expires after seven days.</p>
         </div>
+        <label>
+          Invitation account type
+          <select value={targetRole} onChange={(event) => setTargetRole(event.target.value as Invitation["target_role"])} disabled={busy}>
+            <option value="member">Member</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </label>
         <button type="button" onClick={() => void createLink()} disabled={busy}>
           {busy ? "Working" : "Create invitation link"}
         </button>
@@ -583,6 +660,7 @@ export function OwnerInvitationPanel() {
           <li key={invitation.id} className={invitation.status === "active" ? "workspace-danger-zone" : undefined}>
             <div>
               <strong>{invitation.status}</strong>
+              <span>{invitation.target_role === "admin" ? "Administrator" : "Member"}</span>
               <span>Created {formatDate(invitation.created_at)}</span>
               <span>Expires {formatDate(invitation.expires_at)}</span>
             </div>

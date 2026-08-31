@@ -52,6 +52,7 @@ function isAbort(reason: unknown) {
 
 function roleLabel(role: string | undefined) {
   if (role === "owner") return "Platform owner";
+  if (role === "super_admin") return "Super administrator account";
   if (role === "admin") return "Administrator account";
   return "Member account";
 }
