@@ -71,6 +71,7 @@ interface Props {
   maximumCaptures?: number;
   sampleIntervalMs?: number;
   countdownStepMs?: number;
+  automaticCountdownSeconds?: number;
   sampleFingerprint?: (canvas: HTMLCanvasElement) => FrameFingerprint;
   topControls?: ReactNode;
 }
@@ -142,6 +143,7 @@ export function CardScanner({
   maximumCaptures = 250,
   sampleIntervalMs = 750,
   countdownStepMs = 1_000,
+  automaticCountdownSeconds = 5,
   sampleFingerprint = canvasFingerprint,
   topControls,
 }: Props) {
@@ -534,8 +536,8 @@ export function CardScanner({
           sampleFingerprint(canvas),
         );
         if (detectorRef.current.shouldCapture) {
-          setAutoCountdown(5);
-          setAutoStatus("Capturing in 5… Keep the card steady.");
+          setAutoCountdown(automaticCountdownSeconds);
+          setAutoStatus(`Capturing in ${automaticCountdownSeconds}… Keep the card steady.`);
         } else if (detectorRef.current.phase === "awaiting_change") {
           setAutoStatus("Remove this card or show the next card.");
         } else {
@@ -553,6 +555,7 @@ export function CardScanner({
     captureCount,
     continuous,
     stableFrameAutoCapture,
+    automaticCountdownSeconds,
     maximumCaptures,
     sampleFingerprint,
     sampleIntervalMs,

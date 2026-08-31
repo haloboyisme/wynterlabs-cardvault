@@ -19,6 +19,12 @@ import {
 } from "../scanner/multi-scan-session";
 import { filterConfidentScanCandidates } from "../scanner/title-confidence";
 import { rankScanCandidates, uniqueDetectedPrintingId } from "../scanner/printing-match";
+import {
+  MULTI_SCAN_COUNTDOWN_MAX_SECONDS,
+  MULTI_SCAN_COUNTDOWN_MIN_SECONDS,
+  readMultiScanCountdownSeconds,
+  writeMultiScanCountdownSeconds,
+} from "../scanner/multi-scan-settings";
 import { CardImage } from "./CardImage";
 import { CardScanner, type CapturedScan } from "./CardScanner";
 
@@ -69,6 +75,8 @@ export function MultiScanSession({
   const [saveFeedback, setSaveFeedback] = useState<{ saved: number; failed: number } | null>(null);
   const [collectionTotal, setCollectionTotal] = useState<number | null>(null);
   const [savingAll, setSavingAll] = useState(false);
+  const [captureCountdown, setCaptureCountdown] = useState(readMultiScanCountdownSeconds);
+  const [countdownFeedback, setCountdownFeedback] = useState("");
   const sessionRef = useRef(session);
   const captures = useRef(new Map<string, CapturedScan>());
   const requests = useRef(new Map<string, AbortController>());
@@ -339,12 +347,27 @@ export function MultiScanSession({
       <CardScanner
         topControls={<>
           {topControls}
+          <label className="multi-scan-countdown-setting">Capture countdown
+            <select value={captureCountdown} onChange={(event) => {
+              const next = writeMultiScanCountdownSeconds(Number(event.target.value));
+              setCaptureCountdown(next);
+              const article = next === 8 ? "an" : "a";
+              setCountdownFeedback(`Cards will capture after ${article} ${next}-second countdown.`);
+            }}>
+              {Array.from(
+                { length: MULTI_SCAN_COUNTDOWN_MAX_SECONDS - MULTI_SCAN_COUNTDOWN_MIN_SECONDS + 1 },
+                (_, index) => index + MULTI_SCAN_COUNTDOWN_MIN_SECONDS,
+              ).map((seconds) => <option key={seconds} value={seconds}>{seconds} seconds</option>)}
+            </select>
+          </label>
+          {countdownFeedback && <p role="status" aria-label="Capture countdown saved">{countdownFeedback}</p>}
           <section className="scanner-session-summary scanner-session-strip" aria-label="Multi-card scanning session">
             <p role="status" aria-label="Multi-card scanning session">{sessionFeedback}</p>
           </section>
         </>}
         continuous
         stableFrameAutoCapture={stableFrameAutoCapture}
+        automaticCountdownSeconds={captureCountdown}
         captureCount={session.items.length}
         maximumCaptures={session.maximumItems}
         onResult={receiveScan}

@@ -10,14 +10,16 @@ import type { ScanCandidate } from "../lib/types";
 import { MultiScanSession } from "./MultiScanSession";
 
 vi.mock("./CardScanner", () => ({
-  CardScanner: ({ onResult, onReset, captureCount, topControls }: {
+  CardScanner: ({ onResult, onReset, captureCount, topControls, automaticCountdownSeconds }: {
     onResult: (value: object) => void;
     onReset?: () => void;
     captureCount: number;
     topControls?: ReactNode;
+    automaticCountdownSeconds?: number;
   }) => <section aria-label="Continuous camera mock">
     <section aria-label="Scanner controls">{topControls}</section>
     <span>Captured {captureCount}</span>
+    <span>Automatic countdown {automaticCountdownSeconds}</span>
     <button onClick={() => onResult({
       hints: { name: "Black Lotus", titleCandidates: ["Black Lotus"], rawText: "Black Lotus" },
       previewUrl: `blob:card-${captureCount + 1}`,
@@ -57,9 +59,11 @@ const newerPrinting = {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  localStorage.clear();
 });
 
 beforeEach(() => {
+  localStorage.clear();
   vi.mocked(expandScanCandidates).mockImplementation(async (seeds) => seeds);
   vi.mocked(getCollectionSummary).mockResolvedValue({
     total_copies: 127,
@@ -130,6 +134,23 @@ it("keeps supplied workspace controls with the live multi-card session status", 
   expect(within(controls).getByRole("group", { name: "Scanning mode" })).toHaveTextContent("Mode controls");
   expect(within(controls).getByRole("status", { name: "Multi-card scanning session" }))
     .toHaveTextContent("Ready to capture cards.");
+});
+
+it("lets the member change the automatic capture countdown for this browser", async () => {
+  const user = userEvent.setup();
+  render(<MultiScanSession />);
+
+  const countdown = screen.getByLabelText("Capture countdown");
+  expect(countdown).toHaveValue("5");
+  expect(screen.getByText("Automatic countdown 5")).toBeVisible();
+
+  await user.selectOptions(countdown, "8");
+
+  expect(countdown).toHaveValue("8");
+  expect(screen.getByText("Automatic countdown 8")).toBeVisible();
+  expect(localStorage.getItem("wynterlabs.cardvault.multi-scan.countdown.v1")).toBe("8");
+  expect(screen.getByRole("status", { name: "Capture countdown saved" }))
+    .toHaveTextContent("Cards will capture after an 8-second countdown.");
 });
 
 it("confirms every scanned card from the selected card's collection details", async () => {
