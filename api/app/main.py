@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app import registration
 from app.config import Settings
 from app.database import create_engine, create_session_factory
 from app.errors import install_error_handlers
@@ -46,6 +47,7 @@ def create_app(
     app.include_router(collection.router)
     app.include_router(decks.router)
     app.include_router(invitations.router)
+    app.include_router(registration.router)
     app.include_router(trades.router)
     app.include_router(admin.router)
     app.include_router(auth.router)

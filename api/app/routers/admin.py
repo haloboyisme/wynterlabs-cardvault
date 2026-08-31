@@ -21,11 +21,18 @@ from app.catalog.importer import CatalogImporter
 from app.catalog.status import read_catalog_status
 from app.collection_value import capture_collection_price_snapshots
 from app.database import get_db
-from app.dependencies import CurrentAuth, require_catalog_operator, require_owner
+from app.dependencies import (
+    CurrentAuth,
+    require_catalog_operator,
+    require_owner,
+    require_ready_auth,
+    require_role_manager,
+)
 from app.errors import AppError
 from app.identity import revoke_user_sessions
 from app.invitation_schemas import (
     InvitationCreateOut,
+    InvitationCreateRequest,
     InvitationOut,
     InvitationRevokeRequest,
 )
@@ -241,6 +248,7 @@ def _invitation_view(invitation: AccountInvitation) -> dict[str, object]:
         "used_by_user_id": invitation.used_by_user_id,
         "revision": invitation.revision,
         "created_at": invitation.created_at,
+        "target_role": invitation.target_role,
         "status": invitation_status(invitation),
     }
 
@@ -253,10 +261,16 @@ def _invitation_view(invitation: AccountInvitation) -> dict[str, object]:
 async def create_invitation(
     request: Request,
     response: Response,
-    owner: CurrentAuth = Depends(require_owner),
+    payload: InvitationCreateRequest | None = None,
+    auth: CurrentAuth = Depends(require_ready_auth),
     database: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     no_store(response)
+    target_role = payload.target_role if payload is not None else Role.MEMBER
+    if target_role is Role.ADMIN:
+        await require_role_manager(auth)
+    else:
+        await require_owner(auth)
     raw_token = new_invitation_token()
     now = datetime.now(UTC)
     invitation = AccountInvitation(
@@ -264,7 +278,8 @@ async def create_invitation(
             raw_token,
             request.app.state.settings.session_pepper,
         ),
-        created_by_user_id=owner.user.id,
+        created_by_user_id=auth.user.id,
+        target_role=target_role,
         expires_at=now + timedelta(days=7),
         created_at=now,
         updated_at=now,

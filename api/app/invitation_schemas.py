@@ -16,11 +16,23 @@ class InvitationOut(BaseModel):
     used_by_user_id: uuid.UUID | None
     revision: int
     created_at: datetime
+    target_role: Role
     status: str
 
 
 class InvitationCreateOut(InvitationOut):
     raw_token: str
+
+
+class InvitationCreateRequest(BaseModel):
+    target_role: Role = Role.MEMBER
+
+    @field_validator("target_role")
+    @classmethod
+    def allow_member_or_admin(cls, value: Role) -> Role:
+        if value not in (Role.MEMBER, Role.ADMIN):
+            raise ValueError("Invitation role must be member or admin")
+        return value
 
 
 class InvitationRevokeRequest(BaseModel):

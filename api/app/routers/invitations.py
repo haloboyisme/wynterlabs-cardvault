@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import func, or_, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
@@ -11,15 +10,9 @@ from app.dependencies import get_settings
 from app.errors import AppError
 from app.invitation_schemas import InvitationAcceptedOut, InvitationAcceptRequest
 from app.invitations import invitation_status, no_store
-from app.models import AccountInvitation, LoginAttempt, Role, User, UserSession
-from app.security import (
-    expires_at,
-    hash_invitation_token,
-    hash_password,
-    hash_token,
-    identifier_hash,
-    new_session_token,
-)
+from app.models import AccountInvitation, LoginAttempt, User
+from app.registration import _create_user_and_session
+from app.security import hash_invitation_token, identifier_hash
 
 router = APIRouter(prefix="/api/v1/invitations", tags=["invitations"])
 MAX_ATTEMPTS = 10
@@ -82,68 +75,24 @@ async def accept_invitation(
         await database.commit()
         raise _invalid()
 
-    email = str(payload.email).casefold()
-    display_name_normalized = payload.display_name.casefold()
-    identity_exists = await database.scalar(
-        select(User.id).where(
-            or_(
-                User.email_normalized == email,
-                User.display_name_normalized == display_name_normalized,
-            )
-        )
-    )
-    if identity_exists is not None:
-        await database.rollback()
-        raise AppError(
-            409,
-            "invitation_identity_conflict",
-            "That email or display name is already in use.",
-        )
-
-    user = User(
-        email=email,
-        email_normalized=email,
-        display_name=payload.display_name,
-        display_name_normalized=display_name_normalized,
-        password_hash=hash_password(payload.password),
-        role=Role.MEMBER,
-        owner_slot=None,
-        is_active=True,
-        must_change_password=False,
-        password_changed_at=now,
-    )
-    database.add(user)
     try:
-        await database.flush()
-    except IntegrityError as exc:
-        await database.rollback()
-        raise AppError(
-            409,
-            "invitation_identity_conflict",
-            "That email or display name is already in use.",
-        ) from exc
-
-    raw_session = new_session_token()
-    database.add(
-        UserSession(
-            user_id=user.id,
-            token_hash=hash_token(raw_session, settings.session_pepper),
-            expires_at=expires_at(settings.session_hours),
-            client_ip=ip,
-            user_agent=request.headers.get("user-agent", "unknown")[:256],
+        user = await _create_user_and_session(
+            email=str(payload.email),
+            display_name=payload.display_name,
+            password=payload.password,
+            role=invitation.target_role,
+            conflict_code="invitation_identity_conflict",
+            request=request,
+            response=response,
+            database=database,
+            settings=settings,
+            now=now,
         )
-    )
+    except AppError:
+        await database.rollback()
+        raise
     invitation.used_at = now
     invitation.used_by_user_id = user.id
     invitation.revision += 1
     await database.commit()
-    response.set_cookie(
-        settings.cookie_name,
-        raw_session,
-        max_age=settings.session_hours * 3600,
-        httponly=True,
-        secure=settings.environment == "production",
-        samesite="lax",
-        path="/",
-    )
     return user

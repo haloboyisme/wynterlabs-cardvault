@@ -58,8 +58,8 @@ def owner(app: FastAPI) -> Iterator[TestClient]:
         yield client
 
 
-def _create(owner: TestClient) -> dict:
-    response = owner.post("/api/v1/admin/invitations")
+def _create(owner: TestClient, target_role: Role = Role.MEMBER) -> dict:
+    response = owner.post("/api/v1/admin/invitations", json={"target_role": target_role.value})
     assert response.status_code == 201
     return response.json()
 
@@ -178,6 +178,31 @@ def test_accept_once_creates_ready_member_and_session(app: FastAPI, owner: TestC
             return len(list(users.all())), len(list(sessions.all()))
 
     assert asyncio.run(state()) == (1, 1)
+
+
+def test_role_manager_can_issue_admin_invitation_accepted_as_admin(
+    app: FastAPI, owner: TestClient
+) -> None:
+    created = _create(owner, Role.ADMIN)
+    assert created["target_role"] == "admin"
+
+    with TestClient(app) as recipient:
+        response = recipient.post(
+            "/api/v1/invitations/accept",
+            json=_payload(created["raw_token"], "newadmin"),
+        )
+
+    assert response.status_code == 201
+    assert response.json()["role"] == "admin"
+
+
+def test_regular_admin_cannot_issue_elevated_invitation(app: FastAPI) -> None:
+    with _role_client(app, Role.ADMIN) as admin:
+        _error(
+            admin.post("/api/v1/admin/invitations", json={"target_role": "admin"}),
+            403,
+            "role_manager_required",
+        )
 
 
 def test_invalid_revoked_and_expired_tokens_share_generic_error(
