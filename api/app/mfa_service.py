@@ -84,7 +84,7 @@ class EnrollmentMaterial:
 
 
 def require_privileged_mfa_role(user: User) -> None:
-    if user.role not in (Role.OWNER, Role.ADMIN):
+    if user.role not in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN):
         raise AppError(403, "admin_required", "Administrator access is required.")
 
 

@@ -79,9 +79,21 @@ async def require_owner(
     return auth
 
 
+async def require_role_manager(
+    auth: CurrentAuth = Depends(require_ready_auth),
+) -> CurrentAuth:
+    if auth.user.role not in (Role.OWNER, Role.SUPER_ADMIN):
+        raise AppError(
+            403,
+            "role_manager_required",
+            "Owner or super administrator access is required.",
+        )
+    return auth
+
+
 async def require_catalog_operator(
     auth: CurrentAuth = Depends(require_ready_auth),
 ) -> CurrentAuth:
-    if auth.user.role not in (Role.OWNER, Role.ADMIN):
+    if auth.user.role not in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN):
         raise AppError(403, "admin_required", "Administrator access is required.")
     return auth

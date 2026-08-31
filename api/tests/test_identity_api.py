@@ -10,7 +10,8 @@ from sqlalchemy import select
 from app import dependencies
 from app.dependencies import CurrentAuth
 from app.errors import AppError
-from app.models import LoginAttempt, Role, User, UserSession
+from app.mfa_service import require_privileged_mfa_role
+from app.models import LoginAttempt, MfaCredential, Role, User, UserSession
 from app.security import hash_password, hash_token, identifier_hash, new_session_token
 
 
@@ -64,6 +65,19 @@ async def _add_authenticated_session(app: FastAPI, user_id: uuid.UUID) -> str:
         raw = await _add_session(database, app, user_id, datetime.now(UTC))
         await database.commit()
         return raw
+
+
+async def _enable_mfa(app: FastAPI, user_id: uuid.UUID) -> None:
+    async with app.state.session_factory() as database:
+        database.add(
+            MfaCredential(
+                user_id=user_id,
+                encrypted_totp_secret="not-used-by-login",
+                enabled_at=datetime.now(UTC),
+                pending_expires_at=None,
+            )
+        )
+        await database.commit()
 
 
 async def _add_expired_session(app: FastAPI, user_id: uuid.UUID) -> None:
@@ -583,6 +597,46 @@ def test_member_cannot_use_catalog_operator_dependency() -> None:
         asyncio.run(dependency(_auth_for_role(Role.MEMBER)))
     assert error.value.status_code == 403
     assert error.value.code == "admin_required"
+
+
+def test_super_admin_has_role_management_catalog_and_mfa_authority() -> None:
+    assert Role.SUPER_ADMIN.value == "super_admin"
+
+    role_manager = getattr(dependencies, "require_role_manager", None)
+    assert role_manager is not None
+    auth = _auth_for_role(Role.SUPER_ADMIN)
+    assert asyncio.run(role_manager(auth)).user.role is Role.SUPER_ADMIN
+    assert asyncio.run(dependencies.require_catalog_operator(auth)).user.role is Role.SUPER_ADMIN
+    require_privileged_mfa_role(auth.user)
+
+
+def test_admin_cannot_manage_roles() -> None:
+    role_manager = getattr(dependencies, "require_role_manager", None)
+    assert role_manager is not None
+    with pytest.raises(AppError) as error:
+        asyncio.run(role_manager(_auth_for_role(Role.ADMIN)))
+    assert error.value.status_code == 403
+    assert error.value.code == "role_manager_required"
+
+
+def test_enrolled_super_admin_login_requires_mfa(client: TestClient, app: FastAPI) -> None:
+    _, password, user_id = asyncio.run(
+        _create_authenticated_user(
+            app,
+            role=Role.SUPER_ADMIN,
+            must_change_password=False,
+            email="super-admin@wynterlabs.com",
+        )
+    )
+    asyncio.run(_enable_mfa(app, user_id))
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "super-admin@wynterlabs.com", "password": password},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "mfa_required"
 
 
 def test_admin_cannot_use_owner_dependency() -> None:

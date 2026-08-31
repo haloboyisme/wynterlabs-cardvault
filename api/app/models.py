@@ -40,6 +40,7 @@ def utcnow() -> datetime:
 
 class Role(str, enum.Enum):
     OWNER = "owner"
+    SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     MEMBER = "member"
 
@@ -418,6 +419,7 @@ class AccountInvitation(Base):
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    target_role: Mapped[Role] = mapped_column(Enum(Role), default=Role.MEMBER)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -105,7 +105,7 @@ async def login(
             MfaCredential.enabled_at.is_not(None),
         )
     )
-    if enrolled and user.role in (Role.OWNER, Role.ADMIN):
+    if enrolled and user.role in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN):
         challenge, raw = create_mfa_challenge(
             user, settings, now, ip, request.headers.get("user-agent", "unknown")
         )

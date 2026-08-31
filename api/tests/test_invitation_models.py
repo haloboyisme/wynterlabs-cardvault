@@ -41,6 +41,7 @@ async def _persist_invitation(tmp_path) -> None:
         saved = await database.get(AccountInvitation, invitation.id)
         assert saved is not None
         assert saved.revision == 1
+        assert saved.target_role is Role.MEMBER
         assert saved.revoked_at is None
         assert saved.used_at is None
         assert saved.used_by_user_id is None
