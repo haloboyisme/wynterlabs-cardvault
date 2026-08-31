@@ -403,10 +403,10 @@ it("stays neutral while catalog status is loading or unavailable", async () => {
   expect(screen.queryByText(/account and saved data/i)).not.toBeInTheDocument();
 });
 
-const readyUser = (role: "owner" | "admin" | "member") => ({
+const readyUser = (role: "owner" | "super_admin" | "admin" | "member") => ({
   id: `${role}-id`,
   email: `${role}@wynterlabs.com`,
-  display_name: role === "owner" ? "Owner" : role === "admin" ? "Administrator" : "Member",
+  display_name: role === "owner" ? "Owner" : role === "super_admin" ? "Super administrator" : role === "admin" ? "Administrator" : "Member",
   role,
   must_change_password: false,
   created_at: "2026-08-14T00:00:00Z",
@@ -448,6 +448,15 @@ it.each(["owner", "admin"] as const)("shows Admin navigation to a ready %s", asy
   renderAt("/dashboard");
 
   expect(await screen.findByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
+});
+
+it("labels the super administrator workspace without an underscore", async () => {
+  stubAuthenticatedUser(readyUser("super_admin"));
+
+  renderAt("/dashboard");
+
+  expect(await screen.findByText("Super admin workspace", { selector: ".header-account-role" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
 });
 
 it("never shows Admin navigation to a member", async () => {

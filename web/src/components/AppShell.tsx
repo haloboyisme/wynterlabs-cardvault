@@ -68,9 +68,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     auth.status === "authenticated" && Boolean(auth.user?.must_change_password);
   const canAdminister =
     auth.user?.role === "owner" || auth.user?.role === "super_admin" || auth.user?.role === "admin";
-  const workspaceRole = auth.user?.role
-    ? `${auth.user.role.charAt(0).toUpperCase()}${auth.user.role.slice(1)} workspace`
-    : "LAN protected";
+  const workspaceRole = auth.user?.role === "super_admin"
+    ? "Super admin workspace"
+    : auth.user?.role
+      ? `${auth.user.role.charAt(0).toUpperCase()}${auth.user.role.slice(1)} workspace`
+      : "LAN protected";
 
   async function signOut() {
     await auth.logout();

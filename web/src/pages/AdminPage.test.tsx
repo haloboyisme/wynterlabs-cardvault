@@ -79,6 +79,18 @@ const superAdministrator = {
   display_name: "Super Administrator",
   role: "super_admin" as const,
 };
+const administratorInvitation = {
+  id: "88888888-8888-4888-8888-888888888888",
+  expires_at: "2026-08-22T00:00:00Z",
+  revoked_at: null,
+  used_at: null,
+  used_by_user_id: null,
+  revision: 1,
+  created_at: "2026-08-15T00:00:00Z",
+  target_role: "admin" as const,
+  status: "active" as const,
+  raw_token: "admin-invitation-token",
+};
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -115,6 +127,7 @@ beforeEach(() => {
       administrators = [...administrators, created];
       return json(created, 201);
     }
+    if (path === "/api/v1/admin/invitations" && init?.method === "POST") return json(administratorInvitation, 201);
     if (path.endsWith("/status") && init?.method === "PATCH") {
       const payload = JSON.parse(String(init.body));
       administrators = administrators.map((admin) => path.includes(encodeURIComponent(admin.id)) ? { ...admin, is_active: payload.is_active } : admin);
@@ -280,6 +293,16 @@ it("shows only Administrator role actions to a super administrator", async () =>
   expect(within(memberRow!).getByRole("button", { name: /make collection member an administrator/i })).toBeVisible();
   expect(within(memberRow!).queryByRole("button", { name: /super administrator/i })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /make super administrator/i })).not.toBeInTheDocument();
+});
+
+it("lets a super administrator create only administrator invitations", async () => {
+  authState.role = "super_admin";
+  render(<AdminPage />);
+
+  await screen.findByText(firstAdmin.email);
+  expect(screen.queryByLabelText(/invitation account type/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /revoke invitation/i })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /create administrator invitation link/i })).toBeVisible();
 });
 
 it("does not render or request private page data when the route guard supplies a member", () => {

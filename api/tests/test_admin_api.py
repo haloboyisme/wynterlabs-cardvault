@@ -758,6 +758,19 @@ def test_regular_administrator_cannot_change_account_roles(admin_client: TestCli
     _assert_error(response, 403, "role_manager_required")
 
 
+def test_super_administrator_can_issue_administrator_invitation(
+    super_admin_client: TestClient,
+) -> None:
+    response = super_admin_client.post(
+        "/api/v1/admin/invitations",
+        json={"target_role": "admin"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["target_role"] == "admin"
+    assert response.json()["raw_token"]
+
+
 def test_role_route_rejects_owner_and_protects_the_owner(owner_client: TestClient) -> None:
     owner_role = owner_client.patch(
         f"/api/v1/admin/users/{MEMBER_ID}/role",

@@ -460,6 +460,7 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
           >
             <div className="admin-owner-maintenance-grid">
               {isOwner && <OwnerInvitationPanel />}
+              {!isOwner && <SuperAdministratorInvitationPanel />}
               <AccountAccessPanel
                 administrators={administrators}
                 loadAdministrators={loadAdministrators}
@@ -538,6 +539,53 @@ import {
   listInvitations,
   revokeInvitation,
 } from "../lib/invitations";
+
+export function SuperAdministratorInvitationPanel() {
+  const [oneTimeLink, setOneTimeLink] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function createLink() {
+    setBusy(true);
+    setError(null);
+    setOneTimeLink("");
+    try {
+      const created = await createInvitation("admin");
+      setOneTimeLink(
+        `${window.location.origin}/signup#token=${encodeURIComponent(created.raw_token)}`,
+      );
+    } catch {
+      setError("The administrator invitation link could not be created. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="admin-card invitation-admin" aria-labelledby="super-admin-invitation-heading">
+      <p className="eyebrow">Super administrator access</p>
+      <div className="admin-card-header workspace-routine-actions">
+        <div>
+          <h2 id="super-admin-invitation-heading">Administrator invitations</h2>
+          <p>Create a private single-use administrator link that expires after seven days.</p>
+        </div>
+        <button type="button" onClick={() => void createLink()} disabled={busy}>
+          {busy ? "Working" : "Create administrator invitation link"}
+        </button>
+      </div>
+      {oneTimeLink && (
+        <div className="invitation-copy workspace-routine-actions">
+          <label>
+            New administrator invitation link
+            <input value={oneTimeLink} readOnly onFocus={(event) => event.target.select()} />
+          </label>
+          <p>This is the only time the private link will be shown.</p>
+        </div>
+      )}
+      {error && <FeedbackBanner tone="error" className="form-error">{error}</FeedbackBanner>}
+    </section>
+  );
+}
 
 export function OwnerInvitationPanel() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
