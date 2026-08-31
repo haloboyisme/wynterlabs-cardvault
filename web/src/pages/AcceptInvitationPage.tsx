@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react"
 
 import { useAuth } from "../app/auth"
 import { ApiError } from "../lib/api"
-import { acceptInvitation } from "../lib/invitations"
+import { acceptInvitation, registerMember } from "../lib/invitations"
 
 function captureFragmentToken(): string {
   const fragment = window.location.hash.slice(1)
@@ -45,10 +45,6 @@ export function AcceptInvitationPage() {
       return
     }
     const secret = token.current
-    if (!secret) {
-      setError("This invitation link is missing or no longer available.")
-      return
-    }
     token.current = ""
     setBusy(true)
     setError(null)
@@ -56,12 +52,20 @@ export function AcceptInvitationPage() {
     const request = new AbortController()
     controller.current = request
     try {
-      await acceptInvitation({
-        token: secret,
-        email,
-        display_name: displayName,
-        password,
-      }, request.signal)
+      if (secret) {
+        await acceptInvitation({
+          token: secret,
+          email,
+          display_name: displayName,
+          password,
+        }, request.signal)
+      } else {
+        await registerMember({
+          email,
+          display_name: displayName,
+          password,
+        }, request.signal)
+      }
       setPassword("")
       setConfirmation("")
       await refresh()
@@ -70,7 +74,9 @@ export function AcceptInvitationPage() {
       if (!(caught instanceof DOMException && caught.name === "AbortError")) {
         const message = caught instanceof ApiError
           ? caught.message
-          : "The invitation could not be accepted. Open the original link and try again."
+          : secret
+            ? "The invitation could not be accepted. Open the original link and try again."
+            : "The member account could not be created. Try again."
         setError(message)
       }
     } finally {
@@ -82,29 +88,21 @@ export function AcceptInvitationPage() {
   return (
     <section className="invitation-accept-page">
       <div className="invitation-accept-card">
-        <p className="eyebrow">Invitation-only membership</p>
+        <p className="eyebrow">WynterLabs membership</p>
         <h1>Create your account</h1>
         {complete ? (
           <>
             <p className="form-success" role="status">Your member account is ready.</p>
             <a className="button" href="/dashboard">Continue to dashboard</a>
           </>
-        ) : available === false ? (
-          <div>
-            <p className="form-note">An owner invitation is required to create an account.</p>
-            <p className="form-error" role="alert">
-              Open the private invitation link your owner gave you. Links are single-use and expire after seven days.
-            </p>
-            <a className="button" href="/login">Sign in instead</a>
-          </div>
         ) : (
           <form onSubmit={(event) => void submit(event)}>
-            <p>Choose your own sign-in details. Your private invitation can be used only once.</p>
+            <p>{available ? "Choose your own sign-in details. Your private invitation can be used only once." : "Create a member account for your private card workspace."}</p>
             <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
             <label>Display name<input type="text" minLength={2} maxLength={64} autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} required /></label>
             <label>Password<input type="password" minLength={12} maxLength={256} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
             <label>Confirm password<input type="password" minLength={12} maxLength={256} autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required /></label>
-            <button type="submit" disabled={busy || available !== true}>{busy ? "Creating account" : "Create account"}</button>
+            <button type="submit" disabled={busy || available === null}>{busy ? "Creating account" : available ? "Create account" : "Create member account"}</button>
           </form>
         )}
         {error && <p className="form-error" role="alert">{error}</p>}

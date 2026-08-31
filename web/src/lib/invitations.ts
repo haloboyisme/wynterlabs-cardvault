@@ -24,6 +24,20 @@ export interface InvitationAcceptance {
   password: string
 }
 
+export interface MemberRegistration {
+  email: string
+  display_name: string
+  password: string
+}
+
+export function registerMember(payload: MemberRegistration, signal?: AbortSignal) {
+  return apiRequest<User>("/api/v1/registration", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    signal,
+  })
+}
+
 export function listInvitations(signal?: AbortSignal) {
   return apiRequest<Invitation[]>("/api/v1/admin/invitations", { signal })
 }
