@@ -19,6 +19,7 @@ function captureFragmentToken(): string {
 export function AcceptInvitationPage() {
   const { refresh } = useAuth()
   const token = useRef("")
+  const invitationMode = useRef(false)
   const controller = useRef<AbortController | null>(null)
   const [available, setAvailable] = useState<boolean | null>(null)
   const [email, setEmail] = useState("")
@@ -31,9 +32,11 @@ export function AcceptInvitationPage() {
 
   useEffect(() => {
     token.current = captureFragmentToken()
+    invitationMode.current = Boolean(token.current)
     setAvailable(Boolean(token.current))
     return () => {
       token.current = ""
+      invitationMode.current = false
       controller.current?.abort()
     }
   }, [])
@@ -45,6 +48,7 @@ export function AcceptInvitationPage() {
       return
     }
     const secret = token.current
+    const isInvitation = invitationMode.current
     token.current = ""
     setBusy(true)
     setError(null)
@@ -52,7 +56,7 @@ export function AcceptInvitationPage() {
     const request = new AbortController()
     controller.current = request
     try {
-      if (secret) {
+      if (isInvitation) {
         await acceptInvitation({
           token: secret,
           email,
@@ -74,7 +78,7 @@ export function AcceptInvitationPage() {
       if (!(caught instanceof DOMException && caught.name === "AbortError")) {
         const message = caught instanceof ApiError
           ? caught.message
-          : secret
+          : isInvitation
             ? "The invitation could not be accepted. Open the original link and try again."
             : "The member account could not be created. Try again."
         setError(message)

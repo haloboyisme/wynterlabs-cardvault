@@ -36,6 +36,12 @@ it("does not render account MFA controls for members", () => {
   expect(screen.queryByRole("heading", { name: "Two-step verification" })).toBeNull();
 });
 
+it("loads privileged MFA controls for super administrators", async () => {
+  render(<MfaSettings role="super_admin" />);
+  expect(await screen.findByRole("button", { name: "Set up two-step verification" })).toBeVisible();
+  expect(vi.mocked(fetch).mock.calls.some(([input]) => String(input) === "/api/v1/account/mfa")).toBe(true);
+});
+
 it("shows a browser-generated QR with manual fallback and clears a cancelled ceremony", async () => {
   render(<MfaSettings role="owner" />);
   await screen.findByRole("button", { name: "Set up two-step verification" });

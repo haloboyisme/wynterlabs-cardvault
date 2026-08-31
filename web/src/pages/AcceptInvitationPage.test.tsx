@@ -75,6 +75,34 @@ it("captures and clears the fragment, accepts chosen credentials, and clears the
   expect(window.location.href).not.toContain("private-link-token")
 })
 
+it("keeps a failed token submission in invitation mode on repeated submit", async () => {
+  window.history.replaceState({}, "", "/signup#token=private-link-token")
+  const invalidInvitation = () => new Response(JSON.stringify({
+    error: { code: "invitation_invalid", message: "This invitation link is invalid or no longer available.", fields: null, request_id: "test-request" },
+  }), { status: 400, headers: { "content-type": "application/json" } })
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(invalidInvitation())
+    .mockResolvedValueOnce(invalidInvitation())
+  vi.stubGlobal("fetch", fetchMock)
+  const user = userEvent.setup()
+
+  render(<AcceptInvitationPage />)
+  await user.type(screen.getByLabelText(/email/i), "member@example.com")
+  await user.type(screen.getByLabelText(/display name/i), "Member Player")
+  await user.type(screen.getByLabelText(/^password$/i), "a ready winter password")
+  await user.type(screen.getByLabelText(/confirm password/i), "a ready winter password")
+  await user.click(screen.getByRole("button", { name: /create account/i }))
+
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/invitations/accept")
+  expect(screen.getByRole("alert")).toHaveTextContent(/invitation link is invalid/i)
+  await user.click(screen.getByRole("button", { name: /create account/i }))
+
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+  expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/v1/invitations/accept")
+  expect(fetchMock.mock.calls.some(([input]) => String(input) === "/api/v1/registration")).toBe(false)
+})
+
 it("rejects mismatched passwords locally in invitation mode", async () => {
   const user = userEvent.setup()
   window.history.replaceState({}, "", "/accept-invitation#token=private-link-token")
