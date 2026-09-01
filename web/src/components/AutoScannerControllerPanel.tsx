@@ -4,6 +4,7 @@ import {
   AUTO_SCANNER_LIMITS,
   type AutoScannerSettings,
   readAutoScannerSettings,
+  validateAutoScannerSettings,
   writeAutoScannerSettings,
 } from "../scanner/auto-scanner-settings";
 import {
@@ -12,7 +13,13 @@ import {
   createSimulatedAutoScannerController,
 } from "../scanner/auto-scanner-controller";
 
-type QuickSetting = "speedPercent" | "countdownSeconds" | "settleDelayMs";
+type QuickSetting =
+  | "speedPercent"
+  | "accelerationPercent"
+  | "countdownSeconds"
+  | "settleDelayMs"
+  | "recognitionTimeoutSeconds"
+  | "retryLimit";
 
 export interface AutoScannerControllerPanelProps {
   controller?: AutoScannerController;
@@ -50,6 +57,7 @@ export function AutoScannerControllerPanel({
   const scannerController = controller ?? ownedController;
   const [snapshot, setSnapshot] = useState<AutoScannerControllerSnapshot>(disconnectedSnapshot);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [safetyMessage, setSafetyMessage] = useState("");
   const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const operationRef = useRef(0);
@@ -96,6 +104,20 @@ export function AutoScannerControllerPanel({
     if (!written.ok) return;
     settingsRef.current = written.settings;
     setSettings(written.settings);
+    setSafetyMessage("");
+  }
+
+  function runSafetyCheck() {
+    const result = validateAutoScannerSettings(settingsRef.current);
+    if (!result.ok) {
+      setSafetyMessage(`Safety check failed: ${Object.values(result.errors).join(" ")}`);
+      return;
+    }
+    if (result.warnings.length > 0) {
+      setSafetyMessage(`Profile is ready for simulation with warnings: ${result.warnings.join(" ")}`);
+      return;
+    }
+    setSafetyMessage("Profile is ready for simulation. No hardware connection was attempted.");
   }
 
   function connect() {
@@ -192,13 +214,25 @@ export function AutoScannerControllerPanel({
         <label>Card speed
           <input type="number" min={AUTO_SCANNER_LIMITS.speedPercent.min} max={AUTO_SCANNER_LIMITS.speedPercent.max} value={settings.speedPercent} onChange={(event) => updateQuickSetting("speedPercent", event.target.value)} />
         </label>
+        <label>Acceleration
+          <input type="number" min={AUTO_SCANNER_LIMITS.accelerationPercent.min} max={AUTO_SCANNER_LIMITS.accelerationPercent.max} value={settings.accelerationPercent} onChange={(event) => updateQuickSetting("accelerationPercent", event.target.value)} />
+        </label>
         <label>Scan countdown
           <input type="number" min={AUTO_SCANNER_LIMITS.countdownSeconds.min} max={AUTO_SCANNER_LIMITS.countdownSeconds.max} value={settings.countdownSeconds} onChange={(event) => updateQuickSetting("countdownSeconds", event.target.value)} />
         </label>
         <label>Settle delay
           <input type="number" min={AUTO_SCANNER_LIMITS.settleDelayMs.min} max={AUTO_SCANNER_LIMITS.settleDelayMs.max} value={settings.settleDelayMs} onChange={(event) => updateQuickSetting("settleDelayMs", event.target.value)} />
         </label>
+        <label>Recognition timeout
+          <input type="number" min={AUTO_SCANNER_LIMITS.recognitionTimeoutSeconds.min} max={AUTO_SCANNER_LIMITS.recognitionTimeoutSeconds.max} value={settings.recognitionTimeoutSeconds} onChange={(event) => updateQuickSetting("recognitionTimeoutSeconds", event.target.value)} />
+        </label>
+        <label>Retry limit
+          <input type="number" min={AUTO_SCANNER_LIMITS.retryLimit.min} max={AUTO_SCANNER_LIMITS.retryLimit.max} value={settings.retryLimit} onChange={(event) => updateQuickSetting("retryLimit", event.target.value)} />
+        </label>
       </fieldset>
+
+      <button className="button ghost" type="button" onClick={runSafetyCheck}>Run safety check</button>
+      {safetyMessage && <p role="status" aria-label="Controller safety check" className="auto-scanner-controller-safety-result">{safetyMessage}</p>}
 
       <div className="auto-scanner-controller-actions">
         {connected

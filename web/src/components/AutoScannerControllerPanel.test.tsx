@@ -44,6 +44,36 @@ it("clamps quick tuning values before saving the browser-local profile", () => {
     });
 });
 
+it("exposes bounded acceleration, recognition timeout, and retry tuning", () => {
+  render(<AutoScannerControllerPanel />);
+
+  expect(screen.getByLabelText("Acceleration")).toHaveAttribute("min", "1");
+  expect(screen.getByLabelText("Acceleration")).toHaveAttribute("max", "100");
+  expect(screen.getByLabelText("Recognition timeout")).toHaveAttribute("min", "5");
+  expect(screen.getByLabelText("Recognition timeout")).toHaveAttribute("max", "60");
+  expect(screen.getByLabelText("Retry limit")).toHaveAttribute("min", "0");
+  expect(screen.getByLabelText("Retry limit")).toHaveAttribute("max", "3");
+
+  fireEvent.change(screen.getByLabelText("Acceleration"), { target: { value: "45" } });
+  fireEvent.change(screen.getByLabelText("Recognition timeout"), { target: { value: "20" } });
+  fireEvent.change(screen.getByLabelText("Retry limit"), { target: { value: "2" } });
+
+  expect(JSON.parse(localStorage.getItem(AUTO_SCANNER_STORAGE_KEY) ?? "{}"))
+    .toMatchObject({ accelerationPercent: 45, recognitionTimeoutSeconds: 20, retryLimit: 2 });
+});
+
+it("runs a simulation-only safety check without moving the controller", () => {
+  render(<AutoScannerControllerPanel />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Run safety check" }));
+
+  expect(screen.getByRole("status", { name: "Controller safety check" }))
+    .toHaveTextContent("Profile is ready for simulation");
+  expect(screen.getByRole("status", { name: "Controller status" }))
+    .toHaveTextContent(/disconnected/i);
+  expect(screen.getByText("Command history (0)")).toBeVisible();
+});
+
 it("shows active-profile diagnostics and command history after connecting", async () => {
   render(<AutoScannerControllerPanel />);
 
