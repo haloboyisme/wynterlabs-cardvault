@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -79,3 +80,25 @@ class CatalogRefreshOut(BaseModel):
     imported_records: int = Field(ge=0)
     rejected_records: int = Field(ge=0)
     skipped: bool
+
+
+class CatalogScheduleUpdate(BaseModel):
+    enabled: bool
+    cadence: Literal["hours", "daily", "weekly"]
+    interval_hours: int = Field(ge=1, le=168)
+    weekday: int = Field(ge=0, le=6)
+    time_24h: str = Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    timezone: str = Field(min_length=1, max_length=64)
+    game: Literal[
+        "all", "mtg", "pokemon", "yugioh", "onepiece", "digimon",
+        "starwars", "unionarena", "lorcana", "riftbound",
+    ]
+
+
+class CatalogScheduleOut(CatalogScheduleUpdate):
+    next_run_at: datetime | None
+    last_started_at: datetime | None
+    last_finished_at: datetime | None
+    last_status: str | None
+    last_error_summary: str | None
+    updated_at: datetime | None

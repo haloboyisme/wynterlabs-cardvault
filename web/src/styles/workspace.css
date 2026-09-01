@@ -1078,6 +1078,12 @@ html[data-motion="reduced"] *::after {
 .workspace-danger-zone { gap: var(--space-2); }
 .admin-operational-overview { gap: var(--section-space); transition: gap var(--control-transition); }
 .admin-card { border-color: color-mix(in srgb, var(--line) 72%, transparent); background: var(--surface-glass); box-shadow: var(--shadow-premium); }
+.admin-catalog-schedule { margin: 1rem 0; }
+.admin-catalog-schedule fieldset { display: grid; gap: .9rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: color-mix(in srgb, var(--panel-strong) 84%, transparent); }
+.admin-catalog-schedule legend { padding: 0 .45rem; font-weight: 800; }
+.admin-schedule-enabled { display: flex; align-items: center; gap: .55rem; }
+.admin-schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .75rem; }
+.admin-schedule-grid label { display: grid; gap: .35rem; }
 
 @media (max-width: 760px) {
   .workspace-page-header-actions { width: 100%; justify-content: flex-start; }

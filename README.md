@@ -69,6 +69,12 @@ Version 2 is still a preview. Keep backups, review scanned printings before
 saving, and use the tagged Version 1 installer when stability matters more than
 testing new features.
 
+Authorized owner, Super Admin, and Admin accounts can also configure one
+installation-wide catalog refresh schedule from the Admin catalog card. It can
+run every 1-168 hours, daily, or weekly using a selected 24-hour time and IANA
+time zone, for one supported game or all games. Manual refresh remains
+available, and the panel reports the next run and latest result.
+
 ## 🔐 Privacy and data boundaries
 
 - Collections, accounts, imports, exports, and backups remain under the
@@ -97,6 +103,14 @@ fun project—not a commitment to update the software forever.
 
 - Continue improving scanner recognition, correction speed, mobile layout,
   accessibility, and session feedback.
+- Improve the editable user table, verified email changes, warned deletion
+  requests with owner authority, and privileged-safe MFA recovery controls.
+- Add optional outbound mail configuration, signup email verification, and
+  forgotten-password recovery using short-lived single-use reset links. The
+  project will not email temporary passwords.
+- Add optional Google and Apple sign-in/linking only after each provider is
+  separately configured and security-reviewed; username/password remains the
+  self-hosted default.
 - Add more trading-card games and provider adapters when trustworthy,
   legally appropriate data sources are available.
 - Expand collection organization, statistics, price-history presentation, and

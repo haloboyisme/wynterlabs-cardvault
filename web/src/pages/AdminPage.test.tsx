@@ -9,25 +9,29 @@ import { AdminPage } from "./AdminPage";
 const authState = vi.hoisted(() => ({ role: "owner" as "owner" | "super_admin" | "admin" | "member" }));
 
 vi.mock("../app/auth", () => ({
-  useAuth: () => ({
-    status: "authenticated",
-    user: {
-      id: `${authState.role}-id`, email: `${authState.role}@wynterlabs.com`,
-      display_name: authState.role === "owner" ? "Owner" : "Administrator",
-      role: authState.role, must_change_password: false, created_at: "2026-08-14T00:00:00Z",
-    },
-  }),
+  useAuth: (() => {
+    const users = new Map<string, object>();
+    return () => {
+      if (!users.has(authState.role)) users.set(authState.role, {
+        id: `${authState.role}-id`, email: `${authState.role}@wynterlabs.com`,
+        display_name: authState.role === "owner" ? "Owner" : "Administrator",
+        role: authState.role, must_change_password: false, created_at: "2026-08-14T00:00:00Z",
+      });
+      return { status: "authenticated", user: users.get(authState.role) };
+    };
+  })(),
 }));
 
 vi.mock("../app/branding", () => ({
-  useBranding: () => ({
-    branding: {
+  useBranding: (() => {
+    const branding = {
       site_name: "WynterLabs", product_name: "CardVault",
       tagline: "Scan it. Sort it. Own your collection.",
       has_custom_logo: false, logo_revision: null,
-    },
-    refreshBranding: vi.fn(),
-  }),
+    };
+    const refreshBranding = vi.fn();
+    return () => ({ branding, refreshBranding });
+  })(),
 }));
 
 const activeCatalog = {
@@ -53,6 +57,12 @@ const catalogStatus = {
     pokemon: { active_catalog: { ...activeCatalog, printing_count: 151 }, latest_attempt: null },
     yugioh: { active_catalog: null, latest_attempt: { ...failedAttempt, printing_count: 10000 } },
   },
+};
+const catalogSchedule = {
+  enabled: false, cadence: "weekly" as const, interval_hours: 24, weekday: 6,
+  time_24h: "03:00", timezone: "UTC", game: "all", next_run_at: null,
+  last_started_at: null, last_finished_at: null, last_status: null,
+  last_error_summary: null, updated_at: null,
 };
 const firstAdmin = {
   id: "33333333-3333-4333-8333-333333333333", email: "member-fca03c4a0d89@example.invalid",
@@ -118,6 +128,10 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = requestPath(input);
     if (path === "/api/v1/admin/catalog/status") return json(catalogStatus);
+    if (path === "/api/v1/admin/catalog/schedule" && (!init?.method || init.method === "GET")) return json(catalogSchedule);
+    if (path === "/api/v1/admin/catalog/schedule" && init?.method === "PUT") {
+      return json({ ...catalogSchedule, ...JSON.parse(String(init.body)), next_run_at: "2026-09-03T01:30:00Z" });
+    }
     if (path === "/api/v1/admin/catalog/refresh") return json({ status: "complete", import_id: activeCatalog.import_id, imported_records: 116703, rejected_records: 0, skipped: false });
     if (path === "/api/v1/admin/trade-moderation/reports") return json([]);
     if (path === "/api/v1/admin/users" && (!init?.method || init.method === "GET")) return json(administrators);
@@ -139,6 +153,26 @@ beforeEach(() => {
     }
     return errorJson("not_found", "Not found.", 404);
   }));
+});
+
+it("lets an administrator save the automatic catalog refresh schedule", async () => {
+  render(<AdminPage />);
+
+  const schedule = await screen.findByRole("group", { name: /automatic catalog refresh/i });
+  expect(within(schedule).getByLabelText(/frequency/i)).toHaveValue("weekly");
+  expect(within(schedule).getByLabelText(/day of week/i)).toBeVisible();
+  expect(within(schedule).getByLabelText(/24-hour time/i)).toHaveValue("03:00");
+  expect(within(schedule).getByLabelText(/time zone/i)).toHaveValue("UTC");
+  expect(within(schedule).getByRole("checkbox", { name: /enable automatic refresh/i })).toBeVisible();
+  expect(within(schedule).getByRole("button", { name: /save refresh schedule/i })).toBeVisible();
+  const user = userEvent.setup();
+  await user.click(within(schedule).getByRole("checkbox", { name: /enable automatic refresh/i }));
+  await user.click(within(schedule).getByRole("button", { name: /save refresh schedule/i }));
+  expect(await within(schedule).findByRole("status")).toHaveTextContent(/schedule saved.*next refresh/i);
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/v1/admin/catalog/schedule",
+    expect.objectContaining({ method: "PUT" }),
+  );
 });
 
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });

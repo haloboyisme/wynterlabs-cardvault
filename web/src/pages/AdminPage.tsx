@@ -10,14 +10,17 @@ import { useAuth } from "../app/auth";
 import { ApiError } from "../lib/api";
 import {
   type AdminCatalogStatus,
+  type AdminCatalogSchedule,
   type Administrator,
   createAdministrator,
   getAdminCatalogStatus,
+  getAdminCatalogSchedule,
   getAdministrators,
   refreshAdminCatalog,
   resetAdministratorPassword,
   setAdministratorStatus,
   setUserRole,
+  updateAdminCatalogSchedule,
 } from "../lib/admin";
 import { readAppearance } from "../lib/appearance";
 import { CATALOG_GAMES, catalogGameName } from "../scanner/catalog-games";
@@ -235,6 +238,9 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
   const isRoleManager = role === "owner" || role === "super_admin";
   const [catalog, setCatalog] = useState<AdminCatalogStatus | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogSchedule, setCatalogSchedule] = useState<AdminCatalogSchedule | null>(null);
+  const [scheduleMessage, setScheduleMessage] = useState("");
+  const [scheduleSaving, setScheduleSaving] = useState(false);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [administratorsLoaded, setAdministratorsLoaded] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -247,6 +253,7 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
   const catalogController = useRef<AbortController | null>(null);
   const administratorsGeneration = useRef(0);
   const administratorsController = useRef<AbortController | null>(null);
+  const scheduleController = useRef<AbortController | null>(null);
 
   const loadCatalog = useCallback(async () => {
     catalogController.current?.abort();
@@ -264,6 +271,20 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
       }
     } finally {
       if (generation === catalogGeneration.current) catalogController.current = null;
+    }
+  }, []);
+
+  const loadSchedule = useCallback(async () => {
+    scheduleController.current?.abort();
+    const controller = new AbortController();
+    scheduleController.current = controller;
+    try {
+      const value = await getAdminCatalogSchedule(controller.signal);
+      if (!controller.signal.aborted) setCatalogSchedule(value);
+    } catch (error) {
+      if (!isAbort(error)) setScheduleMessage("Could not load the automatic refresh schedule.");
+    } finally {
+      if (scheduleController.current === controller) scheduleController.current = null;
     }
   }, []);
 
@@ -290,14 +311,16 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
 
   useEffect(() => {
     void loadCatalog();
+    void loadSchedule();
     if (isRoleManager) void loadAdministrators();
     return () => {
       ++catalogGeneration.current;
       catalogController.current?.abort();
+      scheduleController.current?.abort();
       ++administratorsGeneration.current;
       administratorsController.current?.abort();
     };
-  }, [isRoleManager, loadAdministrators, loadCatalog]);
+  }, [isRoleManager, loadAdministrators, loadCatalog, loadSchedule]);
 
   const advanced = readAppearance().complexity === "advanced";
 
@@ -325,6 +348,24 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
       await loadCatalog();
       refreshOpen.current = false;
       setRefreshing(false);
+    }
+  }
+
+  async function saveCatalogSchedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (catalogSchedule === null) return;
+    setScheduleSaving(true);
+    setScheduleMessage("Saving automatic refresh schedule.");
+    try {
+      const saved = await updateAdminCatalogSchedule(catalogSchedule);
+      setCatalogSchedule(saved);
+      setScheduleMessage(saved.enabled
+        ? `Schedule saved. Next refresh: ${formatDate(saved.next_run_at)}.`
+        : "Schedule saved. Automatic refresh is off.");
+    } catch {
+      setScheduleMessage("The refresh schedule could not be saved. Check the time zone and try again.");
+    } finally {
+      setScheduleSaving(false);
     }
   }
 
@@ -399,6 +440,42 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
             </FeedbackBanner>
           )}
           {catalogError && <FeedbackBanner tone="error" className="form-error">{catalogError}</FeedbackBanner>}
+          {catalogSchedule && (
+            <form className="admin-catalog-schedule" onSubmit={(event) => void saveCatalogSchedule(event)}>
+              <fieldset>
+                <legend>Automatic catalog refresh</legend>
+                <label className="admin-schedule-enabled">
+                  <input
+                    type="checkbox"
+                    checked={catalogSchedule.enabled}
+                    onChange={(event) => setCatalogSchedule({ ...catalogSchedule, enabled: event.target.checked })}
+                  />
+                  Enable automatic refresh
+                </label>
+                <div className="admin-schedule-grid">
+                  <label>Frequency<select value={catalogSchedule.cadence} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, cadence: event.target.value as AdminCatalogSchedule["cadence"] })}>
+                    <option value="hours">Every number of hours</option>
+                    <option value="daily">Every day</option>
+                    <option value="weekly">Every week</option>
+                  </select></label>
+                  {catalogSchedule.cadence === "hours" && <label>Hours between refreshes<input type="number" min="1" max="168" value={catalogSchedule.interval_hours} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, interval_hours: Number(event.target.value) })} /></label>}
+                  {catalogSchedule.cadence === "weekly" && <label>Day of week<select value={catalogSchedule.weekday} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, weekday: Number(event.target.value) })}>
+                    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day, index) => <option value={index} key={day}>{day}</option>)}
+                  </select></label>}
+                  {catalogSchedule.cadence !== "hours" && <label>24-hour time<input type="time" value={catalogSchedule.time_24h} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, time_24h: event.target.value })} required /></label>}
+                  <label>Time zone<input value={catalogSchedule.timezone} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, timezone: event.target.value })} placeholder="America/Indiana/Indianapolis" required /></label>
+                  <label>Scheduled catalog game<select value={catalogSchedule.game} onChange={(event) => setCatalogSchedule({ ...catalogSchedule, game: event.target.value })}>
+                    <option value="all">All supported games</option>
+                    {CATALOG_GAMES.map((game) => <option value={game.id} key={game.id}>{game.name}</option>)}
+                  </select></label>
+                </div>
+                <button type="submit" disabled={scheduleSaving}>{scheduleSaving ? "Saving refresh schedule" : "Save refresh schedule"}</button>
+                {catalogSchedule.next_run_at && <p>Next automatic refresh: {formatDate(catalogSchedule.next_run_at)}</p>}
+                {catalogSchedule.last_status && <p>Last automatic refresh: {formatStatus(catalogSchedule.last_status)} · {formatDate(catalogSchedule.last_finished_at)}</p>}
+                {scheduleMessage && <FeedbackBanner tone={scheduleMessage.includes("could not") ? "error" : "success"}>{scheduleMessage}</FeedbackBanner>}
+              </fieldset>
+            </form>
+          )}
           {catalog?.active_catalog ? (
             <>
               <div className="admin-status-grid">

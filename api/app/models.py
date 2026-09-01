@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -19,6 +19,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    Time,
     UniqueConstraint,
     Uuid,
     text,
@@ -212,6 +213,36 @@ class LoginAttempt(Base):
     client_ip: Mapped[str] = mapped_column(String(64))
     succeeded: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CatalogRefreshSchedule(Base):
+    __tablename__ = "catalog_refresh_schedules"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="ck_catalog_refresh_schedule_singleton"),
+        CheckConstraint("cadence IN ('hours', 'daily', 'weekly')", name="ck_catalog_refresh_schedule_cadence"),
+        CheckConstraint("interval_hours BETWEEN 1 AND 168", name="ck_catalog_refresh_schedule_hours"),
+        CheckConstraint("weekday BETWEEN 0 AND 6", name="ck_catalog_refresh_schedule_weekday"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    cadence: Mapped[str] = mapped_column(String(16), default="weekly")
+    interval_hours: Mapped[int] = mapped_column(Integer, default=24)
+    weekday: Mapped[int] = mapped_column(Integer, default=6)
+    time_of_day: Mapped[time] = mapped_column(Time, default=lambda: time(3, 0))
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+    game: Mapped[str] = mapped_column(String(24), default="all")
+    next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    last_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_status: Mapped[str | None] = mapped_column(String(24))
+    last_error_summary: Mapped[str | None] = mapped_column(String(240))
+    updated_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class CatalogImport(Base):

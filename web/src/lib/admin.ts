@@ -31,6 +31,22 @@ export interface AdminCatalogRefresh {
   skipped: boolean;
 }
 
+export interface AdminCatalogSchedule {
+  enabled: boolean;
+  cadence: "hours" | "daily" | "weekly";
+  interval_hours: number;
+  weekday: number;
+  time_24h: string;
+  timezone: string;
+  game: string;
+  next_run_at: string | null;
+  last_started_at: string | null;
+  last_finished_at: string | null;
+  last_status: string | null;
+  last_error_summary: string | null;
+  updated_at: string | null;
+}
+
 export interface Administrator {
   id: string;
   email: string;
@@ -57,6 +73,25 @@ export function refreshAdminCatalog(game?: string) {
     `/api/v1/admin/catalog/refresh${game ? `?game=${encodeURIComponent(game)}` : ""}`,
     { method: "POST" },
   );
+}
+
+export function getAdminCatalogSchedule(signal?: AbortSignal) {
+  return apiRequest<AdminCatalogSchedule>("/api/v1/admin/catalog/schedule", { signal });
+}
+
+export function updateAdminCatalogSchedule(payload: AdminCatalogSchedule) {
+  return apiRequest<AdminCatalogSchedule>("/api/v1/admin/catalog/schedule", {
+    method: "PUT",
+    body: JSON.stringify({
+      enabled: payload.enabled,
+      cadence: payload.cadence,
+      interval_hours: payload.interval_hours,
+      weekday: payload.weekday,
+      time_24h: payload.time_24h,
+      timezone: payload.timezone,
+      game: payload.game,
+    }),
+  });
 }
 
 export function getAdministrators(signal?: AbortSignal) {

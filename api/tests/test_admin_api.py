@@ -265,6 +265,52 @@ def test_catalog_status_is_available_to_ready_owner_and_admin(request, client_fi
     }
 
 
+def test_admin_can_configure_weekly_catalog_refresh_schedule(admin_client: TestClient) -> None:
+    initial = admin_client.get("/api/v1/admin/catalog/schedule")
+    assert initial.status_code == 200
+    assert initial.json()["enabled"] is False
+
+    response = admin_client.put(
+        "/api/v1/admin/catalog/schedule",
+        json={
+            "enabled": True,
+            "cadence": "weekly",
+            "interval_hours": 24,
+            "weekday": 2,
+            "time_24h": "21:30",
+            "timezone": "America/Indiana/Indianapolis",
+            "game": "all",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["enabled"] is True
+    assert payload["weekday"] == 2
+    assert payload["time_24h"] == "21:30"
+    assert payload["next_run_at"] is not None
+
+
+def test_member_cannot_read_or_change_catalog_schedule(member_client: TestClient) -> None:
+    assert member_client.get("/api/v1/admin/catalog/schedule").status_code == 403
+    assert member_client.put("/api/v1/admin/catalog/schedule", json={}).status_code == 403
+
+
+def test_catalog_schedule_rejects_unknown_timezone(admin_client: TestClient) -> None:
+    response = admin_client.put(
+        "/api/v1/admin/catalog/schedule",
+        json={
+            "enabled": True,
+            "cadence": "daily",
+            "interval_hours": 24,
+            "weekday": 0,
+            "time_24h": "03:00",
+            "timezone": "Not/AZone",
+            "game": "all",
+        },
+    )
+    _assert_error(response, 422, "catalog_schedule_invalid")
+
+
 def test_catalog_status_matches_the_sanitized_cli_contract(
     owner_client: TestClient, monkeypatch
 ) -> None:

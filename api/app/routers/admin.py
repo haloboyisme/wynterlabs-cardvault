@@ -1,6 +1,6 @@
 import uuid
 from contextlib import suppress
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy import select
@@ -14,11 +14,14 @@ from app.admin_schemas import (
     AdminStatusRequest,
     AdminUserOut,
     CatalogRefreshOut,
+    CatalogScheduleOut,
+    CatalogScheduleUpdate,
     CatalogStatusOut,
 )
 from app.branding import branding_out, read_branding_for_update, validate_logo_data_url
 from app.branding_schemas import BrandingOut, BrandingUpdate
 from app.catalog.importer import CatalogImporter
+from app.catalog.scheduler import CatalogScheduleSpec, next_catalog_run
 from app.catalog.status import read_catalog_status
 from app.collection_value import capture_collection_price_snapshots
 from app.database import get_db
@@ -38,7 +41,7 @@ from app.invitation_schemas import (
     InvitationRevokeRequest,
 )
 from app.invitations import invitation_status, no_store
-from app.models import AccountInvitation, MfaCredential, Role, SiteBranding, User
+from app.models import AccountInvitation, CatalogRefreshSchedule, MfaCredential, Role, SiteBranding, User
 from app.security import hash_invitation_token, hash_password, new_invitation_token
 
 router = APIRouter(prefix="/api/v1/admin", tags=["administration"])
@@ -111,6 +114,65 @@ async def catalog_status(
     _operator: CurrentAuth = Depends(require_catalog_operator),
 ):
     return await read_catalog_status(request.app.state.session_factory)
+
+
+def _schedule_out(row: CatalogRefreshSchedule | None) -> CatalogScheduleOut:
+    if row is None:
+        return CatalogScheduleOut(
+            enabled=False, cadence="weekly", interval_hours=24, weekday=6,
+            time_24h="03:00", timezone="UTC", game="all", next_run_at=None,
+            last_started_at=None, last_finished_at=None, last_status=None,
+            last_error_summary=None, updated_at=None,
+        )
+    return CatalogScheduleOut(
+        enabled=row.enabled, cadence=row.cadence, interval_hours=row.interval_hours,
+        weekday=row.weekday, time_24h=row.time_of_day.strftime("%H:%M"),
+        timezone=row.timezone, game=row.game, next_run_at=row.next_run_at,
+        last_started_at=row.last_started_at, last_finished_at=row.last_finished_at,
+        last_status=row.last_status, last_error_summary=row.last_error_summary,
+        updated_at=row.updated_at,
+    )
+
+
+@router.get("/catalog/schedule", response_model=CatalogScheduleOut)
+async def get_catalog_schedule(
+    _operator: CurrentAuth = Depends(require_catalog_operator),
+    database: AsyncSession = Depends(get_db),
+) -> CatalogScheduleOut:
+    return _schedule_out(await database.get(CatalogRefreshSchedule, 1))
+
+
+@router.put("/catalog/schedule", response_model=CatalogScheduleOut)
+async def update_catalog_schedule(
+    payload: CatalogScheduleUpdate,
+    operator: CurrentAuth = Depends(require_catalog_operator),
+    database: AsyncSession = Depends(get_db),
+) -> CatalogScheduleOut:
+    spec = CatalogScheduleSpec(
+        cadence=payload.cadence, interval_hours=payload.interval_hours,
+        weekday=payload.weekday, time_24h=payload.time_24h, timezone=payload.timezone,
+    )
+    try:
+        next_run = next_catalog_run(spec, datetime.now(UTC)) if payload.enabled else None
+    except ValueError as exc:
+        raise AppError(422, "catalog_schedule_invalid", str(exc)) from exc
+    hour, minute = (int(part) for part in payload.time_24h.split(":"))
+    async with database.begin():
+        row = await database.get(CatalogRefreshSchedule, 1, with_for_update=True)
+        if row is None:
+            row = CatalogRefreshSchedule(id=1)
+            database.add(row)
+        row.enabled = payload.enabled
+        row.cadence = payload.cadence
+        row.interval_hours = payload.interval_hours
+        row.weekday = payload.weekday
+        row.time_of_day = time(hour, minute)
+        row.timezone = payload.timezone
+        row.game = payload.game
+        row.next_run_at = next_run
+        row.updated_by_user_id = operator.user.id
+    await database.refresh(row)
+    return _schedule_out(row)
 
 
 @router.post("/catalog/refresh", response_model=CatalogRefreshOut)
