@@ -521,16 +521,17 @@ it("announces a failed refresh as an alert without exposing server detail", asyn
 });
 
 it("creates an administrator with the exact API shape then clears and never echoes the temporary password", async () => {
+  const newAdminEmail = "new-admin@example.invalid";
   const user = userEvent.setup();
   render(<AdminPage />);
   await screen.findByText(firstAdmin.email);
-  await user.type(screen.getByLabelText(/administrator email/i), "member-1bfea178405a@example.invalid");
+  await user.type(screen.getByLabelText(/administrator email/i), newAdminEmail);
   await user.type(screen.getByLabelText(/administrator display name/i), "Second Admin");
   const password = screen.getByLabelText(/temporary password/i);
   await user.type(password, "TemporaryPassphrase!23");
   await user.click(screen.getByRole("button", { name: /create administrator/i }));
-  expect(await screen.findByText("member-77880c1d069c@example.invalid")).toBeVisible();
-  expect(fetch).toHaveBeenCalledWith("/api/v1/admin/users", expect.objectContaining({ method: "POST", body: JSON.stringify({ email: "member-cda7177f2117@example.invalid", display_name: "Second Admin", temporary_password: "TemporaryPassphrase!23" }) }));
+  expect(await screen.findByText(newAdminEmail)).toBeVisible();
+  expect(fetch).toHaveBeenCalledWith("/api/v1/admin/users", expect.objectContaining({ method: "POST", body: JSON.stringify({ email: newAdminEmail, display_name: "Second Admin", temporary_password: "TemporaryPassphrase!23" }) }));
   expect(password).toHaveValue("");
   expect(screen.queryByText("TemporaryPassphrase!23")).not.toBeInTheDocument();
 });
