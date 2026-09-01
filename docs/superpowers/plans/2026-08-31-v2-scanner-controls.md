@@ -1,5 +1,7 @@
 # V2 Scanner Controls Implementation Plan
 
+**Status:** Completed and verified on 2026-08-31.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a simple multiple-card capture countdown and clearer simulation-only DIY scanner tuning within the approved $6 increment.
