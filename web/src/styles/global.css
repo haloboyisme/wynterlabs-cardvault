@@ -373,12 +373,29 @@ select { font: inherit; }
 .admin-create-form label, .admin-confirmation label { display: grid; gap: .45rem; color: var(--muted); font-size: .78rem; font-weight: 700; }
 .admin-create-form :where(input, select, textarea), .admin-confirmation :where(input, select, textarea) { width: 100%; padding: .75rem; color: var(--ink); border: 1px solid var(--control-border); border-radius: 9px; background: var(--control-bg); }
 .admin-user-list { display: grid; gap: .8rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
-.admin-user-row { display: grid; gap: .8rem; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); }
-.admin-user-row > div:first-child { display: grid; gap: .25rem; }
+.admin-account-directory { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.admin-account-summary { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
+.admin-account-summary :where(strong, span) { padding: .42rem .68rem; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.025); font-size: .74rem; }
+.admin-account-summary span { color: var(--muted); }
+.admin-account-filters { display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(150px, 1fr)); gap: .65rem; padding: .85rem; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.018); }
+.admin-account-filters label { display: grid; gap: .35rem; color: var(--muted); font-size: .72rem; font-weight: 750; }
+.admin-account-filters :where(input, select) { width: 100%; min-height: 42px; padding: .62rem .72rem; color: var(--ink); border: 1px solid var(--control-border); border-radius: 9px; background: var(--control-bg); }
+.admin-user-row { display: grid; gap: .9rem; padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.012)); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+.admin-user-identity { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.admin-user-identity > div:first-child { display: grid; gap: .25rem; min-width: 0; }
 .admin-user-row span { color: var(--muted); font-size: .76rem; }
+.admin-user-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.admin-user-row .admin-user-badge { padding: .32rem .55rem; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); background: rgba(255,255,255,.04); font-size: .66rem; font-weight: 800; letter-spacing: .025em; }
+.admin-user-badge.role-owner, .admin-user-badge.role-super_admin { border-color: color-mix(in srgb, var(--accent) 46%, transparent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+.admin-user-badge.role-admin { border-color: rgba(120,183,255,.36); background: rgba(120,183,255,.1); }
+.admin-user-badge.state-active, .admin-user-badge.state-ready { border-color: rgba(94,217,166,.34); background: rgba(39,132,94,.15); }
+.admin-user-badge.state-disabled, .admin-user-badge.state-attention { border-color: rgba(255,198,92,.36); background: rgba(108,69,11,.2); }
+.admin-account-empty { display: grid; gap: .3rem; padding: 1.25rem; border: 1px dashed var(--line); border-radius: 14px; color: var(--muted); text-align: center; }
+.admin-account-empty strong { color: var(--ink); }
 .admin-actions { display: flex; gap: .55rem; align-items: center; }
 .admin-warning { padding: .9rem; border: 1px solid rgba(255,198,92,.3); border-radius: 10px; background: rgba(108,69,11,.18); color: #ffd791; }
 .admin-warning p { margin-top: 0; }
+.admin-warning .admin-confirmation-note { color: var(--muted); font-size: .78rem; }
 .admin-card .admin-destructive { border-color: rgba(255,122,138,.38); color: #ffadb8; background: rgba(112,27,40,.18); }
 
 @media (max-width: 900px) {
@@ -391,6 +408,9 @@ select { font: inherit; }
   .admin-card-header { flex-direction: column; }
   .admin-actions { flex-wrap: wrap; align-items: stretch; }
   .admin-actions button { flex: 1 1 180px; }
+  .admin-account-filters { grid-template-columns: 1fr; }
+  .admin-user-identity { flex-direction: column; }
+  .admin-user-badges { justify-content: flex-start; }
   .admin-catalog-details div { grid-template-columns: 1fr; gap: .25rem; }
   .admin-catalog-details dd { text-align: left; }
 }

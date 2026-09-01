@@ -67,7 +67,8 @@ const catalogSchedule = {
 const firstAdmin = {
   id: "33333333-3333-4333-8333-333333333333", email: "member-fca03c4a0d89@example.invalid",
   display_name: "Catalog Admin", role: "admin" as const, is_active: true,
-  must_change_password: false, created_at: "2026-08-14T00:00:00Z", updated_at: "2026-08-14T00:00:00Z",
+  must_change_password: false, must_setup_mfa: false,
+  created_at: "2026-08-14T00:00:00Z", updated_at: "2026-08-14T00:00:00Z",
 };
 const secondAdmin = {
   ...firstAdmin,
@@ -81,6 +82,7 @@ const member = {
   email: "member@wynterlabs.com",
   display_name: "Collection Member",
   role: "member" as const,
+  must_setup_mfa: true,
 };
 const superAdministrator = {
   ...firstAdmin,
@@ -329,6 +331,27 @@ it("shows only Administrator role actions to a super administrator", async () =>
   expect(screen.queryByRole("button", { name: /make super administrator/i })).not.toBeInTheDocument();
 });
 
+it("filters managed accounts and shows security status without changing server data", async () => {
+  administrators = [member, firstAdmin, superAdministrator];
+  const user = userEvent.setup();
+  render(<AdminPage />);
+
+  const accounts = await screen.findByRole("region", { name: /managed account directory/i });
+  expect(within(accounts).getByText(/3 accounts shown/i)).toBeVisible();
+  expect(within(accounts).getByText(/1 needs mfa setup/i)).toBeVisible();
+  expect(within(accounts).getByText("MFA setup required")).toBeVisible();
+
+  await user.type(within(accounts).getByRole("searchbox", { name: /search accounts/i }), "catalog");
+  expect(within(accounts).getByText(firstAdmin.email)).toBeVisible();
+  expect(within(accounts).queryByText(member.email)).not.toBeInTheDocument();
+  expect(within(accounts).getByText(/1 account shown/i)).toBeVisible();
+
+  await user.clear(within(accounts).getByRole("searchbox", { name: /search accounts/i }));
+  await user.selectOptions(within(accounts).getByLabelText(/filter by role/i), "super_admin");
+  expect(within(accounts).getByText(superAdministrator.email)).toBeVisible();
+  expect(within(accounts).queryByText(firstAdmin.email)).not.toBeInTheDocument();
+});
+
 it("lets a super administrator create only administrator invitations", async () => {
   authState.role = "super_admin";
   render(<AdminPage />);
@@ -557,6 +580,7 @@ it("requires explicit confirmation to disable, reactivate, and reset an administ
   await user.type(resetPassword, "AnotherTemporaryPass!23");
   await user.click(actions.getByRole("button", { name: /confirm password reset/i }));
   await waitFor(() => expect(fetch).toHaveBeenCalledWith(`/api/v1/admin/users/${encodeURIComponent(firstAdmin.id)}/reset-password`, expect.objectContaining({ method: "POST", body: JSON.stringify({ temporary_password: "AnotherTemporaryPass!23" }) })));
+  expect(await screen.findByText(/catalog admin's temporary password was reset/i)).toBeVisible();
   expect(screen.queryByDisplayValue("AnotherTemporaryPass!23")).not.toBeInTheDocument();
   expect(screen.queryByText("AnotherTemporaryPass!23")).not.toBeInTheDocument();
 });

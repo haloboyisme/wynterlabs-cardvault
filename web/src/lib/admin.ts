@@ -54,6 +54,7 @@ export interface Administrator {
   role: "member" | "admin" | "super_admin";
   is_active: boolean;
   must_change_password: boolean;
+  must_setup_mfa: boolean;
   created_at: string;
   updated_at: string;
 }

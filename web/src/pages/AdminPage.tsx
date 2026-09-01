@@ -52,6 +52,7 @@ interface AdministratorRowProps {
   administrator: Administrator;
   managerRole: "owner" | "super_admin";
   onUpdated: () => Promise<void>;
+  onFeedback: (message: string) => void;
 }
 
 function roleName(role: Administrator["role"]) {
@@ -72,7 +73,7 @@ function availableRoles(
   return [];
 }
 
-function AdministratorRow({ administrator, managerRole, onUpdated }: AdministratorRowProps) {
+function AdministratorRow({ administrator, managerRole, onUpdated, onFeedback }: AdministratorRowProps) {
   const [confirmation, setConfirmation] = useState<"disable" | "reactivate" | "reset" | "role" | null>(null);
   const [nextRole, setNextRole] = useState<Administrator["role"] | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState("");
@@ -93,6 +94,7 @@ function AdministratorRow({ administrator, managerRole, onUpdated }: Administrat
       await setAdministratorStatus(administrator.id, isActive);
       await onUpdated();
       changeConfirmation(null);
+      onFeedback(`${administrator.display_name} was ${isActive ? "reactivated" : "disabled"}. Active sessions were revoked when required.`);
     } catch {
       setError("The administrator status could not be updated. Try again.");
     } finally {
@@ -108,6 +110,7 @@ function AdministratorRow({ administrator, managerRole, onUpdated }: Administrat
       await resetAdministratorPassword(administrator.id, temporaryPassword);
       changeConfirmation(null);
       await onUpdated();
+      onFeedback(`${administrator.display_name}'s temporary password was reset. They must replace it at their next sign-in.`);
     } catch {
       setError("The temporary password could not be reset. Try again.");
     } finally {
@@ -123,6 +126,7 @@ function AdministratorRow({ administrator, managerRole, onUpdated }: Administrat
       await setUserRole(administrator.id, nextRole);
       await onUpdated();
       changeConfirmation(null);
+      onFeedback(`${administrator.display_name} is now ${roleName(nextRole)}. Their active sessions were revoked.`);
     } catch {
       setError("The account role could not be updated. Try again.");
     } finally {
@@ -137,12 +141,19 @@ function AdministratorRow({ administrator, managerRole, onUpdated }: Administrat
 
   return (
     <li className="admin-user-row">
-      <div>
-        <strong>{administrator.display_name}</strong>
-        <span>{administrator.email}</span>
-        <span>{roleName(administrator.role)}</span>
-        <span>{administrator.is_active ? "Active" : "Disabled"}</span>
-        {administrator.must_change_password && <span>Permanent password required</span>}
+      <div className="admin-user-identity">
+        <div>
+          <strong>{administrator.display_name}</strong>
+          <span>{administrator.email}</span>
+        </div>
+        <div className="admin-user-badges" aria-label={`${administrator.display_name} account status`}>
+          <span className={`admin-user-badge role-${administrator.role}`}>{roleName(administrator.role)}</span>
+          <span className={`admin-user-badge ${administrator.is_active ? "state-active" : "state-disabled"}`}>{administrator.is_active ? "Active" : "Disabled"}</span>
+          <span className={`admin-user-badge ${administrator.must_setup_mfa ? "state-attention" : "state-ready"}`}>
+            {administrator.must_setup_mfa ? "MFA setup required" : "MFA requirement clear"}
+          </span>
+          {administrator.must_change_password && <span className="admin-user-badge state-attention">Permanent password required</span>}
+        </div>
       </div>
       <div className="admin-actions workspace-danger-zone">
         {availableRoles(managerRole, administrator.role).map((role) => (
@@ -209,6 +220,7 @@ function AdministratorRow({ administrator, managerRole, onUpdated }: Administrat
       {confirmation === "reset" && (
         <form className="admin-confirmation admin-warning workspace-danger-zone" onSubmit={(event) => void resetPassword(event)}>
           <p>Set a temporary password for {administrator.display_name}. Their sessions will be revoked.</p>
+          <p className="admin-confirmation-note">They will be required to choose a permanent password before using the workspace.</p>
           <label>
             New temporary password
             <input
@@ -565,17 +577,37 @@ function AccountAccessPanel({ administrators, loadAdministrators, loadError, man
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | Administrator["role"]>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "disabled" | "attention">("all");
+
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filteredAdministrators = administrators.filter((administrator) => {
+    const matchesQuery = normalizedQuery.length === 0
+      || administrator.display_name.toLocaleLowerCase().includes(normalizedQuery)
+      || administrator.email.toLocaleLowerCase().includes(normalizedQuery);
+    const matchesRole = roleFilter === "all" || administrator.role === roleFilter;
+    const matchesStatus = statusFilter === "all"
+      || (statusFilter === "active" && administrator.is_active)
+      || (statusFilter === "disabled" && !administrator.is_active)
+      || (statusFilter === "attention" && (administrator.must_change_password || administrator.must_setup_mfa));
+    return matchesQuery && matchesRole && matchesStatus;
+  });
+  const attentionCount = administrators.filter((administrator) => administrator.must_setup_mfa).length;
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setFormError(null);
+    setFeedback(null);
     try {
       await createAdministrator({ email, display_name: displayName, temporary_password: temporaryPassword });
       setTemporaryPassword("");
       setEmail("");
       setDisplayName("");
       await loadAdministrators();
+      setFeedback(`${displayName} was created as an administrator. They must replace the temporary password and finish MFA setup.`);
     } catch {
       setFormError("The administrator could not be created. Check the details and try again.");
     } finally {
@@ -596,11 +628,47 @@ function AccountAccessPanel({ administrators, loadAdministrators, loadError, man
       </form>}
       {formError && <FeedbackBanner tone="error" className="form-error">{formError}</FeedbackBanner>}
       {loadError && <FeedbackBanner tone="error" className="form-error">{loadError}</FeedbackBanner>}
-      <ul className="admin-user-list" aria-label="Managed accounts">
-        {administrators.map((administrator) => (
-          <AdministratorRow key={administrator.id} administrator={administrator} managerRole={managerRole as "owner" | "super_admin"} onUpdated={loadAdministrators} />
-        ))}
-      </ul>
+      {feedback && <FeedbackBanner tone="success">{feedback}</FeedbackBanner>}
+      <section className="admin-account-directory" aria-label="Managed account directory">
+        <div className="admin-account-summary" aria-live="polite">
+          <strong>{filteredAdministrators.length} {filteredAdministrators.length === 1 ? "account" : "accounts"} shown</strong>
+          <span>{administrators.filter((administrator) => administrator.is_active).length} active</span>
+          <span>{attentionCount} {attentionCount === 1 ? "needs" : "need"} MFA setup</span>
+        </div>
+        <div className="admin-account-filters">
+          <label>Search accounts<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name or email" /></label>
+          <label>Filter by role<select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as typeof roleFilter)}>
+            <option value="all">All roles</option>
+            <option value="member">Members</option>
+            <option value="admin">Administrators</option>
+            <option value="super_admin">Super Administrators</option>
+          </select></label>
+          <label>Filter by status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}>
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+            <option value="attention">Needs attention</option>
+          </select></label>
+        </div>
+        {filteredAdministrators.length > 0 ? (
+          <ul className="admin-user-list" aria-label="Managed accounts">
+            {filteredAdministrators.map((administrator) => (
+              <AdministratorRow
+                key={administrator.id}
+                administrator={administrator}
+                managerRole={managerRole as "owner" | "super_admin"}
+                onUpdated={loadAdministrators}
+                onFeedback={setFeedback}
+              />
+            ))}
+          </ul>
+        ) : (
+          <div className="admin-account-empty" role="status">
+            <strong>No accounts match these filters.</strong>
+            <span>Clear the search or choose a different role or status.</span>
+          </div>
+        )}
+      </section>
     </section>
   );
 }

@@ -75,6 +75,12 @@ run every 1-168 hours, daily, or weekly using a selected 24-hour time and IANA
 time zone, for one supported game or all games. Manual refresh remains
 available, and the panel reports the next run and latest result.
 
+V2 account administration now includes a searchable and filterable managed
+account directory, compact role/account/MFA-requirement badges, explicit
+confirmation warnings, and success feedback after existing account actions.
+This reuses the current authorization and session-revocation APIs; it does not
+add an identity provider or weaken owner and Super Admin boundaries.
+
 ## 🔐 Privacy and data boundaries
 
 - Collections, accounts, imports, exports, and backups remain under the
@@ -103,8 +109,10 @@ fun project—not a commitment to update the software forever.
 
 - Continue improving scanner recognition, correction speed, mobile layout,
   accessibility, and session feedback.
-- Improve the editable user table, verified email changes, warned deletion
-  requests with owner authority, and privileged-safe MFA recovery controls.
+- Continue account management with verified email changes, warned deletion
+  requests with owner authority, and privileged-safe MFA recovery controls;
+  the searchable/filterable user directory and safer existing-action feedback
+  are already included in V2.
 - Add optional outbound mail configuration, signup email verification, and
   forgotten-password recovery using short-lived single-use reset links. The
   project will not email temporary passwords.
