@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/auth";
 import { useBranding } from "../app/branding";
 import { MEMBER_TRADING_ENABLED } from "../app/features";
+import { DEFAULT_BRANDING } from "../lib/branding";
 import { LogoMark } from "./LogoMark";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -70,6 +71,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     auth.status === "authenticated" && Boolean(auth.user?.must_setup_mfa);
   const canAdminister =
     auth.user?.role === "owner" || auth.user?.role === "super_admin" || auth.user?.role === "admin";
+  const siteName = branding.site_name?.trim() || DEFAULT_BRANDING.site_name;
+  const productName = branding.product_name?.trim() || DEFAULT_BRANDING.product_name;
+  const tagline = branding.tagline?.trim() || DEFAULT_BRANDING.tagline;
   const workspaceRole = auth.user?.role === "super_admin"
     ? "Super admin workspace"
     : auth.user?.role
@@ -86,9 +90,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
         <div className="header-topline">
-          <Link className="brand" to="/" aria-label={`${branding.site_name} ${branding.product_name} home`}>
+          <Link className="brand" to="/" aria-label={`${siteName} ${productName} home`}>
             <LogoMark branding={branding} />
-            <span><strong>{branding.site_name}</strong><small>{branding.product_name.toUpperCase()}</small></span>
+            <span><strong>{siteName}</strong><small>{productName.toUpperCase()}</small></span>
           </Link>
           <div className="header-account" aria-label="Current workspace">
             <span className="header-signal" aria-hidden="true" />
@@ -126,8 +130,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <main id="main">{children}</main>
       <footer className="site-footer">
-        <span>{branding.site_name} {branding.product_name}</span>
-        <span>{branding.tagline}</span>
+        <span>{siteName} {productName}</span>
+        <span>{tagline}</span>
       </footer>
     </div>
   );

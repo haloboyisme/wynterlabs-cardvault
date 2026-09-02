@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-1.0.1-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0.0-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -40,15 +40,15 @@ AI helped with planning, coding, testing, documentation, and troubleshooting.
 The project still requires human confirmation for scanned cards and human care
 when installing, securing, backing up, or changing it.
 
-## ✨ Version 1 at a glance
+## ✨ Version 2 at a glance
 
 | Area | What is included |
 |---|---|
-| 🟣 **Catalogs** | Magic: The Gathering, Pokémon, and Yu-Gi-Oh! browsing with game and set filtering |
+| 🟣 **Catalogs** | Magic, Pokémon, Yu-Gi-Oh!, One Piece, Digimon, Star Wars: Unlimited, Union Arena, Disney Lorcana, and Riftbound browsing with game and set filtering |
 | 🩵 **Scanner** | Manual single-card and faster card-by-card sessions with correction and exact-printing confirmation |
-| 🟢 **Collection** | Quantities, conditions, finishes, values, filters, bulk selection, import, and export |
+| 🟢 **Collection** | Quantities, conditions, finishes, values, game statistics, advanced sorting, bulk selection, import, and export |
 | 🟠 **Decks** | Deck creation and management using cards from one supported game at a time |
-| 🔵 **Dashboard** | Collection totals, pricing coverage, activity, and private value-history charts |
+| 🔵 **Dashboard** | Collection totals, pricing coverage, activity, and private hour-to-all-time value-history charts |
 | 🟡 **Accounts** | Owner setup, invitations, roles, themes, sessions, recovery controls, and MFA |
 | 🔴 **Safety** | Private-by-default deployment, generated secrets, HTTPS, isolated services, and backup tools |
 
@@ -56,18 +56,18 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
-## 🧪 Version 2 branch preview
+## 🧪 Version 2 release
 
-The `v2` branch is the active testing line. It expands the catalog foundation
+Version 2 expands the catalog foundation
 to Magic: The Gathering, Pokémon, Yu-Gi-Oh!, One Piece, Digimon, Star Wars:
 Unlimited, Union Arena, Disney Lorcana, and Riftbound. It also includes the
 private Brand Studio and ongoing scanner improvements, including conditional
 sideways-card recognition and labeled Digimon reference-artwork fallback when
 an exact provider image is unavailable.
 
-Version 2 is still a preview. Keep backups, review scanned printings before
-saving, and use the tagged Version 1 installer when stability matters more than
-testing new features.
+Keep backups and review scanned printings before saving. Recognition remains a
+private assistant rather than an authority, even when CardVault preselects one
+confident printing.
 
 Authorized owner, Super Admin, and Admin accounts can also configure one
 installation-wide catalog refresh schedule from the Admin catalog card. It can
@@ -80,6 +80,13 @@ account directory, compact role/account/MFA-requirement badges, explicit
 confirmation warnings, and success feedback after existing account actions.
 This reuses the current authorization and session-revocation APIs; it does not
 add an identity provider or weaken owner and Super Admin boundaries.
+
+Scanner and collection completion adds explicit match feedback, reliable
+one-result preselection, responsive single- and multi-card workspaces,
+game-level collection totals, expanded sorting, and safe exact-printing
+research links. TCGplayer and eBay open as independent third-party searches;
+CardVault does not sell cards or process payments, shipping, messages, or
+seller accounts.
 
 ## 🔐 Privacy and data boundaries
 
@@ -99,16 +106,27 @@ add an identity provider or weaken owner and Super Admin boundaries.
 > privileged accounts, and test backups before trusting the system with a large
 > collection.
 
-## 🧭 Roadmap: possible Version 2 work
+## 🧭 Roadmap after the Version 2 core release
 
-Version 1 is the completed self-hosted collector release. Any new product work
-belongs to Version 2. The roadmap is intentionally flexible because this is a
-fun project—not a commitment to update the software forever.
+The roadmap is intentionally flexible because this is a fun project—not a
+commitment to update the software forever.
 
-### Nearer experiments
+### Completed V2 foundations
 
-- Continue improving scanner recognition, correction speed, mobile layout,
-  accessibility, and session feedback.
+- Responsive and accessible single-card and multi-card scanning with correction,
+  retry, session feedback, exact-printing confirmation, and one-result preselection.
+- Multi-game collection filtering, advanced sorting, game/set statistics,
+  pricing coverage, and private value-history presentation.
+- Safe outbound exact-printing research links to TCGplayer and eBay without
+  internal commerce or member-to-member transactions.
+- Searchable account administration, optional member MFA, mandatory privileged
+  MFA, trusted-browser handling, open member signup, invitation roles, and
+  scheduled catalog refresh controls.
+- One-command Docker installation, generated secrets, backup/recovery tooling,
+  and a documented owner-controlled release process.
+
+### Optional future V2 increments
+
 - Continue account management with verified email changes, warned deletion
   requests with owner authority, and privileged-safe MFA recovery controls;
   the searchable/filterable user directory and safer existing-action feedback
@@ -119,12 +137,9 @@ fun project—not a commitment to update the software forever.
 - Add optional Google and Apple sign-in/linking only after each provider is
   separately configured and security-reviewed; username/password remains the
   self-hosted default.
-- Add more trading-card games and provider adapters when trustworthy,
+- Add more trading-card games and provider adapters only when trustworthy,
   legally appropriate data sources are available.
-- Expand collection organization, statistics, price-history presentation, and
-  optional community-style activity features.
-- Add safe outbound links for researching or selling an exact printing through
-  established marketplaces without processing payments inside WynterLabs.
+- Add optional community-style activity features.
 
 ### Longer-term ideas
 
@@ -156,10 +171,11 @@ attribution requirements, and acceptable-use rules.
 
 ## 🚦 Start here
 
-- [Install with the standalone Docker workflow](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/docs/INSTALL.md)
-- [Read the security policy](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/SECURITY.md)
-- [Read contribution expectations](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/CONTRIBUTING.md)
-- [Review the GitHub publishing checklist](https://github.com/haloboyisme/wynterlabs-cardvault/blob/main/docs/GITHUB-PUBLISHING-CHECKLIST.md)
+- [Install with the standalone Docker workflow](docs/INSTALL.md)
+- [Read the security policy](SECURITY.md)
+- [Read contribution expectations](CONTRIBUTING.md)
+- [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
+- [Review V2 release readiness](docs/v2-release-readiness.md)
 
 ---
 
@@ -179,7 +195,7 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v1.0.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.0.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

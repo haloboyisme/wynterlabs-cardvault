@@ -706,3 +706,15 @@ it("shows authoritative collection totals and next actions after saving", async 
   expect(feedback).toContainElement(screen.getByRole("link", { name: "View collection" }));
   expect(getCollectionSummary).toHaveBeenCalledTimes(1);
 });
+
+it("announces when one confident printing is preselected", async () => {
+  vi.mocked(getScanCandidates).mockResolvedValue([candidate]);
+  const user = userEvent.setup();
+  render(<ScannerPage />);
+
+  await user.click(screen.getByRole("button", { name: "Return OCR hints" }));
+
+  expect(await screen.findByRole("status", { name: "Printing match result" }))
+    .toHaveTextContent(/1 confident printing found and preselected/i);
+  expect(screen.getByRole("radio", { name: /black lotus.*lea.*233/i })).toBeChecked();
+});

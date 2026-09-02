@@ -19,7 +19,7 @@
 - The owner cannot be changed, deactivated, or duplicated.
 - Existing invitations migrate to target role `member` and remain compatible.
 - Invitation links stay single-use, revocable, and valid for seven days.
-- Deploy to private `LAN_HOST` first; leave public GitHub V2 unchanged.
+- Deploy to the private installation first; leave public GitHub V2 unchanged.
 - Hard cap: $8.
 
 ---
@@ -211,8 +211,8 @@ Commit: `feat(v2): open member signup`
 Create and checksum a CT 102 backup, run `deploy/verify-restore.sh`, deploy with `deploy/deploy.sh`, then verify:
 
 ```text
-GET https://LAN_HOST/signup -> 200
-GET https://LAN_HOST/api/health/ready -> {"status":"ready"}
+GET https://cardvault.example.invalid/signup -> 200
+GET https://cardvault.example.invalid/api/health/ready -> {"status":"ready"}
 ```
 
 Do not push the V2 branch to GitHub until the owner tests the live result and explicitly approves publishing.

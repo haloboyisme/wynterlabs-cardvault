@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved for private V2 implementation on `LAN_HOST`. Public GitHub V2
+Approved for private V2 implementation. Public GitHub V2
 must not be updated until the owner tests the private deployment and explicitly
 approves publishing it.
 
@@ -178,7 +178,7 @@ Automated tests must prove:
 - migration upgrade/downgrade and backup/restore tooling recognize revision
   `0016_trusted_mfa_browser`.
 
-Private acceptance on `LAN_HOST` must cover owner setup visibility,
+Private acceptance must cover owner setup visibility,
 optional member enrollment, mandatory privileged enrollment, same-browser
 login within five hours, and another-browser MFA. A fresh backup and isolated
 restore verification are required before the private deployment is considered

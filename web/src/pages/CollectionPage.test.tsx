@@ -202,6 +202,23 @@ it("groups equal set codes by game in the collection summary", async () => {
   fireEvent.click(screen.getByText("More collection stats"));
   expect(screen.getByText("Pokémon · Base Set")).toBeVisible();
   expect(screen.getByText("Yu-Gi-Oh! · Legend of Blue Eyes")).toBeVisible();
+  expect(screen.getByRole("list", { name: "Cards by game" })).toHaveTextContent(
+    "Pokémon2 copiesYu-Gi-Oh!1 copy",
+  );
+});
+
+it("offers safe exact-printing marketplace research from expanded saved-card details", async () => {
+  view();
+  await screen.findByRole("heading", { name: "Lightning Bolt" });
+  openDetails("Lightning Bolt");
+
+  const tcgplayer = screen.getByRole("link", { name: "Search TCGplayer" });
+  const ebay = screen.getByRole("link", { name: "Search eBay" });
+  expect(tcgplayer).toHaveAttribute("href", expect.stringContaining("Lightning+Bolt"));
+  expect(tcgplayer).toHaveAttribute("target", "_blank");
+  expect(ebay).toHaveAttribute("rel", "noreferrer");
+  expect(screen.getByText(/cardvault does not process the sale, payment, shipping, or seller contact/i))
+    .toBeVisible();
 });
 
 it("offers global sort choices, remembers the choice, and reports active ordering", async () => {

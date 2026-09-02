@@ -18,6 +18,7 @@ import {
   type MultiScanSession as MultiScanSessionState,
 } from "../scanner/multi-scan-session";
 import { filterConfidentScanCandidates } from "../scanner/title-confidence";
+import { scanMatchFeedback } from "../scanner/match-feedback";
 import { rankScanCandidates, uniqueDetectedPrintingId } from "../scanner/printing-match";
 import {
   MULTI_SCAN_COUNTDOWN_MAX_SECONDS,
@@ -439,6 +440,11 @@ export function MultiScanSession({
         <h3 id="multi-scan-editor-title">Fix or confirm selected card</h3>
         {selected.status === "recognizing" && <p role="status">Reading this card&hellip;</p>}
         {selected.error && <p role="alert">{selected.error}</p>}
+        {selected.candidates.length > 0 && <p
+          className="scanner-match-feedback"
+          role="status"
+          aria-label="Printing match result"
+        >{scanMatchFeedback(selected.candidates.length, Boolean(selectedCandidate))}</p>}
         <div className="form-actions">
           <button type="button" onClick={() => {
             setRetakeId(selected.id);

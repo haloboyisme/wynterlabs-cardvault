@@ -27,7 +27,7 @@ it("posts the secret only in the acceptance body and preserves AbortError", asyn
   expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/invitations/accept")
   expect(fetchMock.mock.calls[0][0]).not.toContain("private-token")
   expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
-    token: "test-only-credential-7b8e5392ad16",
+    token: "test-only-credential-080d6e42d53b",
   })
   await expect(acceptInvitation({
     token: "test-only-credential-01f4e61ac6ed",

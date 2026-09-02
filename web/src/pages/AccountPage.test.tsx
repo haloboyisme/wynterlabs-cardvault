@@ -107,11 +107,11 @@ it("shows private trading enforcement details only on Account", async () => {
   expect(await screen.findByText(/2 of 3 active trading strikes/i)).toBeVisible();
   expect(screen.getByText(/trading suspended/i)).toBeVisible();
   expect(screen.getByRole("link", { name: /appeal trading suspension/i }))
-    .toHaveAttribute("href", expect.stringContaining("member-5ae090bf2ce6@example.invalid"));
+    .toHaveAttribute("href", expect.stringContaining("member-417aa5e90597@example.invalid"));
   expect(screen.queryByText("WL-2026-0001")).not.toBeInTheDocument();
   expect(vi.mocked(fetch).mock.calls.some(([path]) =>
     String(path) === "/api/v1/trade-reports")).toBe(false);
-  expect(screen.getByText(/192\.168\.1\.50/)).toBeVisible();
+  expect(screen.getByText(/192\.0\.2\.171/)).toBeVisible();
   expect(document.body.textContent).not.toContain("�");
 
   fireEvent.click(screen.getByRole("button", { name: "Revoke" }));

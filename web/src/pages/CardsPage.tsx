@@ -149,7 +149,7 @@ export function CardsPage() {
   const selectedSetValue = selectedSet ? setSelectionValue(selectedSet) : "";
   const noticeGames = selectedGame
     ? [selectedGame]
-    : [...new Set(results?.items.map((card) => card.set.game) ?? [])];
+    : [...new Set(results?.items?.map((card) => card.set.game) ?? [])];
 
 
   return (

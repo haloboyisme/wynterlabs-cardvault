@@ -18,8 +18,14 @@ reuse values from another installation.
 
 ## Install
 
-From the root of this release, prepare the host and install WynterLabs CardVault
-with one command:
+Clone the immutable V2 release and install WynterLabs CardVault with one command.
+Replace `YOUR_HOST_OR_IP` with the LAN address or DNS name used by members:
+
+```sh
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.0.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+```
+
+If the release is already downloaded, run the included bootstrap directly:
 
 ```sh
 sudo ./deploy/standalone/bootstrap.sh --host cards.example.invalid
@@ -39,6 +45,8 @@ Create the initial account using these example values only as a guide:
 - Password: `<choose-a-strong-password>`
 
 Store the generated secrets and backup materials securely. Before relying on
-the installation, test a backup and recovery process that you control.
+the installation, run `sudo ./deploy/standalone/backup.sh`, then use the
+isolated recovery workflow documented by `deploy/standalone/recover.sh` on
+alternate ports. Never test a restore over the active installation.
 
 Return to the [project overview](../README.md).

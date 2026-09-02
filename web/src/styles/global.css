@@ -1510,6 +1510,7 @@ html[data-theme="light"] .avatar { color: #07111b; }
 .scanner-result-toolbar label { display: grid; gap: .4rem; color: var(--muted); font-size: .78rem; font-weight: 750; }
 .scanner-result-toolbar input, .scanner-result-toolbar select { width: 100%; min-height: 46px; }
 .scanner-result-toolbar strong { min-height: 46px; display: flex; align-items: center; color: var(--blue); }
+.scanner-match-feedback { margin: .75rem 0; padding: .75rem .9rem; border-left: 4px solid var(--cyan); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--cyan) 9%, var(--panel)); color: var(--ink); }
 .scanner-save-feedback {
   display: grid;
   gap: .65rem;

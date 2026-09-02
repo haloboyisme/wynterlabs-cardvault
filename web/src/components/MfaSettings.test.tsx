@@ -48,13 +48,13 @@ it("shows a browser-generated QR with manual fallback and clears a cancelled cer
   await screen.findByRole("button", { name: "Set up two-step verification" });
   fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "owner password" } });
   fireEvent.click(screen.getByRole("button", { name: "Set up two-step verification" }));
-  await screen.findByText("ABCDEFGHIJKLMNOP");
+  await screen.findByText(fixtureSecret);
   expect(await screen.findByRole("img", { name: "Authenticator setup QR code" })).toHaveAttribute("src", "data:image/png;base64,fixture-qr");
   expect(screen.getByText(/created only in this browser/i)).toBeVisible();
   expect(screen.queryByRole("link")).toBeNull();
   expect(screen.getByRole("button", { name: "Copy authenticator setup URI" })).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Cancel setup" }));
-  await waitFor(() => expect(screen.queryByText("ABCDEFGHIJKLMNOP")).toBeNull());
+  await waitFor(() => expect(screen.queryByText(fixtureSecret)).toBeNull());
 });
 
 it("requires acknowledgement before clearing one-time recovery codes", async () => {
@@ -62,7 +62,7 @@ it("requires acknowledgement before clearing one-time recovery codes", async () 
   await screen.findByRole("button", { name: "Set up two-step verification" });
   fireEvent.change(screen.getByLabelText("Current password"), { target: { value: "owner password" } });
   fireEvent.click(screen.getByRole("button", { name: "Set up two-step verification" }));
-  await screen.findByText("ABCDEFGHIJKLMNOP");
+  await screen.findByText(fixtureSecret);
   fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm and show recovery codes" }));
   await screen.findByText("ABCDE-FGHIJ-KLMNO-PQRST");

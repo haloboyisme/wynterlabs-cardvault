@@ -19,6 +19,7 @@ import {
   updateCollectionItem, writeCollectionSort,
 } from "../lib/collection";
 import { createDeck, DECK_FORMATS, formatsForGame, setDeckCard } from "../lib/decks";
+import { marketplaceLinksForCard } from "../lib/marketplace";
 import { catalogGameName } from "../scanner/catalog-games";
 import type {
   CollectionCondition, CollectionItem, CollectionItemUpdate, CollectionPageData,
@@ -328,6 +329,13 @@ export function CollectionPage() {
   const quickDeckFormats = selectedGames.size === 1
     ? formatsForGame([...selectedGames][0]!)
     : DECK_FORMATS;
+  const gameStats = summary ? [...summary.sets.reduce((totals, entry) => {
+    const gameKey = entry.game || "mtg";
+    totals.set(gameKey, (totals.get(gameKey) ?? 0) + entry.copies);
+    return totals;
+  }, new Map<string, number>())]
+    .sort((left, right) => right[1] - left[1] || catalogGameName(left[0]).localeCompare(catalogGameName(right[0])))
+    : [];
 
   async function removeSelected() {
     if (bulkBusy || selected.size === 0 || hasSelectedStale) return;
@@ -501,6 +509,12 @@ export function CollectionPage() {
                 <dt>{entry.value.replaceAll("_", " ")}</dt><dd>{entry.copies} copies</dd>
               </div>)}
             </dl>
+            {gameStats.length > 0 && <ul className="collection-game-stats" aria-label="Cards by game">
+              {gameStats.map(([gameKey, copies]) => <li key={gameKey}>
+                <span>{catalogGameName(gameKey)}</span>
+                <strong>{copies} {copies === 1 ? "copy" : "copies"}</strong>
+              </li>)}
+            </ul>}
             {summary.sets.length > 0 && <ul className="collection-set-stats" aria-label="Cards by set">
               {summary.sets.map((entry) => <li key={`${entry.game || "mtg"}-${entry.code}`}>
                 <span>{catalogGameName(entry.game || "mtg")} · {entry.name}</span><strong>{entry.copies} copies</strong>
@@ -755,6 +769,25 @@ export function CollectionPage() {
                   {display.showTypeRarity && <div><dt>Card</dt><dd>{item.card.type_line} · {item.card.rarity}</dd></div>}
                   {display.showPrices && price && <div><dt>Informational price</dt><dd>${price}</dd></div>}
                 </dl>
+                {item.card.active && <section className="collection-marketplace-handoff" aria-label={`Research ${item.card.name} marketplaces`}>
+                  <strong>Research this printing</strong>
+                  <p>Search using {item.card.set.code.toUpperCase()} · {item.card.collector_number}, then verify condition and seller details on the marketplace.</p>
+                  <div className="collection-actions">
+                    {marketplaceLinksForCard({
+                      game: item.card.set.game,
+                      name: item.card.name,
+                      setCode: item.card.set.code,
+                      collectorNumber: item.card.collector_number,
+                    }).map((link) => <a
+                      className="button ghost"
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      key={link.label}
+                    >{link.label}</a>)}
+                  </div>
+                  <small>CardVault does not process the sale, payment, shipping, or seller contact.</small>
+                </section>}
                 {editing ? <form className="collection-edit" onSubmit={(event) => {
                 event.preventDefault();
                 void mutate(item, {

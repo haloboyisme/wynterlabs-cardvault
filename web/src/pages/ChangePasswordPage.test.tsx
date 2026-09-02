@@ -75,8 +75,8 @@ it("changes the password with exact API fields, clears auth, and returns to logi
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
-          current_password: "test-only-credential-35b231b8da9a",
-          new_password: "test-only-credential-976634524f60",
+          current_password: "temporary winter admin",
+          new_password: "permanent winter password",
         }),
       }),
     );

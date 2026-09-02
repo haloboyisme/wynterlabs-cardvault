@@ -331,6 +331,21 @@ it("previews the exact selected printing beside the active scanner", async () =>
   expect(preview).toHaveTextContent("CMM · 500");
 });
 
+it("announces when one confident session printing is preselected", async () => {
+  vi.mocked(recognizeCardPhoto).mockResolvedValue({
+    name: "Black Lotus", titleCandidates: ["Black Lotus"], rawText: "Black Lotus",
+  });
+  vi.mocked(getScanCandidates).mockResolvedValue([candidate]);
+  const user = userEvent.setup();
+  render(<MultiScanSession />);
+
+  await user.click(screen.getByRole("button", { name: "Capture test card" }));
+
+  expect(await screen.findByRole("status", { name: "Printing match result" }))
+    .toHaveTextContent(/1 confident printing found and preselected/i);
+  expect(screen.getByRole("radio", { name: /black lotus.*lea.*233/i })).toBeChecked();
+});
+
 it("uses the selected finish for the preview price", async () => {
   vi.mocked(recognizeCardPhoto).mockResolvedValue({
     name: "Black Lotus",

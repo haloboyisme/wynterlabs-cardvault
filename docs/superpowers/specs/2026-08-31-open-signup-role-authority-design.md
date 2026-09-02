@@ -63,7 +63,7 @@ No endpoint may change the owner's role, deactivate the owner, or create a secon
 - Add focused tests for member-only self-registration, rate limiting, duplicate identities, admin-invite role assignment, and every role-authority boundary.
 - Add UI tests for open signup, role controls, and invitation type selection.
 - Run one combined focused test and production-build gate.
-- Create and verify a CT 102 backup, deploy to `LAN_HOST`, and check signup plus readiness.
+- Create and verify a host backup, deploy privately, and check signup plus readiness.
 - Do not update the public GitHub V2 branch until the owner tests and approves the private deployment.
 
 ## Budget boundary

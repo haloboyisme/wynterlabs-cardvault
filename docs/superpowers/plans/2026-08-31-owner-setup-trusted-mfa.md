@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Private V2 at `LAN_HOST` is deployed and verified before GitHub V2 is updated.
+- Private V2 is deployed and verified before GitHub V2 is updated.
 - Public GitHub V2 is pushed only after the private deployment passes the focused acceptance check.
 - The trusted-browser duration is a fixed, non-sliding 18,000 seconds.
 - Normal members may enroll in MFA; Owner, Super Admin, and Admin must enroll.
@@ -101,5 +101,5 @@
 
 - [ ] **Step 1: Run one combined final verification**: focused API tests, focused web tests, TypeScript check/build, migration upgrade/downgrade smoke, and `git diff --check` in a single command group.
 - [ ] **Step 2: Commit the complete feature** without dependency caches or secrets.
-- [ ] **Step 3: Take and verify a pre-deploy backup**, deploy the exact commit to `LAN_HOST`, apply migration `0016_trusted_mfa_browser`, and perform one private smoke check covering setup status, login page, and health.
+- [ ] **Step 3: Take and verify a pre-deploy backup**, deploy the exact commit privately, apply migration `0016_trusted_mfa_browser`, and perform one private smoke check covering setup status, login page, and health.
 - [ ] **Step 4: Push the exact tested feature commit to public GitHub branch `v2`**, then verify the remote branch head and report the private and public commit IDs.

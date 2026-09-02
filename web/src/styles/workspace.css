@@ -540,6 +540,28 @@ html[data-motion="reduced"] *::after {
 .collection-overview .workspace-stat-detail { display: grid; gap: .25rem; }
 .collection-overview-details { grid-column: 1 / -1; }
 .collection-overview-details .collection-more-stats { margin-top: 0; }
+.collection-game-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .55rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.collection-game-stats li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel-strong) 76%, transparent);
+}
+.collection-game-stats span { color: var(--muted); }
+.collection-marketplace-handoff { display: grid; gap: .55rem; padding: .8rem; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.collection-marketplace-handoff p, .collection-marketplace-handoff small { margin: 0; color: var(--muted); }
+.collection-marketplace-handoff .collection-actions { justify-content: flex-start; }
 
 .collection-filters {
   display: grid;

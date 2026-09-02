@@ -12,6 +12,7 @@ import type { CardSet, CollectionCondition, ScanCandidate } from "../lib/types";
 import { rankScanCandidates, uniqueDetectedPrintingId } from "../scanner/printing-match";
 import { filterConfidentScanCandidates } from "../scanner/title-confidence";
 import { selectedSetFromValue } from "../scanner/catalog-games";
+import { scanMatchFeedback } from "../scanner/match-feedback";
 
 const CONDITIONS: Array<[CollectionCondition, string]> = [
   ["near_mint", "Near mint"],
@@ -429,6 +430,9 @@ export function ScannerPage() {
           {candidates.length > 0 && <section className="single-scan-candidates" aria-labelledby="scan-candidates-title">
             <h2 id="scan-candidates-title">Choose the exact printing</h2>
             <p>OCR is only a hint. All known printings are shown so you can check the set and collector number yourself.</p>
+            <p className="scanner-match-feedback" role="status" aria-label="Printing match result">
+              {scanMatchFeedback(candidates.length, Boolean(selected))}
+            </p>
             <div className="scanner-result-toolbar">
               <label>Filter by set<select value={setFilter} onChange={(event) => {
                 setSetFilter(event.target.value);
