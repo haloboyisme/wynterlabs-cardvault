@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../app/auth";
+import { GoogleAccountPanel } from "../components/GoogleAccountPanel";
 import { FeedbackBanner } from "../components/workspace/FeedbackBanner";
 import { AutoScannerSettingsPanel } from "../components/AutoScannerSettings";
 import { MfaSettings } from "../components/MfaSettings";
@@ -195,6 +196,7 @@ export function AccountPage() {
         {user?.display_name}
       </PageHeader>
       <div className="account-grid">
+        <GoogleAccountPanel />
         <article className="profile-card"><span className="avatar">{user?.display_name.slice(0, 1).toUpperCase()}</span><div><strong>{user?.display_name}</strong><p>{roleLabel(user?.role)}</p></div></article>
         <section className="account-appearance-card" aria-labelledby="account-appearance-heading">
           <div className="account-card-heading">

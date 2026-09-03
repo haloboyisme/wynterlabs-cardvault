@@ -104,6 +104,13 @@ async def login(
         await database.commit()
         raise AppError(401, "invalid_credentials", "Email or password is incorrect.")
 
+    if user.email_verification_required:
+        await database.commit()
+        raise AppError(
+            403, "email_verification_required",
+            "Verify your email before signing in. Use the resend verification link below.",
+        )
+
     enrolled = await database.scalar(
         select(MfaCredential).where(
             MfaCredential.user_id == user.id,

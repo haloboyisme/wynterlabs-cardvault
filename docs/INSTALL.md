@@ -6,6 +6,12 @@ reuse values from another installation.
 
 ## Before you begin
 
+Google sign-in is optional and disabled by default. After Docker installation
+and owner setup, configure it in **Admin → Google sign-in** using your own Google
+OAuth client. The installer reminds you of this step; no shared Google secret is
+included. See [Google setup](GOOGLE-SIGN-IN.md) for the callback address, private
+LAN hostname requirements, and account-linking instructions.
+
 - Use an Ubuntu 26.04 LTS amd64 host. The bootstrap installs Docker Engine,
   Docker Compose v2, and the HTTPS readiness client when needed.
 - Minimum for a small personal collection: 2 vCPU, 4 GiB RAM, 512 MiB swap,

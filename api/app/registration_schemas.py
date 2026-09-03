@@ -31,4 +31,5 @@ class RegistrationOut(BaseModel):
     role: Role
     must_change_password: bool
     must_setup_mfa: bool
+    email_verification_required: bool = False
     created_at: datetime

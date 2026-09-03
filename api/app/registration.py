@@ -1,10 +1,11 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import email_delivery
 from app.config import Settings
 from app.database import get_db
 from app.dependencies import get_settings
@@ -50,6 +51,7 @@ async def _create_user_and_session(
     database: AsyncSession,
     settings: Settings,
     now: datetime,
+    require_verification: bool = False,
 ) -> User:
     email_normalized = str(email).casefold()
     display_name_normalized = display_name.casefold()
@@ -73,6 +75,7 @@ async def _create_user_and_session(
         role=role,
         owner_slot=None,
         is_active=True,
+        email_verification_required=require_verification,
         must_change_password=False,
         must_setup_mfa=role in (Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN),
         password_changed_at=now,
@@ -84,6 +87,8 @@ async def _create_user_and_session(
     except IntegrityError as exc:
         raise _identity_conflict(conflict_code) from exc
 
+    if require_verification:
+        return user
     raw_session = new_session_token()
     database.add(
         UserSession(
@@ -103,6 +108,7 @@ async def register(
     payload: RegistrationRequest,
     request: Request,
     response: Response,
+    tasks: BackgroundTasks,
     database: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User:
@@ -133,6 +139,7 @@ async def register(
         succeeded=False,
     )
     database.add(attempt)
+    mail_config = await email_delivery.enabled_config(database)
     try:
         user = await _create_user_and_session(
             email=str(payload.email),
@@ -145,10 +152,13 @@ async def register(
             database=database,
             settings=settings,
             now=now,
+            require_verification=mail_config is not None,
         )
     except AppError:
         await database.commit()
         raise
     attempt.succeeded = True
+    if mail_config:
+        await email_delivery.issue_link(database, user, "verify", mail_config, settings, tasks)
     await database.commit()
     return user

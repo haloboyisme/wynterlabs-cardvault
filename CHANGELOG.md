@@ -2,6 +2,15 @@
 
 ## Unreleased — V2.5 preparation
 
+- Add optional Google sign-in and explicit account linking, configured privately
+  by the owner/superadmin in Admin. Password sign-in remains available; existing
+  MFA requirements still apply. See [Google setup](docs/GOOGLE-SIGN-IN.md).
+
+- Add optional owner/superadmin-configured TLS SMTP for signup verification and
+  single-use password recovery, encrypted provider credentials, resend forms,
+  and session/MFA-trust revocation after password recovery. Existing accounts
+  retain access. See [Email setup](docs/EMAIL-SETUP.md).
+
 - Repair standalone upgrades to use the included `verify-backup.sh` instead of
   a private deployment helper absent from public releases. Restore validation
   runs in a disposable PostgreSQL container with no network or published ports.

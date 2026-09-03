@@ -13,9 +13,13 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [setupAvailable, setSetupAvailable] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const googleResult = new URLSearchParams(location.search).get("google");
 
   useEffect(() => {
     let active = true;
+    void apiRequest<{ enabled: boolean }>("/api/v1/auth/google/status")
+      .then(r => { if (active) setGoogleEnabled(r.enabled); }).catch(() => {});
     void apiRequest<{ available: boolean }>("/api/v1/setup/status")
       .then((result) => { if (active) setSetupAvailable(result.available); })
       .catch(() => { if (active) setSetupAvailable(false); });
@@ -62,10 +66,19 @@ export function LoginPage() {
         </div>
         {message && <div className="form-note" role="status">{message}</div>}
         {error && <div className="form-error" role="alert">{error}</div>}
+        {googleResult === "failed" && <p role="alert">Google sign-in could not be completed. Please retry or use your password.</p>}
+        {googleResult === "unlinked" && <p role="status">This Google account is not linked yet. Sign in with your CardVault password, or <Link to="/signup">create an account</Link>, then choose Link Google in Account.</p>}
         <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         <button className="button primary wide" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</button>
-        <p className="form-note">Have an invitation? <Link to="/signup">Create account</Link></p>
+        {googleEnabled && <button type="button" className="button secondary wide" disabled={busy} onClick={() => {
+          setBusy(true); setError("");
+          void apiRequest<{ url: string }>("/api/v1/auth/google/start", { method: "POST" })
+            .then(r => window.location.assign(r.url))
+            .catch((r: unknown) => { setError(r instanceof ApiError ? r.message : "Could not start Google sign-in."); setBusy(false); });
+        }}>Sign in with Google</button>}
+        <p className="form-note"><Link to="/forgot-password">Forgot password?</Link> · <Link to="/resend-verification">Resend verification</Link></p>
+        <p className="form-note">New here? <Link to="/signup">Create account</Link></p>
         {setupAvailable && <p className="form-note">Setting up a new server? <Link to="/setup">Complete owner setup</Link></p>}
       </form>
     </section>

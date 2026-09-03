@@ -51,6 +51,7 @@ async def require_auth(
         session.revoked_at is not None
         or expires <= now
         or not user.is_active
+        or user.email_verification_required
         or session.created_at.replace(tzinfo=UTC) < changed
     ):
         raise AppError(401, "not_authenticated", "Sign in to continue.")

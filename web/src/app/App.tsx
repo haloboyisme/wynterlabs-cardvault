@@ -16,6 +16,7 @@ import { DeckDetailPage } from "../pages/DeckDetailPage";
 import { DecksPage } from "../pages/DecksPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
+import { EmailActionPage, EmailRequestPage } from "../pages/EmailActionPage";
 import { MfaChallengePage } from "../pages/MfaChallengePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ScannerPage } from "../pages/ScannerPage";
@@ -35,6 +36,10 @@ export function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<EmailRequestPage key="reset" purpose="reset" />} />
+            <Route path="/resend-verification" element={<EmailRequestPage key="verify" purpose="verify" />} />
+            <Route path="/reset-password" element={<EmailActionPage key="reset" purpose="reset" />} />
+            <Route path="/verify-email" element={<EmailActionPage key="verify" purpose="verify" />} />
             <Route path="/mfa-challenge" element={<MfaChallengePage />} />
             <Route path="/signup" element={<AcceptInvitationPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />

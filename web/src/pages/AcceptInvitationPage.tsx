@@ -28,6 +28,7 @@ export function AcceptInvitationPage() {
   const [confirmation, setConfirmation] = useState("")
   const [busy, setBusy] = useState(false)
   const [complete, setComplete] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -64,11 +65,12 @@ export function AcceptInvitationPage() {
           password,
         }, request.signal)
       } else {
-        await registerMember({
+        const result = await registerMember({
           email,
           display_name: displayName,
           password,
         }, request.signal)
+        setNeedsVerification(Boolean(result.email_verification_required))
       }
       setPassword("")
       setConfirmation("")
@@ -96,8 +98,8 @@ export function AcceptInvitationPage() {
         <h1>Create your account</h1>
         {complete ? (
           <>
-            <p className="form-success" role="status">Your account is ready.</p>
-            <a className="button" href="/dashboard">Continue to dashboard</a>
+            <p className="form-success" role="status">{needsVerification ? "Check your email to verify your account before signing in. The link expires in 24 hours." : "Your account is ready."}</p>
+            {needsVerification ? <><a className="button" href="/login">Go to sign in</a><p><a href="/resend-verification">Resend verification email</a></p></> : <a className="button" href="/dashboard">Continue to dashboard</a>}
           </>
         ) : (
           <form onSubmit={(event) => void submit(event)}>

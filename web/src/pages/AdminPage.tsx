@@ -2,6 +2,8 @@ import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
 import { TradeModerationPanel } from "../components/TradeModerationPanel";
 import { BrandStudio } from "../components/BrandStudio";
+import { EmailSettingsPanel } from "../components/EmailSettingsPanel";
+import { GoogleSettingsPanel } from "../components/GoogleSettingsPanel";
 import { DisclosurePanel } from "../components/workspace/DisclosurePanel";
 import { FeedbackBanner } from "../components/workspace/FeedbackBanner";
 import { PageHeader } from "../components/workspace/PageHeader";
@@ -464,6 +466,8 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
       )}
 
       <BrandStudio />
+      {isRoleManager && <EmailSettingsPanel />}
+      {isRoleManager && <GoogleSettingsPanel />}
 
       <div className="admin-grid">
         <section className="admin-card" aria-labelledby="catalog-admin-heading">

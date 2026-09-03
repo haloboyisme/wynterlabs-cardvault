@@ -31,7 +31,7 @@ export interface MemberRegistration {
 }
 
 export function registerMember(payload: MemberRegistration, signal?: AbortSignal) {
-  return apiRequest<User>("/api/v1/registration", {
+  return apiRequest<User & { email_verification_required?: boolean }>("/api/v1/registration", {
     method: "POST",
     body: JSON.stringify(payload),
     signal,

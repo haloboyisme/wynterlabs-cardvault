@@ -74,6 +74,9 @@ class User(Base):
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.MEMBER)
     owner_slot: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_verification_required: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     must_setup_mfa: Mapped[bool] = mapped_column(Boolean, default=False)
     share_activity: Mapped[bool] = mapped_column(
@@ -90,6 +93,80 @@ class User(Base):
     collection_value_snapshots: Mapped[list["CollectionValueSnapshot"]] = relationship(
         cascade="all, delete-orphan"
     )
+
+
+class GoogleSettings(Base):
+    __tablename__ = "google_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_google_settings_singleton"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    client_id: Mapped[str] = mapped_column(String(256))
+    secret_ciphertext: Mapped[str] = mapped_column(Text)
+    site_url: Mapped[str] = mapped_column(String(512))
+    revision: Mapped[str] = mapped_column(String(64))
+
+
+class GoogleIdentity(Base):
+    __tablename__ = "google_identities"
+    subject: Mapped[str] = mapped_column(String(255), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GoogleFlow(Base):
+    __tablename__ = "google_flows"
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    browser_hash: Mapped[str] = mapped_column(String(64))
+    trust_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    verifier_ciphertext: Mapped[str] = mapped_column(Text)
+    nonce: Mapped[str] = mapped_column(String(64))
+    revision: Mapped[str] = mapped_column(String(64))
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
+    session_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=True
+    )
+    password_version: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    client_ip: Mapped[str] = mapped_column(String(64), index=True)
+
+
+class EmailDeliverySettings(Base):
+    __tablename__ = "email_delivery_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_email_delivery_singleton"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    host: Mapped[str] = mapped_column(String(253))
+    port: Mapped[int] = mapped_column(Integer)
+    username: Mapped[str] = mapped_column(String(320))
+    from_address: Mapped[str] = mapped_column(String(320))
+    site_url: Mapped[str] = mapped_column(String(512))
+    password_ciphertext: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class EmailActionToken(Base):
+    __tablename__ = "email_action_tokens"
+    __table_args__ = (
+        CheckConstraint("purpose IN ('verify', 'reset')", name="ck_email_action_purpose"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    purpose: Mapped[str] = mapped_column(String(16))
+    target_email: Mapped[str] = mapped_column(String(320))
+    password_version: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AccountDeletionRequest(Base):

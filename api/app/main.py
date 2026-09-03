@@ -18,6 +18,8 @@ from app.routers import (
     collection,
     community,
     decks,
+    email,
+    google,
     health,
     invitations,
     mfa,
@@ -72,6 +74,8 @@ def create_app(
     app.include_router(trades.router)
     app.include_router(admin.router)
     app.include_router(auth.router)
+    app.include_router(email.router)
+    app.include_router(google.router)
     app.include_router(account.router)
     app.include_router(mfa.router)
     return app
