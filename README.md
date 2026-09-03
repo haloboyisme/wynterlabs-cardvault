@@ -122,15 +122,17 @@ commitment to update the software forever.
 - Searchable account administration, optional member MFA, mandatory privileged
   MFA, trusted-browser handling, open member signup, invitation roles, and
   scheduled catalog refresh controls.
+- Password-confirmed email changes, owner-reviewed deletion requests,
+  hierarchy-safe MFA resets, and owner-only account deletion without requiring
+  an outbound email service.
+- A signed-in community feed for opted-in display names, recent card additions,
+  catalog refreshes, and set releases. Sharing is off by default and never
+  includes email, value, condition, notes, sessions, IP addresses, or scan photos.
 - One-command Docker installation, generated secrets, backup/recovery tooling,
   and a documented owner-controlled release process.
 
 ### Optional future V2 increments
 
-- Continue account management with verified email changes, warned deletion
-  requests with owner authority, and privileged-safe MFA recovery controls;
-  the searchable/filterable user directory and safer existing-action feedback
-  are already included in V2.
 - Add optional outbound mail configuration, signup email verification, and
   forgotten-password recovery using short-lived single-use reset links. The
   project will not email temporary passwords.
@@ -139,7 +141,7 @@ commitment to update the software forever.
   self-hosted default.
 - Add more trading-card games and provider adapters only when trustworthy,
   legally appropriate data sources are available.
-- Add optional community-style activity features.
+- Add finer feed controls or moderation only if the private community needs them.
 
 ### Longer-term ideas
 
@@ -176,6 +178,7 @@ attribution requirements, and acceptable-use rules.
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
 - [Review V2 release readiness](docs/v2-release-readiness.md)
+- [Understand account and private community controls](docs/ACCOUNT-AND-COMMUNITY.md)
 
 ---
 

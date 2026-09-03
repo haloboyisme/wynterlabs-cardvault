@@ -11,9 +11,17 @@ backup contents.
 - Marketplace buttons open exact-printing searches on independent third-party
   sites. CardVault does not process transactions, payment, shipping, seller
   contact, or marketplace accounts.
-- Google/Apple sign-in, outbound email recovery, community feeds, physical
-  scanner transport, custom collectibles, and gameplay remain optional future
-  work rather than V2 release requirements.
+- The community feed is authenticated and opt-in. It exposes only display name,
+  safe card identity/image data, catalog counts, and set release information.
+  Prices, collection details, email, sessions, IP addresses, and scanner photos
+  are excluded.
+- Email changes use the current password and revoke all sessions. Non-owner
+  deletion requests require owner review; owner deletion is unavailable in the
+  web application. MFA reset follows the existing role hierarchy and revokes
+  the target's sessions and trusted browsers.
+- Google/Apple sign-in, outbound email recovery, physical scanner transport,
+  custom collectibles, and gameplay remain optional future work rather than V2
+  release requirements.
 
 ## Release gate
 
@@ -28,6 +36,12 @@ backup contents.
 - [ ] Encrypted off-host copy is checksum verified and decrypt-tested.
 - [ ] Owner reviews the private live deployment before public push and tag.
 
+## Account and community acceptance
+
+- [ ] Email change signs the member out and the new email signs in successfully.
+- [ ] A member can request and cancel deletion; only the owner can decide it.
+- [ ] MFA reset never targets the owner or bypasses the Super Admin hierarchy.
+- [ ] Activity remains hidden until a member opts in, and opting out removes it.
 ## Installation and recovery
 
 Install from the immutable `v2.0.0` tag using the command in

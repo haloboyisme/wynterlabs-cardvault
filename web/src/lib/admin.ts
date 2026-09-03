@@ -65,6 +65,15 @@ export interface CreateAdministratorPayload {
   temporary_password: string;
 }
 
+export interface AdminDeletionRequest {
+  id: string;
+  user_id: string;
+  display_name: string;
+  email: string;
+  role: Administrator["role"];
+  requested_at: string;
+}
+
 export function getAdminCatalogStatus(signal?: AbortSignal) {
   return apiRequest<AdminCatalogStatus>("/api/v1/admin/catalog/status", { signal });
 }
@@ -125,4 +134,25 @@ export function setUserRole(userId: string, role: Administrator["role"]) {
     `/api/v1/admin/users/${encodeURIComponent(userId)}/role`,
     { method: "PATCH", body: JSON.stringify({ role }) },
   );
+}
+
+export function resetUserMfa(userId: string) {
+  return apiRequest<Administrator>(`/api/v1/admin/users/${encodeURIComponent(userId)}/reset-mfa`, { method: "POST" });
+}
+
+export function deleteUser(userId: string) {
+  return apiRequest<void>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: "DELETE", body: JSON.stringify({ confirmation: "DELETE ACCOUNT" }),
+  });
+}
+
+export function getDeletionRequests(signal?: AbortSignal) {
+  return apiRequest<AdminDeletionRequest[]>("/api/v1/admin/deletion-requests", { signal });
+}
+
+export function decideDeletionRequest(requestId: string, decision: "approve" | "reject") {
+  return apiRequest<void>(`/api/v1/admin/deletion-requests/${encodeURIComponent(requestId)}/${decision}`, {
+    method: "POST",
+    body: JSON.stringify(decision === "approve" ? { confirmation: "DELETE ACCOUNT" } : {}),
+  });
 }

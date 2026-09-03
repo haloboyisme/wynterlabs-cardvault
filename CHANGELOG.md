@@ -13,6 +13,8 @@
 - Added searchable account administration, role-controlled signup and
   invitations, privileged MFA requirements, trusted-browser handling, and
   scheduled catalog refresh controls.
+- Added password-confirmed email changes, owner-reviewed account deletion,
+  role-safe MFA reset controls, and a private-by-default community activity feed.
 - Kept one-command Docker installation, generated installation secrets,
   backup/recovery tools, and private-by-default service boundaries.
 

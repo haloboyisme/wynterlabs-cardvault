@@ -40,6 +40,23 @@ class AdminResetPasswordRequest(BaseModel):
     temporary_password: str = Field(min_length=12, max_length=256)
 
 
+class AdminDeleteRequest(BaseModel):
+    confirmation: Literal["DELETE ACCOUNT"]
+
+
+class AdminDeletionDecision(BaseModel):
+    confirmation: Literal["DELETE ACCOUNT"] | None = None
+
+
+class AdminDeletionRequestOut(BaseModel):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    display_name: str
+    email: str
+    role: Role
+    requested_at: datetime
+
+
 class AdminUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

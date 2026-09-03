@@ -4,6 +4,7 @@ import { useAuth } from "../app/auth";
 import { FeedbackBanner } from "../components/workspace/FeedbackBanner";
 import { AutoScannerSettingsPanel } from "../components/AutoScannerSettings";
 import { MfaSettings } from "../components/MfaSettings";
+import { AccountManagementPanel } from "../components/AccountManagementPanel";
 import { PageHeader } from "../components/workspace/PageHeader";
 import { ApiError, apiRequest } from "../lib/api";
 import {
@@ -358,6 +359,7 @@ export function AccountPage() {
           ))}
         </section>
         {user && <MfaSettings role={user.role} required={user.must_setup_mfa} onEnrollmentComplete={refresh} />}
+        {user && <AccountManagementPanel user={user} />}
         {trading && (
           <section className={`account-trading-card ${trading.status}`} aria-labelledby="account-trading-heading">
             <p className="eyebrow">Community safety</p>

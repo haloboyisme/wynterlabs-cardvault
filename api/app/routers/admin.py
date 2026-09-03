@@ -3,12 +3,15 @@ from contextlib import suppress
 from datetime import UTC, datetime, time, timedelta
 
 from fastapi import APIRouter, Depends, Query, Request, Response
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin_schemas import (
     AdminCreateRequest,
+    AdminDeleteRequest,
+    AdminDeletionDecision,
+    AdminDeletionRequestOut,
     AdminResetPasswordRequest,
     AdminRoleRequest,
     AdminStatusRequest,
@@ -41,7 +44,18 @@ from app.invitation_schemas import (
     InvitationRevokeRequest,
 )
 from app.invitations import invitation_status, no_store
-from app.models import AccountInvitation, CatalogRefreshSchedule, MfaCredential, Role, SiteBranding, User
+from app.models import (
+    AccountDeletionRequest,
+    AccountInvitation,
+    CatalogRefreshSchedule,
+    MfaCredential,
+    MfaLoginChallenge,
+    MfaRecoveryCode,
+    Role,
+    SecurityAuditEvent,
+    SiteBranding,
+    User,
+)
 from app.security import hash_invitation_token, hash_password, new_invitation_token
 
 router = APIRouter(prefix="/api/v1/admin", tags=["administration"])
@@ -225,6 +239,26 @@ async def _get_admin(database: AsyncSession, user_id: uuid.UUID) -> User:
     return admin
 
 
+async def _managed_user(
+    database: AsyncSession,
+    actor: User,
+    user_id: uuid.UUID,
+) -> User:
+    user = await database.scalar(
+        select(User)
+        .where(User.id == user_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if user is None:
+        raise AppError(404, "user_not_found", "User was not found.")
+    if user.role is Role.OWNER:
+        raise AppError(403, "owner_target_protected", "The owner account is protected.")
+    if actor.role is Role.SUPER_ADMIN and user.role is Role.SUPER_ADMIN:
+        raise AppError(403, "role_target_protected", "Super administrators cannot manage peers.")
+    return user
+
+
 @router.get("/users", response_model=list[AdminUserOut])
 async def list_administrators(
     _manager: CurrentAuth = Depends(require_role_manager),
@@ -234,6 +268,122 @@ async def list_administrators(
         select(User).where(User.role != Role.OWNER).order_by(User.created_at, User.id)
     )
     return list(result.all())
+
+
+@router.get("/deletion-requests", response_model=list[AdminDeletionRequestOut])
+async def list_deletion_requests(
+    _owner: CurrentAuth = Depends(require_owner),
+    database: AsyncSession = Depends(get_db),
+) -> list[AdminDeletionRequestOut]:
+    rows = (
+        await database.execute(
+            select(AccountDeletionRequest, User)
+            .join(User, User.id == AccountDeletionRequest.user_id)
+            .where(AccountDeletionRequest.status == "pending")
+            .order_by(AccountDeletionRequest.requested_at)
+        )
+    ).all()
+    return [
+        AdminDeletionRequestOut(
+            id=request.id,
+            user_id=user.id,
+            display_name=user.display_name,
+            email=user.email,
+            role=user.role,
+            requested_at=request.requested_at,
+        )
+        for request, user in rows
+    ]
+
+
+@router.post("/deletion-requests/{request_id}/approve", status_code=204)
+async def approve_deletion_request(
+    request_id: uuid.UUID,
+    payload: AdminDeletionDecision,
+    owner: CurrentAuth = Depends(require_owner),
+    database: AsyncSession = Depends(get_db),
+) -> None:
+    if payload.confirmation != "DELETE ACCOUNT":
+        raise AppError(422, "deletion_confirmation_required", "Type DELETE ACCOUNT to continue.")
+    row = await database.scalar(
+        select(AccountDeletionRequest)
+        .where(AccountDeletionRequest.id == request_id, AccountDeletionRequest.status == "pending")
+        .with_for_update()
+    )
+    if row is None:
+        raise AppError(404, "deletion_request_not_found", "Deletion request was not found.")
+    user = await _managed_user(database, owner.user, row.user_id)
+    database.add(SecurityAuditEvent(
+        subject_user_id=user.id, event_type="account_deleted", actor_type="owner",
+        details={"request_id": str(row.id)},
+    ))
+    await database.delete(user)
+    await database.commit()
+
+
+@router.post("/deletion-requests/{request_id}/reject", status_code=204)
+async def reject_deletion_request(
+    request_id: uuid.UUID,
+    owner: CurrentAuth = Depends(require_owner),
+    database: AsyncSession = Depends(get_db),
+) -> None:
+    row = await database.scalar(
+        select(AccountDeletionRequest)
+        .where(AccountDeletionRequest.id == request_id, AccountDeletionRequest.status == "pending")
+        .with_for_update()
+    )
+    if row is None:
+        raise AppError(404, "deletion_request_not_found", "Deletion request was not found.")
+    row.status = "rejected"
+    row.decided_at = datetime.now(UTC)
+    row.decided_by_user_id = owner.user.id
+    row.revision += 1
+    database.add(SecurityAuditEvent(
+        subject_user_id=row.user_id, event_type="deletion_rejected", actor_type="owner",
+        details={"request_id": str(row.id)},
+    ))
+    await database.commit()
+
+
+@router.post("/users/{user_id}/reset-mfa", response_model=AdminUserOut)
+async def reset_user_mfa(
+    user_id: uuid.UUID,
+    manager: CurrentAuth = Depends(require_role_manager),
+    database: AsyncSession = Depends(get_db),
+) -> User:
+    now = datetime.now(UTC)
+    actor = await database.scalar(select(User).where(User.id == manager.user.id).with_for_update())
+    if actor is None:
+        raise AppError(401, "not_authenticated", "Sign in to continue.")
+    user = await _managed_user(database, actor, user_id)
+    await database.execute(delete(MfaRecoveryCode).where(MfaRecoveryCode.user_id == user.id))
+    await database.execute(delete(MfaLoginChallenge).where(MfaLoginChallenge.user_id == user.id))
+    await database.execute(delete(MfaCredential).where(MfaCredential.user_id == user.id))
+    await revoke_user_sessions(database, user.id, now)
+    await revoke_mfa_trust(database, user.id, now)
+    user.must_setup_mfa = user.role in (Role.SUPER_ADMIN, Role.ADMIN)
+    database.add(SecurityAuditEvent(
+        subject_user_id=user.id, event_type="mfa_admin_reset", actor_type=actor.role.value,
+        details={},
+    ))
+    await database.commit()
+    await database.refresh(user)
+    return user
+
+
+@router.delete("/users/{user_id}", status_code=204)
+async def delete_user(
+    user_id: uuid.UUID,
+    payload: AdminDeleteRequest,
+    owner: CurrentAuth = Depends(require_owner),
+    database: AsyncSession = Depends(get_db),
+) -> None:
+    user = await _managed_user(database, owner.user, user_id)
+    database.add(SecurityAuditEvent(
+        subject_user_id=user.id, event_type="account_deleted", actor_type="owner", details={},
+    ))
+    await database.delete(user)
+    await database.commit()
 
 
 @router.post("/users", response_model=AdminUserOut, status_code=201)

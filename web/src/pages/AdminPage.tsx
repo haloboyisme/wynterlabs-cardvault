@@ -13,11 +13,16 @@ import {
   type AdminCatalogSchedule,
   type Administrator,
   createAdministrator,
+  deleteUser,
+  decideDeletionRequest,
+  getDeletionRequests,
+  type AdminDeletionRequest,
   getAdminCatalogStatus,
   getAdminCatalogSchedule,
   getAdministrators,
   refreshAdminCatalog,
   resetAdministratorPassword,
+  resetUserMfa,
   setAdministratorStatus,
   setUserRole,
   updateAdminCatalogSchedule,
@@ -74,7 +79,7 @@ function availableRoles(
 }
 
 function AdministratorRow({ administrator, managerRole, onUpdated, onFeedback }: AdministratorRowProps) {
-  const [confirmation, setConfirmation] = useState<"disable" | "reactivate" | "reset" | "role" | null>(null);
+  const [confirmation, setConfirmation] = useState<"disable" | "reactivate" | "reset" | "role" | "mfa" | "delete" | null>(null);
   const [nextRole, setNextRole] = useState<Administrator["role"] | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -134,6 +139,24 @@ function AdministratorRow({ administrator, managerRole, onUpdated, onFeedback }:
     }
   }
 
+  async function resetMfa() {
+    setBusy(true); setError(null);
+    try {
+      await resetUserMfa(administrator.id); await onUpdated(); changeConfirmation(null);
+      onFeedback(`${administrator.display_name}'s MFA was reset. Active sessions were revoked.`);
+    } catch { setError("MFA could not be reset. Try again."); }
+    finally { setBusy(false); }
+  }
+
+  async function removeAccount() {
+    setBusy(true); setError(null);
+    try {
+      await deleteUser(administrator.id); await onUpdated(); changeConfirmation(null);
+      onFeedback(`${administrator.display_name}'s account was permanently deleted.`);
+    } catch { setError("The account could not be deleted. Try again."); }
+    finally { setBusy(false); }
+  }
+
   function cancelConfirmation() {
     changeConfirmation(null);
     setError(null);
@@ -182,6 +205,12 @@ function AdministratorRow({ administrator, managerRole, onUpdated, onFeedback }:
             Reset password for {administrator.display_name}
           </button>
         </>}
+        {(managerRole === "owner" || administrator.role !== "super_admin") && (
+          <button type="button" onClick={() => changeConfirmation("mfa")} disabled={busy}>Reset MFA for {administrator.display_name}</button>
+        )}
+        {managerRole === "owner" && (
+          <button className="admin-destructive" type="button" onClick={() => changeConfirmation("delete")} disabled={busy}>Delete {administrator.display_name}</button>
+        )}
       </div>
 
       {confirmation === "role" && nextRole !== null && (
@@ -240,6 +269,14 @@ function AdministratorRow({ administrator, managerRole, onUpdated, onFeedback }:
           </div>
         </form>
       )}
+      {confirmation === "mfa" && <div className="admin-confirmation admin-warning">
+        <p>Reset MFA for {administrator.display_name}? Their sessions and trusted browsers will be revoked.</p>
+        <div className="admin-actions"><button type="button" onClick={() => void resetMfa()} disabled={busy}>Confirm MFA reset</button><button type="button" onClick={cancelConfirmation}>Cancel</button></div>
+      </div>}
+      {confirmation === "delete" && <div className="admin-confirmation admin-warning">
+        <p>Permanently delete {administrator.display_name} and their collection data? This cannot be undone.</p>
+        <div className="admin-actions"><button className="admin-destructive" type="button" onClick={() => void removeAccount()} disabled={busy}>Permanently delete account</button><button type="button" onClick={cancelConfirmation}>Cancel</button></div>
+      </div>}
       {error && <FeedbackBanner tone="error" className="form-error">{error}</FeedbackBanner>}
     </li>
   );
@@ -581,6 +618,7 @@ function AccountAccessPanel({ administrators, loadAdministrators, loadError, man
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | Administrator["role"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "disabled" | "attention">("all");
+  const [deletionRequests, setDeletionRequests] = useState<AdminDeletionRequest[]>([]);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const filteredAdministrators = administrators.filter((administrator) => {
@@ -595,6 +633,24 @@ function AccountAccessPanel({ administrators, loadAdministrators, loadError, man
     return matchesQuery && matchesRole && matchesStatus;
   });
   const attentionCount = administrators.filter((administrator) => administrator.must_setup_mfa).length;
+
+  useEffect(() => {
+    if (managerRole !== "owner") return;
+    const controller = new AbortController();
+    void getDeletionRequests(controller.signal).then(setDeletionRequests).catch(() => undefined);
+    return () => controller.abort();
+  }, [managerRole, administrators]);
+
+  async function decide(request: AdminDeletionRequest, decision: "approve" | "reject") {
+    setSubmitting(true); setFormError(null);
+    try {
+      await decideDeletionRequest(request.id, decision);
+      setDeletionRequests((items) => items.filter((item) => item.id !== request.id));
+      await loadAdministrators();
+      setFeedback(decision === "approve" ? `${request.display_name}'s account was deleted.` : `${request.display_name}'s request was rejected.`);
+    } catch { setFormError("The deletion request could not be updated."); }
+    finally { setSubmitting(false); }
+  }
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -629,6 +685,10 @@ function AccountAccessPanel({ administrators, loadAdministrators, loadError, man
       {formError && <FeedbackBanner tone="error" className="form-error">{formError}</FeedbackBanner>}
       {loadError && <FeedbackBanner tone="error" className="form-error">{loadError}</FeedbackBanner>}
       {feedback && <FeedbackBanner tone="success">{feedback}</FeedbackBanner>}
+      {managerRole === "owner" && deletionRequests.length > 0 && <section className="admin-deletion-requests" aria-label="Pending account deletion requests">
+        <h3>Pending deletion requests</h3>
+        {deletionRequests.map((request) => <article key={request.id}><div><strong>{request.display_name}</strong><span>{request.email} · requested {formatDate(request.requested_at)}</span></div><div className="admin-actions"><button className="admin-destructive" type="button" onClick={() => void decide(request, "approve")}>Approve deletion</button><button type="button" onClick={() => void decide(request, "reject")}>Reject</button></div></article>)}
+      </section>}
       <section className="admin-account-directory" aria-label="Managed account directory">
         <div className="admin-account-summary" aria-live="polite">
           <strong>{filteredAdministrators.length} {filteredAdministrators.length === 1 ? "account" : "accounts"} shown</strong>

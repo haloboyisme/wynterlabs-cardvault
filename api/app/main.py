@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app import registration
-from app.config import Settings
 from app.catalog.scheduler import catalog_scheduler_loop
+from app.config import Settings
 from app.database import create_engine, create_session_factory
 from app.errors import install_error_handlers
 from app.routers import (
@@ -16,6 +16,7 @@ from app.routers import (
     branding,
     catalog,
     collection,
+    community,
     decks,
     health,
     invitations,
@@ -64,6 +65,7 @@ def create_app(
     app.include_router(scanner.router)
     app.include_router(catalog.router)
     app.include_router(collection.router)
+    app.include_router(community.router)
     app.include_router(decks.router)
     app.include_router(invitations.router)
     app.include_router(registration.router)

@@ -76,6 +76,9 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     must_setup_mfa: Mapped[bool] = mapped_column(Boolean, default=False)
+    share_activity: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
     password_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -86,6 +89,32 @@ class User(Base):
     )
     collection_value_snapshots: Mapped[list["CollectionValueSnapshot"]] = relationship(
         cascade="all, delete-orphan"
+    )
+
+
+class AccountDeletionRequest(Base):
+    __tablename__ = "account_deletion_requests"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'rejected', 'canceled')",
+            name="ck_account_deletion_requests_status",
+        ),
+        CheckConstraint("revision >= 1", name="ck_account_deletion_requests_revision"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
 
@@ -184,10 +213,15 @@ class SecurityAuditEvent(Base):
     __table_args__ = (
         CheckConstraint(
             "event_type IN ('mfa_enrolled', 'mfa_recovery_codes_regenerated', "
-            "'mfa_recovery_code_redeemed', 'owner_mfa_break_glass')",
+            "'mfa_recovery_code_redeemed', 'owner_mfa_break_glass', 'email_changed', "
+            "'deletion_requested', 'deletion_canceled', 'deletion_rejected', "
+            "'account_deleted', 'mfa_admin_reset', 'activity_sharing_changed')",
             name="ck_security_audit_event_type",
         ),
-        CheckConstraint("actor_type IN ('self', 'console')", name="ck_security_audit_actor_type"),
+        CheckConstraint(
+            "actor_type IN ('self', 'owner', 'super_admin', 'console')",
+            name="ck_security_audit_actor_type",
+        ),
         Index("ix_security_audit_events_type_created", "event_type", "created_at"),
     )
 
@@ -219,8 +253,14 @@ class CatalogRefreshSchedule(Base):
     __tablename__ = "catalog_refresh_schedules"
     __table_args__ = (
         CheckConstraint("id = 1", name="ck_catalog_refresh_schedule_singleton"),
-        CheckConstraint("cadence IN ('hours', 'daily', 'weekly')", name="ck_catalog_refresh_schedule_cadence"),
-        CheckConstraint("interval_hours BETWEEN 1 AND 168", name="ck_catalog_refresh_schedule_hours"),
+        CheckConstraint(
+            "cadence IN ('hours', 'daily', 'weekly')",
+            name="ck_catalog_refresh_schedule_cadence",
+        ),
+        CheckConstraint(
+            "interval_hours BETWEEN 1 AND 168",
+            name="ck_catalog_refresh_schedule_hours",
+        ),
         CheckConstraint("weekday BETWEEN 0 AND 6", name="ck_catalog_refresh_schedule_weekday"),
     )
 

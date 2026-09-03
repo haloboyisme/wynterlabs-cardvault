@@ -83,7 +83,7 @@ migration="$(sed -n 's/^migration=//p' "$backup/manifest.txt")"
 }
 case "$migration" in
   0002_catalog|0003_admin_controls|0004_collections_decks|0005_collection_imports|\
-  0006_account_invitations|0007_private_trading|0008_collection_manual_prices|0009_privileged_mfa|0010_multi_game_catalog|0011_collection_value_history|0012_site_branding) ;;
+  0006_account_invitations|0007_private_trading|0008_collection_manual_prices|0009_privileged_mfa|0010_multi_game_catalog|0011_collection_value_history|0012_site_branding|0013_one_piece_catalog|0014_more_tcgjson_games|0015_open_signup_role_authority|0016_trusted_mfa_browser|0017_catalog_refresh_schedule|0018_account_community) ;;
   *) standalone_die "Unsupported backup migration: $migration"; exit 1 ;;
 esac
 

@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../app/auth";
 import { useBranding } from "../app/branding";
+import { CardImage } from "../components/CardImage";
+import { getCommunityActivity, type CommunityActivity } from "../lib/community";
 
 const quickActions = [
   {
@@ -46,6 +49,17 @@ export function HomePage() {
   const auth = useAuth();
   const { branding } = useBranding();
   const signedIn = auth.status === "authenticated";
+  const [activity, setActivity] = useState<CommunityActivity[]>([]);
+  const [activityState, setActivityState] = useState<"loading" | "ready" | "unavailable">("loading");
+
+  useEffect(() => {
+    if (!signedIn) { setActivityState("ready"); return; }
+    const controller = new AbortController();
+    void getCommunityActivity(controller.signal).then((result) => {
+      setActivity(result.items); setActivityState("ready");
+    }).catch(() => { if (!controller.signal.aborted) setActivityState("unavailable"); });
+    return () => controller.abort();
+  }, [signedIn]);
 
   return (
     <>
@@ -128,6 +142,23 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {signedIn && <section className="home-activity-section" aria-labelledby="community-activity-heading">
+        <div className="section-heading"><div><p className="eyebrow">Private community</p><h2 id="community-activity-heading">What collectors are doing.</h2></div><p>Only members who opt in appear here. Collection values and private details stay hidden.</p></div>
+        {activityState === "loading" && <p role="status">Loading community activity&hellip;</p>}
+        {activityState === "unavailable" && <p role="status">Community activity is temporarily unavailable.</p>}
+        {activityState === "ready" && activity.length === 0 && <div className="home-activity-empty"><strong>No shared activity yet.</strong><p>Members can opt in from Account controls.</p></div>}
+        <div className="home-activity-grid">
+          {activity.map((item, index) => <article className={`home-activity-card activity-${item.kind}`} key={`${item.kind}-${item.occurred_at}-${index}`}>
+            {item.kind === "card_added" && item.card_name ? <>
+              <CardImage name={item.card_name} imageUris={item.image_uris} className="home-activity-image" />
+              <span className="home-activity-kind">Recently added</span><h3>{item.card_name}</h3><p>{item.display_name} added {item.set_name} · {item.collector_number}</p>
+              {item.printing_id && <Link to={`/cards/${item.printing_id}`}>View exact printing</Link>}
+            </> : item.kind === "new_member" ? <><span className="home-activity-avatar">{item.display_name?.slice(0, 1).toUpperCase()}</span><span className="home-activity-kind">New member</span><h3>{item.display_name}</h3><p>Joined the private CardVault community.</p></> : item.kind === "set_updated" ? <><span className="home-activity-kind">Set release</span><h3>{item.set_name}</h3><p>{item.game?.toUpperCase()} · {item.set_code} · {item.released_at}</p></> : <><span className="home-activity-kind">Catalog update</span><h3>{item.game?.toUpperCase()} cards refreshed</h3><p>{item.printing_count?.toLocaleString()} printings across {item.set_count?.toLocaleString()} sets.</p></>}
+            <time dateTime={item.occurred_at}>{new Date(item.occurred_at).toLocaleDateString()}</time>
+          </article>)}
+        </div>
+      </section>}
 
       <section className="home-roadmap-section" id="roadmap">
         <div className="home-roadmap-heading">
