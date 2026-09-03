@@ -184,6 +184,9 @@ it("reveals the hidden header from a touch at the top edge", async () => {
 
 it("gives a signed-in member direct Home shortcuts and identity feedback", async () => {
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input).endsWith("/api/v1/community/activity")) {
+      return new Response(JSON.stringify({ items: [] }), { headers: { "content-type": "application/json" } });
+    }
     if (String(input).endsWith("/api/v1/auth/me")) {
       return new Response(JSON.stringify({
         id: "member-id", email: "member-ea28fda2ddaf@example.invalid", display_name: "Winter Collector",

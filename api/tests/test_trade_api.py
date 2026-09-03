@@ -15,6 +15,7 @@ from test_catalog_api import (
 )
 
 from app.models import Role, TradeStrike, User
+from app.trading_constants import SUPPORT_EMAIL
 
 MEMBER_A_ID = uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 MEMBER_B_ID = uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
@@ -156,7 +157,7 @@ def test_three_upheld_reports_suspend_only_trading_and_remove_active_listings(
     assert account.status_code == 200
     assert account.json()["status"] == "suspended"
     assert account.json()["active_strikes"] == 3
-    assert account.json()["support_email"] == "member-dca27ea374b4@example.invalid"
+    assert account.json()["support_email"] == SUPPORT_EMAIL
     assert member_b.get("/api/v1/collection").status_code == 200
     assert member_b.get("/api/v1/decks").status_code == 200
     assert member_b.get("/api/v1/trades").json()["items"][0]["status"] == "removed"

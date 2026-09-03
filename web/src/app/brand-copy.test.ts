@@ -57,7 +57,7 @@ describe("shared branding", () => {
   });
 
   it("updates shared labels, home copy, footer, and title from branding data", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(String(input).endsWith("/api/v1/community/activity") ? { items: [] } : {
       site_name: "Winter Lab",
       product_name: "Card Archive",
       tagline: "Keep every card close.",

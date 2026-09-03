@@ -235,7 +235,11 @@ class TcgJsonClient:
                     sets = payload.get("sets")
                     products = payload.get("products")
                     meta = payload.get("meta")
-                    if not isinstance(sets, list) or not isinstance(products, list) or not isinstance(meta, dict):
+                    if (
+                        not isinstance(sets, list)
+                        or not isinstance(products, list)
+                        or not isinstance(meta, dict)
+                    ):
                         raise ValueError("tcgjson catalog had an invalid shape")
                     if len(products) > self.settings.catalog_provider_max_records:
                         raise ValueError("tcgjson catalog exceeded configured record limit")

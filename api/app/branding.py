@@ -5,7 +5,7 @@ import hashlib
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.branding_schemas import BrandingOut, INVALID_LOGO_MESSAGE
+from app.branding_schemas import INVALID_LOGO_MESSAGE, BrandingOut
 from app.errors import AppError
 from app.models import SiteBranding
 

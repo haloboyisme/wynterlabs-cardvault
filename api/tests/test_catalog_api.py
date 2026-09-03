@@ -4,6 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from mfa_helpers import enroll_current_user
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 
@@ -43,7 +44,7 @@ def _sign_in(client: TestClient, secret: str) -> None:
     response = client.post(
         "/api/v1/setup/owner",
         json={
-            "email": "member-67dcd60ec598@example.invalid",
+            "email": "member-67dcd60ec598@example.com",
             "display_name": "Wynter Owner",
             "password": "test-only-credential-f0bb2c82b013",
         },
@@ -53,11 +54,12 @@ def _sign_in(client: TestClient, secret: str) -> None:
     response = client.post(
         "/api/v1/auth/login",
         json={
-            "email": "member-57343aeb7a98@example.invalid",
-            "password": "test-only-credential-2dcc069cbf9e",
+            "email": "member-67dcd60ec598@example.com",
+            "password": "test-only-credential-f0bb2c82b013",
         },
     )
     assert response.status_code == 200
+    enroll_current_user(client, "test-only-credential-f0bb2c82b013")
 
 
 def test_catalog_media_requires_authentication(client: TestClient) -> None:

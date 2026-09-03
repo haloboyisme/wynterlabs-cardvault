@@ -5,12 +5,12 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from mfa_helpers import enroll_current_user
 from sqlalchemy import select
 
 from app import dependencies
 from app.dependencies import CurrentAuth
 from app.errors import AppError
-from app.mfa_service import require_privileged_mfa_role
 from app.models import LoginAttempt, MfaCredential, Role, User, UserSession
 from app.security import hash_password, hash_token, identifier_hash, new_session_token
 
@@ -220,7 +220,7 @@ def create_authenticated_admin(
             app,
             role=Role.ADMIN,
             must_change_password=must_change_password,
-            email="member-7de408b17fe5@example.invalid",
+            email="member-7de408b17fe5@example.com",
         )
     )
 
@@ -255,7 +255,7 @@ def _auth_for_role(role: Role) -> CurrentAuth:
 
 def owner_payload() -> dict[str, str]:
     return {
-        "email": "member-51b284fa7c82@example.invalid",
+        "email": "member-51b284fa7c82@example.com",
         "display_name": "Wynter Owner",
         "password": "test-only-credential-9ca6000d783f",
     }
@@ -285,7 +285,7 @@ def test_owner_setup_is_secret_protected_and_one_time(client, bootstrap_secret: 
     )
     assert created.status_code == 201
     assert created.json()["role"] == "owner"
-    assert created.json()["email"] == "member-b610374a21a3@example.invalid"
+    assert created.json()["email"] == owner_payload()["email"]
 
     closed = client.post(
         "/api/v1/setup/owner",
@@ -317,7 +317,10 @@ def test_login_session_and_logout(client, bootstrap_secret: str) -> None:
 
     failure = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-f513e0bde329@example.invalid", "password": "test-only-credential-de36586e5c75"},
+        json={
+            "email": "member-f513e0bde329@example.com",
+            "password": "test-only-credential-de36586e5c75",
+        },
     )
     assert failure.status_code == 401
     assert failure.json()["error"]["code"] == "invalid_credentials"
@@ -325,14 +328,15 @@ def test_login_session_and_logout(client, bootstrap_secret: str) -> None:
     login = client.post(
         "/api/v1/auth/login",
         json={
-            "email": "member-cd0b2b5ffd7d@example.invalid",
-            "password": "test-only-credential-dc63f5f71647",
+            "email": owner_payload()["email"],
+            "password": owner_payload()["password"],
         },
     )
     assert login.status_code == 200
     assert "wynterlabs_session=" in login.headers["set-cookie"]
     assert "HttpOnly" in login.headers["set-cookie"]
     assert "SameSite=lax" in login.headers["set-cookie"]
+    enroll_current_user(client, owner_payload()["password"])
 
     me = client.get("/api/v1/auth/me")
     assert me.status_code == 200
@@ -373,11 +377,17 @@ def test_login_returns_the_same_error_for_unknown_user_and_wrong_password(
 
     unknown = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-133aa30c54bf@example.invalid", "password": "test-only-credential-f05c124ad641"},
+        json={
+            "email": "member-133aa30c54bf@example.com",
+            "password": "test-only-credential-f05c124ad641",
+        },
     )
     wrong = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-6c3c899f1c0e@example.invalid", "password": "test-only-credential-b51397437a4a"},
+        json={
+            "email": owner_payload()["email"],
+            "password": "test-only-credential-b51397437a4a",
+        },
     )
 
     assert unknown.status_code == wrong.status_code == 401
@@ -407,7 +417,10 @@ def test_login_limit_applies_to_shared_ip_without_recording_an_extra_attempt(
 
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-ebc0c03e104c@example.invalid", "password": "test-only-credential-e398e1351d75"},
+        json={
+            "email": "member-ebc0c03e104c@example.com",
+            "password": "test-only-credential-e398e1351d75",
+        },
     )
 
     assert response.status_code == 429
@@ -419,7 +432,7 @@ def test_login_limit_applies_to_identifier_across_ips(
     client: TestClient,
     app: FastAPI,
 ) -> None:
-    email = "member-4ff3a29edbee@example.invalid"
+    email = "member-4ff3a29edbee@example.com"
     now = datetime.now(UTC)
     for index in range(10):
         asyncio.run(
@@ -447,7 +460,7 @@ def test_login_limit_ignores_attempts_older_than_the_window(
     asyncio.run(
         _add_login_attempts(
             app,
-            email="member-cd1a1b174454@example.invalid",
+            email="member-cd1a1b174454@example.com",
             client_ip="203.0.113.20",
             created_at=now - timedelta(minutes=6),
             count=10,
@@ -455,7 +468,10 @@ def test_login_limit_ignores_attempts_older_than_the_window(
     )
     allowed = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-5f3ac90115eb@example.invalid", "password": "test-only-credential-79ca73b668e0"},
+        json={
+            "email": "member-cd1a1b174454@example.com",
+            "password": "test-only-credential-79ca73b668e0",
+        },
     )
     assert allowed.status_code == 401
     assert allowed.json()["error"]["code"] == "invalid_credentials"
@@ -469,7 +485,7 @@ def test_login_cleanup_is_bounded_and_preserves_the_active_throttle_window(
     asyncio.run(
         _add_login_attempts(
             app,
-            email="member-e1b732c1558e@example.invalid",
+            email="member-e1b732c1558e@example.com",
             client_ip="198.51.100.90",
             created_at=now - timedelta(days=31),
             count=251,
@@ -488,7 +504,10 @@ def test_login_cleanup_is_bounded_and_preserves_the_active_throttle_window(
 
     blocked = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-e3735c3b7396@example.invalid", "password": "test-only-credential-3e001e0520c1"},
+        json={
+            "email": "member-e3735c3b7396@example.com",
+            "password": "test-only-credential-3e001e0520c1",
+        },
     )
 
     assert blocked.status_code == 429
@@ -511,7 +530,10 @@ def test_login_cleanup_removes_only_old_expired_or_revoked_sessions(
 
     rejected = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-845b7cdf51fb@example.invalid", "password": "test-only-credential-d62a822c18d1"},
+        json={
+            "email": "member-845b7cdf51fb@example.com",
+            "password": "test-only-credential-d62a822c18d1",
+        },
     )
 
     assert rejected.status_code == 401
@@ -575,14 +597,14 @@ def test_forced_password_user_can_only_me_logout_and_change_password(
 
     old_login = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-144719a1c501@example.invalid", "password": temporary_password},
+        json={"email": "member-7de408b17fe5@example.com", "password": temporary_password},
     )
     assert old_login.status_code == 401
     fresh_login = client.post(
         "/api/v1/auth/login",
         json={
-            "email": "member-8559cc556b53@example.invalid",
-            "password": "test-only-credential-493d08b9648c",
+            "email": "member-7de408b17fe5@example.com",
+            "password": "test-only-credential-d5b29782cd03",
         },
     )
     assert fresh_login.status_code == 200
@@ -607,7 +629,8 @@ def test_super_admin_has_role_management_catalog_and_mfa_authority() -> None:
     auth = _auth_for_role(Role.SUPER_ADMIN)
     assert asyncio.run(role_manager(auth)).user.role is Role.SUPER_ADMIN
     assert asyncio.run(dependencies.require_catalog_operator(auth)).user.role is Role.SUPER_ADMIN
-    require_privileged_mfa_role(auth.user)
+    # MFA enrollment now supports every password-ready member, including Super Admins.
+    assert asyncio.run(dependencies.require_password_ready_auth(auth)).user is auth.user
 
 
 def test_admin_cannot_manage_roles() -> None:

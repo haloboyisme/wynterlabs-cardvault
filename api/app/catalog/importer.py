@@ -468,7 +468,8 @@ class CatalogImporter:
             from app.catalog.tcgjson import TcgJsonClient, catalog_url, normalize_tcgjson_card
 
             provider = self.providers.get(game) or TcgJsonClient(self.settings, game)
-            normalizer = lambda record: normalize_tcgjson_card(record, game)
+            def normalizer(record):
+                return normalize_tcgjson_card(record, game)
         metadata = BulkMetadata(
             uuid.uuid5(uuid.NAMESPACE_URL, f"wynterlabs:catalog:{game}"),
             datetime.now(UTC),

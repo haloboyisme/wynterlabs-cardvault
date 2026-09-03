@@ -26,14 +26,22 @@ def upgrade() -> None:
         sa.Column("last_status", sa.String(24)),
         sa.Column("last_error_summary", sa.String(240)),
         sa.Column("updated_by_user_id", sa.Uuid()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
         sa.CheckConstraint("id = 1", name="ck_catalog_refresh_schedule_singleton"),
-        sa.CheckConstraint("cadence IN ('hours', 'daily', 'weekly')", name="ck_catalog_refresh_schedule_cadence"),
-        sa.CheckConstraint("interval_hours BETWEEN 1 AND 168", name="ck_catalog_refresh_schedule_hours"),
+        sa.CheckConstraint(
+            "cadence IN ('hours', 'daily', 'weekly')", name="ck_catalog_refresh_schedule_cadence"
+        ),
+        sa.CheckConstraint(
+            "interval_hours BETWEEN 1 AND 168", name="ck_catalog_refresh_schedule_hours"
+        ),
         sa.CheckConstraint("weekday BETWEEN 0 AND 6", name="ck_catalog_refresh_schedule_weekday"),
         sa.ForeignKeyConstraint(["updated_by_user_id"], ["users.id"], ondelete="SET NULL"),
     )
-    op.create_index("ix_catalog_refresh_schedules_next_run_at", "catalog_refresh_schedules", ["next_run_at"])
+    op.create_index(
+        "ix_catalog_refresh_schedules_next_run_at", "catalog_refresh_schedules", ["next_run_at"]
+    )
 
 
 def downgrade() -> None:

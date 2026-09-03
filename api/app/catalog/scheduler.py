@@ -74,21 +74,20 @@ async def run_due_catalog_schedule(
     now: datetime | None = None,
 ) -> bool:
     current = (now or datetime.now(UTC)).astimezone(UTC)
-    async with session_factory() as database:
-        async with database.begin():
-            row = await database.get(CatalogRefreshSchedule, 1, with_for_update=True)
-            if row is None or not row.enabled or row.next_run_at is None:
-                return False
-            due_at = row.next_run_at
-            if due_at.tzinfo is None:
-                due_at = due_at.replace(tzinfo=UTC)
-            if due_at > current:
-                return False
-            row.last_started_at = current
-            row.last_status = "running"
-            row.last_error_summary = None
-            row.next_run_at = next_catalog_run(schedule_spec(row), current)
-            game = row.game
+    async with session_factory() as database, database.begin():
+        row = await database.get(CatalogRefreshSchedule, 1, with_for_update=True)
+        if row is None or not row.enabled or row.next_run_at is None:
+            return False
+        due_at = row.next_run_at
+        if due_at.tzinfo is None:
+            due_at = due_at.replace(tzinfo=UTC)
+        if due_at > current:
+            return False
+        row.last_started_at = current
+        row.last_status = "running"
+        row.last_error_summary = None
+        row.next_run_at = next_catalog_run(schedule_spec(row), current)
+        game = row.game
     status = "failed"
     error_summary = None
     try:
@@ -100,13 +99,12 @@ async def run_due_catalog_schedule(
     except Exception:
         error_summary = "Scheduled refresh failed; the previous catalog remains active."
     finished = datetime.now(UTC)
-    async with session_factory() as database:
-        async with database.begin():
-            row = await database.get(CatalogRefreshSchedule, 1, with_for_update=True)
-            if row is not None:
-                row.last_finished_at = finished
-                row.last_status = status
-                row.last_error_summary = error_summary
+    async with session_factory() as database, database.begin():
+        row = await database.get(CatalogRefreshSchedule, 1, with_for_update=True)
+        if row is not None:
+            row.last_finished_at = finished
+            row.last_status = status
+            row.last_error_summary = error_summary
     return True
 
 

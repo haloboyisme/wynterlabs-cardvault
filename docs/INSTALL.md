@@ -22,7 +22,7 @@ Clone the immutable V2 release and install WynterLabs CardVault with one command
 Replace `YOUR_HOST_OR_IP` with the LAN address or DNS name used by members:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.0.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.0.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 If the release is already downloaded, run the included bootstrap directly:
@@ -34,14 +34,16 @@ sudo ./deploy/standalone/bootstrap.sh --host cards.example.invalid
 If Docker and Compose v2 are already installed and healthy, the bootstrap
 leaves them unchanged. The installer creates the application secrets, starts
 the services, and prints
-the local setup URL and one-time bootstrap secret. Trust the certificate it
+the local setup URL and the file path of the one-time bootstrap secret. Read
+that file locally on your server; the secret is not a default shared password.
+Trust the certificate it
 provides on devices that will use the application, then open the printed setup
 URL.
 
 Create the initial account using these example values only as a guide:
 
-- Username: `owner`
-- Email: `owner@example.invalid`
+- Display name: `owner`
+- Email: your own email address
 - Password: `<choose-a-strong-password>`
 
 Store the generated secrets and backup materials securely. Before relying on

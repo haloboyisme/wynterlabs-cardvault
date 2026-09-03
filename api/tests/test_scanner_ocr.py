@@ -1,5 +1,5 @@
-import uuid
 import sys
+import uuid
 from collections.abc import Iterator
 from types import SimpleNamespace
 

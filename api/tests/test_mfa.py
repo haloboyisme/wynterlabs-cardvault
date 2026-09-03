@@ -42,6 +42,9 @@ from app.models import (
 )
 from app.security import hash_password, hash_token, new_session_token, verify_password
 
+MFA_OWNER_EMAIL = "mfa-owner@example.com"
+MFA_OWNER_PASSWORD = "mfa owner password"
+
 
 @pytest.mark.parametrize(
     ("unix_time", "expected"),
@@ -71,7 +74,7 @@ def test_encrypted_totp_secret_rejects_tampering() -> None:
 
 
 def test_counter_matching_accepts_one_step_skew_and_rejects_invalid_input() -> None:
-    secret = "test-only-credential-933fc7a599b1"
+    secret = b"test-only-credential-933fc7a599b1"
     now = 1_111_111_111
     assert matching_totp_counter(secret, totp_at(secret, now - 30), now) == (now // 30) - 1
     assert matching_totp_counter(secret, "12345", now) is None
@@ -130,11 +133,11 @@ async def _enrolled_owner(app, *, active: bool = True) -> tuple[User, str, bytes
     async with app.state.session_factory() as database:
         user = User(
             id=uuid.uuid4(),
-            email="member-77c653755f17@example.invalid",
-            email_normalized="member-0356f299a285@example.invalid",
+            email=MFA_OWNER_EMAIL,
+            email_normalized=MFA_OWNER_EMAIL,
             display_name="MFA Owner",
             display_name_normalized="mfa owner",
-            password_hash=hash_password("mfa owner password"),
+            password_hash=hash_password(MFA_OWNER_PASSWORD),
             role=Role.OWNER,
             owner_slot=1,
             is_active=active,
@@ -210,7 +213,7 @@ def test_enrolled_privileged_login_uses_only_a_scoped_pre_auth_cookie(app, clien
     _, _, _ = asyncio.run(_enrolled_owner(app))
     login = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-3ad8ac120ea5@example.invalid", "password": "test-only-credential-6954a1acc951"},
+        json={"email": MFA_OWNER_EMAIL, "password": MFA_OWNER_PASSWORD},
     )
     assert login.status_code == 200
     assert login.json()["status"] == "mfa_required"
@@ -235,7 +238,7 @@ def test_enrolled_privileged_login_uses_only_a_scoped_pre_auth_cookie(app, clien
 
 def test_totp_success_trusts_browser_for_same_browser_login_and_rejects_replay(app, client) -> None:
     _, _, secret = asyncio.run(_enrolled_owner(app))
-    credentials = {"email": "member-7e3a6b1979df@example.invalid", "password": "test-only-credential-b0acde2364fa"}
+    credentials = {"email": MFA_OWNER_EMAIL, "password": MFA_OWNER_PASSWORD}
     now = datetime.now(UTC)
     code = totp_at(secret, int(now.timestamp()))
     assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "mfa_required"
@@ -323,7 +326,11 @@ def test_audit_event_allowlist_and_member_mfa_status_are_supported(app) -> None:
             user_id=uuid.uuid4(),
             event_type=AUDIT_MFA_ENROLLED,
             actor_type="self",
-            details={"recovery_generation": 1, "recovery_codes": 10, "secret": "test-only-credential-a90d0936c5b5"},
+            details={
+                "recovery_generation": 1,
+                "recovery_codes": 10,
+                "secret": "test-only-credential-a90d0936c5b5",
+            },
         )
 
     async def status_for_member() -> None:
@@ -418,43 +425,48 @@ def test_recovery_code_consumes_one_code_revokes_old_sessions_and_audits(app, cl
     assert asyncio.run(state()) == (1, 1, 1)
 
 
-def test_account_mfa_one_time_responses_are_no_store(app, client) -> None:
+def test_account_mfa_one_time_responses_are_no_store(
+    app, client, bootstrap_secret: str
+) -> None:
+    password = "mfa owner enrollment password"
     created = client.post(
         "/api/v1/setup/owner",
         json={
-            "email": "member-fdcc4595767c@example.invalid",
+            "email": MFA_OWNER_EMAIL,
             "display_name": "Owner",
-            "password": "test-only-credential-adcf3f747187",
+            "password": password,
         },
-        headers={"X-Bootstrap-Secret": "test-only-credential-44caad84f071"},
+        headers={"X-Bootstrap-Secret": bootstrap_secret},
     )
     assert created.status_code == 201
     login = client.post(
         "/api/v1/auth/login",
-        json={"email": "member-062fa281d1d5@example.invalid", "password": "test-only-credential-04cfc81b6740"},
+        json={"email": MFA_OWNER_EMAIL, "password": password},
     )
     assert login.status_code == 200
     response = client.post(
         "/api/v1/account/mfa/enrollment",
-        json={"current_password": "test-only-credential-9b24520507c2"},
+        json={"current_password": password},
     )
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_owner_enrollment_activates_encrypted_secret_and_returns_codes_once(app, client) -> None:
+def test_owner_enrollment_activates_encrypted_secret_and_returns_codes_once(
+    app, client, bootstrap_secret: str
+) -> None:
     password = "test-only-credential-01eb7324f716"
     assert (
         client.post(
             "/api/v1/setup/owner",
-            json={"email": "member-c52914e2d0d8@example.invalid", "display_name": "Owner", "password": password},
-            headers={"X-Bootstrap-Secret": "test-only-credential-b4e31bd14a93"},
+            json={"email": MFA_OWNER_EMAIL, "display_name": "Owner", "password": password},
+            headers={"X-Bootstrap-Secret": bootstrap_secret},
         ).status_code
         == 201
     )
     assert (
         client.post(
-            "/api/v1/auth/login", json={"email": "member-441be91ff8fe@example.invalid", "password": password}
+            "/api/v1/auth/login", json={"email": MFA_OWNER_EMAIL, "password": password}
         ).status_code
         == 200
     )
@@ -525,7 +537,7 @@ def test_member_can_enroll_in_optional_mfa(app, client) -> None:
 
 def test_trusted_mfa_is_browser_specific_and_expires_without_sliding(app, client) -> None:
     _, _, secret = asyncio.run(_enrolled_owner(app))
-    credentials = {"email": "mfa-owner@wynterlabs.com", "password": "mfa owner password"}
+    credentials = {"email": MFA_OWNER_EMAIL, "password": MFA_OWNER_PASSWORD}
     assert client.post("/api/v1/auth/login", json=credentials).json()["status"] == "mfa_required"
     code = totp_at(secret, int(datetime.now(UTC).timestamp()))
     assert client.post("/api/v1/auth/mfa/totp", json={"code": code}).status_code == 200

@@ -5,9 +5,9 @@ from collections.abc import Iterator
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from test_admin_api import _authenticated_client
 
 from app.models import Role
-from test_admin_api import _authenticated_client
 
 OWNER_ID = uuid.UUID("55555555-5555-5555-5555-555555555555")
 ADMIN_ID = uuid.UUID("66666666-6666-6666-6666-666666666666")
