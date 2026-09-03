@@ -68,9 +68,9 @@ latest="$(printf '%s\n' "$backup_output" | sed -n 's/^Standalone backup complete
 if [[ "${STANDALONE_TEST_MODE:-0}" = 1 && -n "${STANDALONE_RESTORE_VERIFIER:-}" ]]; then
   verifier="$STANDALONE_RESTORE_VERIFIER"
 else
-  verifier="$source_root/deploy/verify-restore.sh"
+  verifier="$source_root/deploy/standalone/verify-backup.sh"
 fi
-CARDS_RESTORE_BACKUP_ROOT="$backup_root" "$verifier" "$latest" >/dev/null
+CARDS_RESTORE_BACKUP_ROOT="$backup_root" bash "$verifier" "$latest"
 
 releases="$install_root/releases"
 ensure_safe_child_directory "$install_root" releases 700 || { standalone_die "Invalid releases directory."; exit 1; }

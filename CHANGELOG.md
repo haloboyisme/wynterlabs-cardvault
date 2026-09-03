@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — V2.5 preparation
+
+- Repair standalone upgrades to use the included `verify-backup.sh` instead of
+  a private deployment helper absent from public releases. Restore validation
+  runs in a disposable PostgreSQL container with no network or published ports.
+- Add an explicitly opt-in disposable upgrade smoke check and upgrade guidance.
+- Fix the older-install migration path comparing a newly added PostgreSQL role
+  enum value before its transaction commits; compare the stored role as text.
+
 ## 2.0.1 - Account and community release
 
 - Added password-confirmed email changes with session revocation, owner-reviewed

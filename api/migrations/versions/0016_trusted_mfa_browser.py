@@ -17,7 +17,9 @@ def upgrade() -> None:
     op.execute(
         sa.text(
             "UPDATE users SET must_setup_mfa = true "
-            "WHERE role IN ('OWNER', 'SUPER_ADMIN', 'ADMIN') "
+            # 0015 can add SUPER_ADMIN in this same migration transaction.
+            # Compare text so PostgreSQL need not use the uncommitted enum value.
+            "WHERE CAST(role AS TEXT) IN ('OWNER', 'SUPER_ADMIN', 'ADMIN') "
             "AND NOT EXISTS (SELECT 1 FROM mfa_credentials "
             "WHERE mfa_credentials.user_id = users.id "
             "AND mfa_credentials.enabled_at IS NOT NULL)"
