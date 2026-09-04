@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.2 - Documentation closeout
+
+- Consolidate final Version 2.5 release evidence, current installation links,
+  publishing status and Version 3 handoff without changing application behavior
+  or database migrations.
+
 ## 2.5.1 - Final Version 2 maintenance release
 
 - Present Version 2.5 as complete on Home, remove unsupported-provider plans

@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-2.5.1-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.5.2-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -164,7 +164,9 @@ attribution requirements, and acceptable-use rules.
 - [Read the security policy](SECURITY.md)
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
-- [Review V2 release readiness](docs/v2-release-readiness.md)
+- [Review final V2.5 release readiness](docs/v2.5-release-readiness.md)
+- [Read the final Version 2.5.2 release notes](docs/v2.5.2-release.md)
+- [See the staged Version 3 roadmap](docs/V3-ROADMAP.md)
 - [Understand account and private community controls](docs/ACCOUNT-AND-COMMUNITY.md)
 
 ---
@@ -185,7 +187,7 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.2 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

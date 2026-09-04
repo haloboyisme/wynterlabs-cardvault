@@ -35,5 +35,5 @@ directions, not promised dates or permanent maintenance commitments.
 ## Promotion rule
 
 Every V3 stage is tested first on the private CardVault installation. Public V3
-branches or releases are updated only after owner acceptance. V2.5 remains the
-stable fallback throughout experimentation.
+branches or releases are updated only after owner acceptance. The immutable
+V2.5.2 tag remains the stable fallback throughout experimentation.

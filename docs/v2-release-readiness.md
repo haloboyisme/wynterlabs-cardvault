@@ -1,7 +1,7 @@
 # Version 2.0.1 release readiness
 
-Historical V2.0.1 evidence is preserved below. For the newer V2.5 release
-checks, see [V2.5 closeout](v2.5-closeout-checkpoint.md).
+Historical V2.0.1 evidence is preserved below. For the completed V2.5 release
+line, see [final V2.5 readiness](v2.5-release-readiness.md).
 
 This document records the release-candidate checks without storing private
 addresses, usernames, email addresses, credentials, certificates, MFA keys, or
