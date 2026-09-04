@@ -33,7 +33,7 @@ port_is_free "$http_port" || { standalone_die "HTTP port $http_port is already i
 port_is_free "$https_port" || { standalone_die "HTTPS port $https_port is already in use."; exit 1; }
 
 version="$(tr -d '\r\n' < "$repo_dir/VERSION")"
-[[ "$version" = 2.0.1 ]] || { standalone_die "This installer requires VERSION 2.0.1."; exit 1; }
+[[ "$version" = 2.5.0 ]] || { standalone_die "This installer requires VERSION 2.5.0."; exit 1; }
 
 if [[ -n "${STANDALONE_TEST_ROOT:-}" ]]; then
   [[ "${STANDALONE_TEST_MODE:-0}" = 1 ]] || { standalone_die "Test roots require explicit test mode."; exit 1; }
