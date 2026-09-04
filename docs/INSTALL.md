@@ -28,7 +28,7 @@ Clone the immutable V2.5 release and install WynterLabs CardVault with one comma
 Replace `YOUR_HOST_OR_IP` with the LAN address or DNS name used by members:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 If the release is already downloaded, run the included bootstrap directly:

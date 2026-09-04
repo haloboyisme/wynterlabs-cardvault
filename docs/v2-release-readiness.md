@@ -22,7 +22,7 @@ backup contents.
   deletion requests require owner review; owner deletion is unavailable in the
   web application. MFA reset follows the existing role hierarchy and revokes
   the target's sessions and trusted browsers.
-- Google/Apple sign-in, outbound email recovery, physical scanner transport,
+- Google sign-in, outbound email recovery, physical scanner transport,
   custom collectibles, and gameplay remain optional future work rather than V2
   release requirements.
 

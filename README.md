@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-2.5.0-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.5.1-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -106,7 +106,7 @@ seller accounts.
 > privileged accounts, and test backups before trusting the system with a large
 > collection.
 
-## 🧭 Roadmap after the Version 2 core release
+## 🧭 Version 2.5 and the road to Version 3
 
 The roadmap is intentionally flexible because this is a fun project—not a
 commitment to update the software forever.
@@ -140,29 +140,12 @@ commitment to update the software forever.
   username/password remains available. See [Google setup](docs/GOOGLE-SIGN-IN.md)
   and [email setup](docs/EMAIL-SETUP.md).
 
-### Optional future increments
-
-- Apple sign-in remains a separate provider project.
-- Add more trading-card games and provider adapters only when trustworthy,
-  legally appropriate data sources are available.
-- Add finer feed controls or moderation only if the private community needs them.
-
-### Longer-term ideas
-
-- Optional DIY 3D-printed scanner hardware using an ESP or Arduino-compatible
-  controller and a card-moving motor.
-- A camera-assisted tabletop practice layout that can eventually use saved
-  decks during solo play.
-- Carefully designed member-to-member features only after moderation, privacy,
-  legal, and safety questions are solved.
-- Easier upgrades, more deployment targets, and optional advanced database
-  choices if the hobby project grows enough to justify them.
-
-Roadmap items are ideas, not promised dates or guaranteed features.
-Possible Version 3 experiments include an easy owner-managed Custom
-Collectibles workflow for cards without a dependable public catalog and staged
-Magic/Pokémon tabletop play, beginning with solo camera-assisted practice and
-only considering multiplayer much later.
+Version 2.5 closes the planned account, email, Google sign-in, collection,
+scanner, backup, and self-hosted installation work. Future product changes are
+grouped under Version 3: custom collectibles, continued scanner experiments,
+optional DIY scanner hardware, and staged solo Magic/Pokémon tabletop practice.
+See the [fine-grained V3 roadmap](docs/V3-ROADMAP.md). Roadmap items remain ideas,
+not promised dates or guaranteed features.
 
 ## ⚖️ License and card-data notice
 
@@ -202,7 +185,7 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.1 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

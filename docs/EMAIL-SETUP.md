@@ -61,5 +61,5 @@ If a provider credential was exposed, revoke it at the provider and save a new
 one in Admin. This does not require changing members' CardVault passwords.
 
 Google sign-in requires separate OAuth configuration and a supported HTTPS
-hostname; Gmail SMTP does not enable the Google sign-in button. Apple and
-physical scanner control are separate projects.
+hostname; Gmail SMTP does not enable the Google sign-in button. Physical
+scanner controls are a separate V3 project.

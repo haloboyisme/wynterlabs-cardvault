@@ -34,15 +34,15 @@ const quickActions = [
 ];
 
 const updates = [
-  ["Collection", "Bulk card actions", "Select many cards to build a quick deck or remove them together."],
-  ["Scanner", "Back-to-back scanning", "Keep a private session running, review small previews, and fix uncertain matches."],
-  ["Workspace", "Make it yours", "Choose from more than 25 accents plus density, text, motion, and detail controls."],
+  ["V2.5", "Email recovery", "Verify new accounts and recover access with private, owner-configured email delivery."],
+  ["V2.5", "Google sign-in", "Link an existing account to Google using credentials controlled by each installation owner."],
+  ["Release", "Ready to self-host", "Install with Docker, generated secrets, encrypted backups, and a tested recovery path."],
 ];
 
 const roadmap = [
-  ["Now", "Fresh catalog prices", "Every owner refresh replaces current printing prices and updates collection totals."],
-  ["Next", "Scanner reliability", "Continue improving recognition, correction speed, and multi-card session feedback."],
-  ["Later", "Marketplace planning", "Trading stays paused while marketplace safety and member controls are designed."],
+  ["V3", "Custom cards", "Create and manage collectibles that do not have a dependable public catalog."],
+  ["V3", "Scanner workshop", "Fine-tune sideways-card recognition and safely prototype the optional ESP or Arduino card mover."],
+  ["V3", "Solo tabletop practice", "Start with guided Magic and Pokemon camera layouts, then connect saved decks in small steps."],
 ];
 
 export function HomePage() {
@@ -130,7 +130,7 @@ export function HomePage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Release notes</p>
-            <h2>What's new in your workspace.</h2>
+          <h2>V2.5 is ready.</h2>
           </div>
           <p>Recent improvements are kept short and useful so members can see what changed at a glance.</p>
         </div>
@@ -163,12 +163,12 @@ export function HomePage() {
       <section className="home-roadmap-section" id="roadmap">
         <div className="home-roadmap-heading">
           <p className="eyebrow">Roadmap</p>
-          <h2>Built in public, released with care.</h2>
-          <p>Clear priorities, no invented dates, and no feature turned on before its controls are ready.</p>
+          <h2>V3, one useful experiment at a time.</h2>
+          <p>Small stages, no invented dates, and nothing promoted until it works on the private test installation.</p>
         </div>
         <ol className="home-roadmap-list">
           {roadmap.map(([status, title, copy]) => (
-            <li key={status}>
+            <li key={`${status}-${title}`}>
               <span className={`roadmap-state roadmap-${status.toLowerCase()}`}>{status}</span>
               <div><h3>{title}</h3><p>{copy}</p></div>
             </li>

@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased — V2.5 preparation
+## 2.5.1 - Final Version 2 maintenance release
+
+- Present Version 2.5 as complete on Home, remove unsupported-provider plans
+  from current user-facing material, and consolidate remaining ideas into a
+  staged Version 3 roadmap.
+- Update the immutable Docker installation command and release version guard.
+
+## 2.5.0 - Email recovery and Google sign-in
 
 - Add optional Google sign-in and explicit account linking, configured privately
   by the owner/superadmin in Admin. Password sign-in remains available; existing
