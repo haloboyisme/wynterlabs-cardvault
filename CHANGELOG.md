@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — planning documentation
+
+- Document planned V3.2 streamer previews, optional sounds and card effects,
+  private OBS overlays, and replayable/exportable pack recaps.
+- Defer account-owned Bluetooth feeders to V3.5, subject to platform compatibility.
+- Refresh upgrade guidance and distinguish the stable release snapshot from
+  ongoing documentation updates. No new application features are released here.
+- See the [V3 roadmap](docs/V3-ROADMAP.md) and
+  [V3.2 proposal](docs/V3.2-STREAMER-PREVIEW.md).
+
 ## 2.5.2 - Documentation closeout
 
 - Consolidate final Version 2.5 release evidence, current installation links,
