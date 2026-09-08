@@ -146,8 +146,7 @@ grouped under Version 3: custom collectibles, continued scanner experiments,
 optional DIY scanner hardware, and staged solo Magic/Pokémon tabletop practice.
 See the [fine-grained V3 roadmap](docs/V3-ROADMAP.md). Planned **V3.2** adds
 optional streamer previews, confirmation/rejection sounds, card reveals,
-OBS overlays and saved pack-recap videos; see the
-[detailed V3.2 proposal](docs/V3.2-STREAMER-PREVIEW.md). **V3.5** defers Bluetooth
+OBS overlays and saved pack-recap videos. **V3.5** defers Bluetooth
 feeder support for iPhone, Android and computers pending platform compatibility.
 Feeder connections are planned to belong to individual user accounts.
 These features are not included in V2.5.2. Roadmap items remain ideas,
