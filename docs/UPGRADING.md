@@ -1,9 +1,11 @@
 # Standalone upgrades
 
-This repair is prepared for the next release. The immutable `v2.0.1` download
-still contains the earlier broken upgrade helper; do not use that older helper.
+The repaired upgrade helper shipped in Version 2.5.0 and is included in the
+stable **V2.5.2** release. The older `v2.0.1` download still contains the broken
+helper; do not use that older helper. See [installation](INSTALL.md) and the
+[final V2.5 verification record](v2.5-release-readiness.md).
 
-When a newer release containing this repair is published:
+To upgrade an older standalone installation using V2.5.2:
 
 1. Keep your original source checkout and escrowed secrets. Obtain the newer
    trusted release separately; never overwrite installation secrets.
