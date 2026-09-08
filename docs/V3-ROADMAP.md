@@ -26,6 +26,45 @@ directions, not promised dates or permanent maintenance commitments.
 - Add optional second-camera recognition only after the basic layout is usable.
 - Keep video local/private and show clear camera and retention controls.
 
+
+## V3.2: streamer previews, feedback and pack recap
+
+Planned scope; implementation has not started. Add optional presentation tools
+for collectors, YouTube creators and streamers while retaining plain scanning.
+
+- Choose instant appearance, fade-in or card-back-to-front flip directly in the preview.
+- Preserve existing card details with configurable styling, visibility and layout.
+- Offer optional pack-opening effects and 3D-style presentation with a lightweight fallback.
+- Configure confirmation/rejection sounds, individual effects and volume; provide
+  account-page master mute plus a convenient preview mute.
+- Save preferences per user with Plain, Subtle and Streamer presets.
+- Provide a clean pop-out and a revocable, read-only OBS Browser Source URL for
+  the user's selected session, with transparent, green, blue or solid backgrounds.
+- Finish Pack produces a replayable recap of confirmed pulls; target downloadable
+  video as well as OBS recording, with export compatibility validated during design.
+- Keep overlay viewing separate from feeder control and avoid duplicate audio or
+  celebration replay after reconnects.
+
+See the [V3.2 streamer preview proposal](V3.2-STREAMER-PREVIEW.md) for scope,
+recap ideas, ownership boundaries and validation requirements.
+
+## V3.5: Bluetooth feeder connections
+
+Deferred until V3.5. Target iPhone, Android and computers, subject to an explicit
+platform/browser compatibility assessment; do not assume direct browser Bluetooth
+works everywhere. Evaluate a companion application or bridge where needed.
+
+- Keep Wi-Fi as the initial feeder transport.
+- Pair each feeder to an individual CardVault account; enforce ownership for all
+  commands and allow only one active scanning session per feeder.
+- Preserve those ownership and session boundaries when adding Bluetooth.
+- Provide device rename, disconnect and revoke controls; reconnects must not
+  repeat motor commands or automatically resume unsafe movement.
+- Treat Bluetooth pairing and CardVault account authorization as distinct checks.
+
+These version targets supplement the stages above; they do not renumber or
+remove custom collectibles, recognition improvements or solo tabletop practice.
+
 ## Later experiments
 
 - Consider multiplayer only after identity, moderation, privacy and network safety review.
