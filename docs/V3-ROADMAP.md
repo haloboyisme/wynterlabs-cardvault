@@ -4,6 +4,14 @@ Version 2.5 is the completed self-hosted collection release. Version 3 remains
 experimental and will be developed in small, privately tested stages. These are
 directions, not promised dates or permanent maintenance commitments.
 
+| Version | Status | Focus |
+|---|---|---|
+| V2.5.2 | Released | Stable self-hosted collection and scanning release |
+| V3.2 | Planned | Streamer previews, optional feedback, OBS overlays and pack-recap videos |
+| V3.5 | Deferred | Bluetooth feeders for iPhone, Android and computers, subject to compatibility |
+
+The stages below describe work areas, not minor-version numbers.
+
 ## Stage 1: custom collectibles
 
 - Add a simple owner-controlled form for cards without a dependable catalog.
@@ -25,7 +33,6 @@ directions, not promised dates or permanent maintenance commitments.
 - Let the member select a saved deck; do not attempt automatic rules enforcement.
 - Add optional second-camera recognition only after the basic layout is usable.
 - Keep video local/private and show clear camera and retention controls.
-
 
 ## V3.2: streamer previews, feedback and pack recap
 
