@@ -65,6 +65,8 @@ They are clearly labeled as user supplied and stay private to their account.
 
 [Custom Card Import guide](docs/CUSTOM-CARD-IMPORT.md) · [V2.5.9 release notes](docs/v2.5.9-release.md)
 
+**Planned for V2.6:** remember your last selected scan set when navigating between pages.
+
 ## 🧪 Version 2 release
 
 Version 2 expands the catalog foundation

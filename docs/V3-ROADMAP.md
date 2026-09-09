@@ -7,10 +7,18 @@ directions, not promised dates or permanent maintenance commitments.
 | Version | Status | Focus |
 |---|---|---|
 | V2.5.9 | Released | Collection and scanning release with Custom Card Import |
+| V2.6 | Planned | Remember the last selected scan set when navigating between pages |
 | V3.2 | Planned | Streamer previews, optional feedback, OBS overlays and pack-recap videos |
 | V3.5 | Deferred | Bluetooth feeders for iPhone, Android and computers, subject to compatibility |
 
 The stages below describe work areas, not minor-version numbers.
+
+## V2.6: remember the selected scan set
+
+- Keep the last set selected in the scanner when moving to another page and back.
+- Restore the selection for the current user and card game; do not mix selections between accounts or games.
+- Let the user change or clear the remembered set, and handle removed sets gracefully.
+- Planned for V2.6; not included in V2.5.9.
 
 ## Stage 1: Custom Card Import — delivered in V2.5.9
 
