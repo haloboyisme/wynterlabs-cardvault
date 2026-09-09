@@ -174,7 +174,7 @@ export function DecksPage() {
         <form onSubmit={(event) => void submit(event)}>
           <label>Deck name<input value={name} maxLength={120} required onChange={(event) => setName(event.target.value)} /></label>
           <label>Game<select value={game} onChange={(event) => changeGame(event.target.value)}>
-            {CATALOG_GAMES.map((value) => <option value={value.id} key={value.id}>{value.name}</option>)}
+            <option value="custom">Other / Custom collectibles</option>{CATALOG_GAMES.map((value) => <option value={value.id} key={value.id}>{value.name}</option>)}
           </select></label>
           <label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DeckFormat)}>
             {creationFormats.map((value) => <option value={value} key={value}>{title(value)}</option>)}

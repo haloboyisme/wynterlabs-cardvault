@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.catalog.summary import card_summary, first_face_images
 from app.collection_constants import allowed_deck_sections
+from app.custom_cards import visible_to
 from app.database import get_db
 from app.deck_analysis import analyze_deck
 from app.deck_schemas import (
@@ -156,7 +157,9 @@ async def set_deck_card(
                 )
             printing = await database.scalar(
                 select(CardPrinting).where(
-                    CardPrinting.id == payload.printing_id, CardPrinting.active.is_(True)
+                    CardPrinting.id == payload.printing_id,
+                    CardPrinting.active.is_(True),
+                    visible_to(CardPrinting, auth.user.id),
                 )
             )
             if printing is None:

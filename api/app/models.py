@@ -426,6 +426,9 @@ class CardSet(Base):
         Index("ix_card_sets_name", "name"),
     )
 
+    custom_owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     scryfall_id: Mapped[uuid.UUID] = mapped_column(Uuid, unique=True)
     game: Mapped[str] = mapped_column(String(16), default="mtg", server_default="mtg")
@@ -455,6 +458,9 @@ class OracleCard(Base):
         Index("ix_oracle_cards_type_line", "type_line"),
     )
 
+    custom_owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     scryfall_id: Mapped[uuid.UUID] = mapped_column(Uuid, unique=True)
     game: Mapped[str] = mapped_column(String(16), default="mtg", server_default="mtg")
@@ -487,6 +493,9 @@ class CardPrinting(Base):
         Index("ix_card_printings_oracle_active", "oracle_card_id", "active"),
     )
 
+    custom_owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     scryfall_id: Mapped[uuid.UUID] = mapped_column(Uuid, unique=True)
     game: Mapped[str] = mapped_column(String(16), default="mtg", server_default="mtg")
@@ -740,7 +749,7 @@ class Deck(Base):
         ),
         CheckConstraint(
             "game IN ('mtg', 'pokemon', 'yugioh', 'onepiece', 'digimon', "
-            "'starwars', 'unionarena', 'lorcana', 'riftbound')",
+            "'starwars', 'unionarena', 'lorcana', 'riftbound', 'custom')",
             name="ck_decks_game",
         ),
         CheckConstraint("revision >= 1", name="ck_decks_revision"),

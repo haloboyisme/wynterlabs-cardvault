@@ -52,6 +52,7 @@ from app.collection_value import (
     utc_timestamp,
 )
 from app.collection_value_schemas import CollectionValueHistoryOut, CollectionValuePointOut
+from app.custom_cards import visible_to
 from app.database import get_db
 from app.dependencies import CurrentAuth, require_ready_auth
 from app.errors import AppError
@@ -380,7 +381,7 @@ async def create_collection_item(
     database: AsyncSession = Depends(get_db),
 ) -> CollectionItemOut:
     user_id = auth.user.id
-    printing = await _active_printing(database, payload.printing_id)
+    printing = await _active_printing(database, payload.printing_id, auth.user.id)
     _validate_finish(printing, payload.finish)
     created = False
     try:
@@ -549,9 +550,15 @@ def _tuple_query(user_id: uuid.UUID, payload: CollectionItemCreate):
     )
 
 
-async def _active_printing(database: AsyncSession, printing_id: uuid.UUID) -> CardPrinting:
+async def _active_printing(
+    database: AsyncSession, printing_id: uuid.UUID, user_id: uuid.UUID
+) -> CardPrinting:
     printing = await database.scalar(
-        select(CardPrinting).where(CardPrinting.id == printing_id, CardPrinting.active.is_(True))
+        select(CardPrinting).where(
+            CardPrinting.id == printing_id,
+            CardPrinting.active.is_(True),
+            visible_to(CardPrinting, user_id),
+        )
     )
     if printing is None:
         raise AppError(404, "printing_not_found", "Card printing was not found.")

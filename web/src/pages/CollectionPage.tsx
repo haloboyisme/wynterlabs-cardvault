@@ -730,6 +730,7 @@ export function CollectionPage() {
             </label>}
             {item.card.active ? <Link to={`/cards/${item.printing_id}`}><CardImage name={item.card.name} imageUris={item.card.image_uris} /></Link> : <div className="inactive-card-image"><CardImage name={item.card.name} imageUris={item.card.image_uris} /></div>}
             <div className="collection-item-copy">
+              <span>{item.card.is_custom ? "Custom card · User supplied" : ""}</span>
               <h2>{item.card.active ? <Link to={`/cards/${item.printing_id}`}>{item.card.name}</Link> : item.card.name}</h2>
               <span className="collection-quantity" aria-label={`${item.quantity} copies`}>{item.quantity}×</span>
               <span className="collection-finish-badge">{displayValue(item.finish)}</span>

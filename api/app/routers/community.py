@@ -25,7 +25,11 @@ async def activity(
             .join(CardPrinting, CardPrinting.id == CollectionItem.printing_id)
             .join(OracleCard, OracleCard.id == CardPrinting.oracle_card_id)
             .join(CardSet, CardSet.id == CardPrinting.card_set_id)
-            .where(User.share_activity.is_(True), User.is_active.is_(True))
+            .where(
+                User.share_activity.is_(True),
+                User.is_active.is_(True),
+                CardPrinting.custom_owner_id.is_(None),
+            )
             .order_by(CollectionItem.created_at.desc())
             .limit(limit)
         )
@@ -50,12 +54,16 @@ async def activity(
             )
         ).all()
     )
-    set_rows = list((await database.scalars(
-        select(CardSet)
-        .where(CardSet.active.is_(True), CardSet.released_at.is_not(None))
-        .order_by(CardSet.released_at.desc())
-        .limit(min(limit, 12))
-    )).all())
+    set_rows = list(
+        (
+            await database.scalars(
+                select(CardSet)
+                .where(CardSet.active.is_(True), CardSet.released_at.is_not(None))
+                .order_by(CardSet.released_at.desc())
+                .limit(min(limit, 12))
+            )
+        ).all()
+    )
 
     items = [
         CommunityActivityItem(
@@ -104,9 +112,11 @@ async def activity(
         if row.completed_at is not None
     )
     items.sort(
-        key=lambda item: item.occurred_at.replace(tzinfo=UTC)
-        if item.occurred_at.tzinfo is None
-        else item.occurred_at,
+        key=lambda item: (
+            item.occurred_at.replace(tzinfo=UTC)
+            if item.occurred_at.tzinfo is None
+            else item.occurred_at
+        ),
         reverse=True,
     )
     return CommunityActivityOut(items=items[:limit])

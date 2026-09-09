@@ -27,6 +27,7 @@ from app.catalog.importer import CatalogImporter
 from app.catalog.scheduler import CatalogScheduleSpec, next_catalog_run
 from app.catalog.status import read_catalog_status
 from app.collection_value import capture_collection_price_snapshots
+from app.custom_cards import remove_owned_custom_cards
 from app.database import get_db
 from app.dependencies import (
     CurrentAuth,
@@ -317,6 +318,7 @@ async def approve_deletion_request(
         subject_user_id=user.id, event_type="account_deleted", actor_type="owner",
         details={"request_id": str(row.id)},
     ))
+    await remove_owned_custom_cards(database, user.id)
     await database.delete(user)
     await database.commit()
 
@@ -382,6 +384,7 @@ async def delete_user(
     database.add(SecurityAuditEvent(
         subject_user_id=user.id, event_type="account_deleted", actor_type="owner", details={},
     ))
+    await remove_owned_custom_cards(database, user.id)
     await database.delete(user)
     await database.commit()
 

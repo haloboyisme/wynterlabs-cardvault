@@ -28,6 +28,7 @@ async def first_face_images(database: AsyncSession, printing_ids: list) -> dict:
 
 def card_summary(printing, oracle, card_set, face_images: dict) -> CardSummaryOut:
     return CardSummaryOut(
+        is_custom=printing.custom_owner_id is not None,
         printing_id=printing.id,
         oracle_id=oracle.id,
         name=oracle.name,

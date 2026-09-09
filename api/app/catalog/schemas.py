@@ -42,6 +42,7 @@ class CardFaceOut(BaseModel):
 
 
 class CardSummaryOut(BaseModel):
+    is_custom: bool = False
     printing_id: uuid.UUID
     oracle_id: uuid.UUID
     name: str

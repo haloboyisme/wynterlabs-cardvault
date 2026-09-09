@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.5.9 — Custom Card Import
+
+- Add a dedicated Custom Card Import page for missing catalog cards, optional HTTPS artwork, set details, values and quantities.
+- Keep custom cards private to their account across catalog search, collections, decks and CSV operations.
+- Add portable JSON import/export and protect custom records during provider refreshes.
+- Include migration 0021_custom_cards and update standalone installation version checks.
+- Preserve existing scanner behavior; streamer effects and Bluetooth remain planned.
+
+
 ## Unreleased — planning documentation
 
 - Document planned V3.2 streamer previews, optional sounds and card effects,

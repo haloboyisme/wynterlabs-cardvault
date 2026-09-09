@@ -10,6 +10,7 @@ from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collection_csv import CollectionExportRow, ParsedCollectionCsv
+from app.custom_cards import visible_to
 from app.errors import AppError
 from app.models import (
     CardPrinting,
@@ -81,7 +82,7 @@ async def create_preview(
             select(CardPrinting, OracleCard, CardSet)
             .join(OracleCard, OracleCard.id == CardPrinting.oracle_card_id)
             .join(CardSet, CardSet.id == CardPrinting.card_set_id)
-            .where(CardPrinting.id.in_(printing_ids))
+            .where(CardPrinting.id.in_(printing_ids), visible_to(CardPrinting, user_id))
         )
     ).all()
     catalog = {
@@ -233,7 +234,11 @@ async def confirm_preview(
     printings = {
         printing.id: printing
         for printing in (
-            await database.scalars(select(CardPrinting).where(CardPrinting.id.in_(printing_ids)))
+            await database.scalars(
+                select(CardPrinting).where(
+                    CardPrinting.id.in_(printing_ids), visible_to(CardPrinting, user_id)
+                )
+            )
         ).all()
     }
     existing = {(item.printing_id, item.finish, item.condition): item for item in items}

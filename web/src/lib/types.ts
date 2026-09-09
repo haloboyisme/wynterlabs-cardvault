@@ -71,6 +71,7 @@ export interface CardFace {
 }
 
 export interface CardSummary {
+  is_custom?: boolean;
   printing_id: string;
   oracle_id: string;
   name: string;

@@ -1907,3 +1907,15 @@ html[data-contrast="high"] :is(.header-topline, .site-footer) { border-color: va
   line-height: 1.25;
   text-align: center;
 }
+
+.custom-card-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1.25rem; }
+.custom-card-fields { border: 0; padding: 0; display: grid; gap: 1rem; min-width: 0; }
+.custom-card-fields label { display: grid; gap: .35rem; }
+.custom-card-image { width: 100%; max-width: 280px; min-height: 160px; object-fit: contain; border-radius: 12px; }
+.custom-card-import .panel { padding: 1.25rem; }
+@media (max-width: 720px) { .custom-card-layout { grid-template-columns: 1fr; } }
+.custom-card-import { width: min(100%, 1200px); margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); display: grid; gap: 1.5rem; }
+.custom-card-import .panel { min-width: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); }
+.custom-card-import .button-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: 1rem; }
+.custom-card-import input, .custom-card-import select { width: 100%; min-width: 0; }
+.custom-card-import [role="status"] { padding: 1rem; border: 1px solid var(--line); border-radius: 12px; }

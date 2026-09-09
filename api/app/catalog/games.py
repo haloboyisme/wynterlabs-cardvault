@@ -24,4 +24,4 @@ def is_supported_game(value: str | None) -> bool:
 
 def current_game_matches(value: str | None) -> bool:
     normalized = normalize_game(value)
-    return normalized is None or normalized in SUPPORTED_GAME_KEYS
+    return normalized is None or normalized == "custom" or normalized in SUPPORTED_GAME_KEYS

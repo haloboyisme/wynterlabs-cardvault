@@ -64,3 +64,9 @@ it("uses labeled Digimon reference artwork when the exact printing image fails",
   );
   expect(screen.getByText("Reference artwork — verify exact printing")).toBeVisible();
 });
+
+it("renders owner-supplied HTTPS images without forwarding a referrer", () => {
+  render(<CardImage name="Custom" imageUris={{ custom: "https://example.com/card.png" }} />);
+  expect(screen.getByRole("img", {name: "Custom card"})).toHaveAttribute("src", "https://example.com/card.png");
+  expect(screen.getByRole("img", {name: "Custom card"})).toHaveAttribute("referrerpolicy", "no-referrer");
+});

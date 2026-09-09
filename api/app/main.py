@@ -16,6 +16,7 @@ from app.routers import (
     branding,
     catalog,
     collection,
+    custom_cards,
     community,
     decks,
     email,
@@ -67,6 +68,7 @@ def create_app(
     app.include_router(scanner.router)
     app.include_router(catalog.router)
     app.include_router(collection.router)
+    app.include_router(custom_cards.router)
     app.include_router(community.router)
     app.include_router(decks.router)
     app.include_router(invitations.router)

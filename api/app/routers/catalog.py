@@ -38,6 +38,7 @@ from app.catalog.summary import (
 )
 from app.collection_constants import FORMATS
 from app.config import Settings
+from app.custom_cards import visible_to
 from app.database import get_db
 from app.dependencies import CurrentAuth, get_settings, require_ready_auth
 from app.errors import AppError
@@ -145,7 +146,13 @@ async def cards(
             pages=0,
         )
 
-    statement = _structured_card_filters(_card_rows(), set_code, collector, rarity, card_type)
+    statement = _structured_card_filters(
+        _card_rows().where(visible_to(CardPrinting, _auth.user.id)),
+        set_code,
+        collector,
+        rarity,
+        card_type,
+    )
     if normalized_game:
         statement = statement.where(
             CardPrinting.game == normalized_game,
@@ -199,7 +206,9 @@ async def scan_candidates(
     normalized_game = normalize_game(game)
     if not current_game_matches(normalized_game) or not current_game_matches(preferred_game):
         return []
-    statement = _structured_card_filters(_card_rows(), None, None, None, None)
+    statement = _structured_card_filters(
+        _card_rows().where(visible_to(CardPrinting, _auth.user.id)), None, None, None, None
+    )
     if normalized_game:
         statement = statement.where(
             CardPrinting.game == normalized_game,
@@ -267,7 +276,9 @@ async def card_detail(
 ) -> CardDetailOut:
     row = (
         await database.execute(
-            _card_rows().where(
+            _card_rows()
+            .where(visible_to(CardPrinting, _auth.user.id))
+            .where(
                 CardPrinting.id == printing_id,
                 CardPrinting.active.is_(True),
                 OracleCard.active.is_(True),
@@ -335,6 +346,7 @@ async def oracle_printings(
         return PrintingListOut(items=[], page=page, page_size=page_size, total=0, pages=0)
     exists = await database.scalar(
         select(OracleCard.id).where(
+            visible_to(OracleCard, _auth.user.id),
             OracleCard.id == oracle_id,
             OracleCard.active.is_(True),
         )
@@ -342,6 +354,7 @@ async def oracle_printings(
     if exists is None:
         raise AppError(404, "oracle_card_not_found", "Oracle card was not found.")
     filters = [
+        visible_to(CardPrinting, _auth.user.id),
         OracleCard.id == oracle_id,
         OracleCard.active.is_(True),
         CardPrinting.active.is_(True),
@@ -369,6 +382,7 @@ async def oracle_printings(
         (
             await database.execute(
                 _card_rows()
+                .where(visible_to(CardPrinting, _auth.user.id))
                 .where(*filters)
                 .order_by(
                     CardPrinting.released_at.desc().nulls_last(),
@@ -402,7 +416,7 @@ async def sets(
     normalized_game = normalize_game(game)
     if not current_game_matches(normalized_game):
         return SetPageOut(items=[], page=page, page_size=page_size, total=0, pages=0)
-    filters = [CardSet.active.is_(True)]
+    filters = [CardSet.active.is_(True), visible_to(CardSet, _auth.user.id)]
     if normalized_game:
         filters.append(CardSet.game == normalized_game)
     total = await database.scalar(select(func.count()).select_from(CardSet).where(*filters)) or 0

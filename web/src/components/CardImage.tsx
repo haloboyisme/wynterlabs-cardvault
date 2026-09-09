@@ -6,7 +6,7 @@ interface CardImageProps {
   className?: string;
 }
 
-function approvedCardImage(value: string | undefined): string | undefined {
+function approvedCardImage(value: string | undefined, custom = false): string | undefined {
   if (!value) return undefined;
   try {
     const url = new URL(value);
@@ -18,6 +18,7 @@ function approvedCardImage(value: string | undefined): string | undefined {
     ) {
       return undefined;
     }
+    if (custom) return value;
     if (
       url.hostname === "cards.scryfall.io" ||
       url.hostname === "images.pokemontcg.io" ||
@@ -34,8 +35,8 @@ function approvedCardImage(value: string | undefined): string | undefined {
 }
 
 export function CardImage({ name, imageUris, className }: CardImageProps) {
-  const sources = ["normal", "large", "small", "reference"]
-    .map((kind) => ({ kind, source: approvedCardImage(imageUris[kind]) }))
+  const sources = ["normal", "large", "small", "reference", "custom"]
+    .map((kind) => ({ kind, source: approvedCardImage(imageUris[kind], kind === "custom") }))
     .filter((item): item is { kind: string; source: string } => Boolean(item.source))
     .filter((item, index, items) => (
       items.findIndex((candidate) => candidate.source === item.source) === index
@@ -65,6 +66,7 @@ export function CardImage({ name, imageUris, className }: CardImageProps) {
       src={selected.source}
       alt={`${name} ${reference ? "reference artwork" : "card"}`}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setSourceIndex((current) => current + 1)}
     />
     {reference ? (

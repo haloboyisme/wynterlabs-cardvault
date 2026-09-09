@@ -13,6 +13,7 @@ export const DECK_FORMATS: DeckFormat[] = [
 ];
 
 const GAME_FORMATS: Record<string, DeckFormat[]> = {
+  custom: ["unlimited"],
   pokemon: ["standard", "expanded", "unlimited"],
   yugioh: ["advanced", "traditional", "unlimited"],
   onepiece: ["standard"],

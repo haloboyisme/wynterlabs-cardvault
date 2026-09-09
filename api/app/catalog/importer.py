@@ -468,8 +468,10 @@ class CatalogImporter:
             from app.catalog.tcgjson import TcgJsonClient, catalog_url, normalize_tcgjson_card
 
             provider = self.providers.get(game) or TcgJsonClient(self.settings, game)
+
             def normalizer(record):
                 return normalize_tcgjson_card(record, game)
+
         metadata = BulkMetadata(
             uuid.uuid5(uuid.NAMESPACE_URL, f"wynterlabs:catalog:{game}"),
             datetime.now(UTC),
@@ -569,12 +571,20 @@ class CatalogImporter:
                 checksum.update(chunk)
         async with self.session_factory() as session, session.begin():
             item = await session.get(CatalogImport, import_id)
-            await session.execute(update(CardSet).where(CardSet.game == game).values(active=False))
             await session.execute(
-                update(OracleCard).where(OracleCard.game == game).values(active=False)
+                update(CardSet)
+                .where(CardSet.game == game, CardSet.custom_owner_id.is_(None))
+                .values(active=False)
             )
             await session.execute(
-                update(CardPrinting).where(CardPrinting.game == game).values(active=False)
+                update(OracleCard)
+                .where(OracleCard.game == game, OracleCard.custom_owner_id.is_(None))
+                .values(active=False)
+            )
+            await session.execute(
+                update(CardPrinting)
+                .where(CardPrinting.game == game, CardPrinting.custom_owner_id.is_(None))
+                .values(active=False)
             )
             for _line, raw in stream_gzip_jsonl(path):
                 total += 1

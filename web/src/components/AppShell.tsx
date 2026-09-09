@@ -113,6 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <NavLink to="/dashboard">Dashboard</NavLink>
                   <NavLink to="/cards">Cards</NavLink>
                   <NavLink to="/collection">Collection</NavLink>
+                  <NavLink to="/custom-card-import">Custom Card Import</NavLink>
                   <NavLink to="/scan">Scan</NavLink>
                   <NavLink to="/decks">Decks</NavLink>
                   {MEMBER_TRADING_ENABLED && <NavLink to="/trades">Trades</NavLink>}

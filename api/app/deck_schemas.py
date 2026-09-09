@@ -45,7 +45,7 @@ class DeckCreate(DeckMetadata):
     @classmethod
     def valid_game(cls, value: str) -> str:
         normalized = normalize_game(value)
-        if not is_supported_game(normalized):
+        if normalized != "custom" and not is_supported_game(normalized):
             raise ValueError("invalid game")
         return normalized
 

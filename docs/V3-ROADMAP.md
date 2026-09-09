@@ -6,15 +6,15 @@ directions, not promised dates or permanent maintenance commitments.
 
 | Version | Status | Focus |
 |---|---|---|
-| V2.5.2 | Released | Stable self-hosted collection and scanning release |
+| V2.5.9 | Released | Collection and scanning release with Custom Card Import |
 | V3.2 | Planned | Streamer previews, optional feedback, OBS overlays and pack-recap videos |
 | V3.5 | Deferred | Bluetooth feeders for iPhone, Android and computers, subject to compatibility |
 
 The stages below describe work areas, not minor-version numbers.
 
-## Stage 1: custom collectibles
+## Stage 1: Custom Card Import — delivered in V2.5.9
 
-- Add a simple owner-controlled form for cards without a dependable catalog.
+- A simple account-private form for cards without a dependable catalog is now available.
 - Require a name and game or category; keep image, set, number and value optional.
 - Clearly label custom records so they cannot be mistaken for provider data.
 - Include custom cards in collections, decks, imports, exports and backups.

@@ -9,6 +9,7 @@ import { CardDetailPage } from "../pages/CardDetailPage";
 import { CardsPage } from "../pages/CardsPage";
 import { ChangePasswordPage } from "../pages/ChangePasswordPage";
 import { CollectionImportPage } from "../pages/CollectionImportPage";
+import { CustomCardImportPage } from "../pages/CustomCardImportPage";
 import { CollectionPage } from "../pages/CollectionPage";
 import { CollectionPricingPage } from "../pages/CollectionPricingPage";
 import { DashboardPage } from "../pages/DashboardPage";
@@ -51,6 +52,7 @@ export function App() {
             <Route path="/account" element={<ProtectedRoute allowMfaSetup><AccountPage /></ProtectedRoute>} />
             <Route path="/cards" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
             <Route path="/cards/:printingId" element={<ProtectedRoute><CardDetailPage /></ProtectedRoute>} />
+            <Route path="/custom-card-import" element={<ProtectedRoute><CustomCardImportPage /></ProtectedRoute>} />
             <Route path="/collection" element={<ProtectedRoute><CollectionPage /></ProtectedRoute>} />
             <Route
               path="/collection/pricing"
