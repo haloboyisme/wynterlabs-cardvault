@@ -7,11 +7,23 @@ directions, not promised dates or permanent maintenance commitments.
 | Version | Status | Focus |
 |---|---|---|
 | V2.5.9 | Released | Collection and scanning release with Custom Card Import |
+| V2.5.10 | Private testing | Daily asking-versus-market pricing bubble and interactive dashboard graph |
 | V2.6 | Planned | Remember the last selected scan set when navigating between pages |
 | V3.2 | Planned | Streamer previews, optional feedback, OBS overlays and pack-recap videos |
 | V3.5 | Deferred | Bluetooth feeders for iPhone, Android and computers, subject to compatibility |
 
 The stages below describe work areas, not minor-version numbers.
+
+## V2.5.10: detailed prices and useful dashboard history
+
+Implemented for private testing after V2.5.9 and before V2.6; not part of the V2.5.9 download.
+
+- Add a separate collection price-details bubble with per-copy and quantity estimates.
+- Compare daily TCGplayer low/median/high asking prices against sales-based Market Price through the free TCGCSV feed, with separate finish/variant rows and source timestamps.
+- Show the asking-versus-market gap. Market Price is an aggregate, not individual completed sales; eBay sold-listing links support manual comparison.
+- Keep exact-printing matching, account privacy, missing-price states and stale-data labels. No paid provider account is required.
+- Improve the dashboard with readable numeric axes, proportional time spacing, a keyboard/touch slider, exact snapshot values and coverage, and a data table.
+- Preserve prior releases; publish the candidate after private review.
 
 ## V2.6: remember the selected scan set
 
