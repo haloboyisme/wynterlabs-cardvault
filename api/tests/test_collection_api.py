@@ -535,6 +535,14 @@ def test_collection_summary_is_private_and_removed_from_list_response(
     summary = owner_client.get("/api/v1/collection/summary")
     assert summary.status_code == 200
     assert summary.json() == {
+        "market_total": {
+            "value_usd": None,
+            "asking_value_usd": None,
+            "priced_copies": 0,
+            "unpriced_copies": 8,
+            "stale_copies": 0,
+            "provider_updated_at": None,
+        },
         "total_copies": 8,
         "distinct_items": 3,
         "distinct_oracle_cards": 2,
@@ -569,6 +577,14 @@ def test_collection_summary_is_private_and_removed_from_list_response(
         ],
     }
     assert member_client.get("/api/v1/collection/summary").json() == {
+        "market_total": {
+            "value_usd": "0.00",
+            "asking_value_usd": None,
+            "priced_copies": 0,
+            "unpriced_copies": 0,
+            "stale_copies": 0,
+            "provider_updated_at": None,
+        },
         "total_copies": 0,
         "distinct_items": 0,
         "distinct_oracle_cards": 0,

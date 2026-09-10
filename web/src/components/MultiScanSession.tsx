@@ -120,6 +120,8 @@ export function MultiScanSession({
       selectedPrintingId: "",
       confirmed: false,
     }));
+    let timedOut = false;
+    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
     try {
       let privateTitles: string[] = [];
       let privateSet = "";
@@ -184,14 +186,15 @@ export function MultiScanSession({
         error: candidates.length ? "" : "No confident match found. Search the card title or retake it.",
       }));
     } catch (reason) {
-      if (generations.current.get(id) === generation && (reason as Error).name !== "AbortError") {
+      if (generations.current.get(id) === generation && (timedOut || (reason as Error).name !== "AbortError")) {
         setSession((current) => setSessionItemError(
           current,
           id,
-          reason instanceof Error ? reason.message : "Recognition unavailable.",
+          timedOut ? "Matching took too long. Your photo is kept; retry or retake with less glare." : reason instanceof Error ? reason.message : "Recognition unavailable.",
         ));
       }
     } finally {
+      window.clearTimeout(searchTimeout);
       if (requests.current.get(id) === controller) requests.current.delete(id);
     }
   };

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.6.0 — scanner preferences, pricing and history
+
+- Remember scan game/set per account and game on the current browser.
+- Add daily TCGCSV pricing, per-card comparisons and sales-based collection totals with coverage.
+- Add interactive numeric dashboard history and snapshot exploration.
+- Match either split-card half, require explicit ambiguous-printing choices and recover stalled matching requests.
+- Reconcile README and roadmap; keep private hardware experiments outside this release.
+- See [release notes](docs/v2.6.0-release.md) for validation and limits.
+
 ## 2.5.9 — Custom Card Import
 
 - Add a dedicated Custom Card Import page for missing catalog cards, optional HTTPS artwork, set details, values and quantities.

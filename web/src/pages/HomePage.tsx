@@ -34,15 +34,22 @@ const quickActions = [
 ];
 
 const updates = [
-  ["V2.5", "Email recovery", "Verify new accounts and recover access with private, owner-configured email delivery."],
-  ["V2.5", "Google sign-in", "Link an existing account to Google using credentials controlled by each installation owner."],
-  ["Release", "Ready to self-host", "Install with Docker, generated secrets, encrypted backups, and a tested recovery path."],
+  ["Available", "Difficult-card matching refinements", "Either half of a split card can match. Ambiguous printings require a choice, stalled searches can be retried, and Scan includes foil/promo guidance."],
+  ["V2.6", "Remembered scanning set", "Return to Scan with your last game and preferred set restored for this account and browser. Each game remembers its own set; Auto clears it."],
+  ["Available", "Custom Card Import", "Add missing cards privately, with optional images, set details and values. Use them in collections, decks, imports and exports."],
+  ["Available", "Sales-based collection value", "Compare asking and market prices per card and see a collection-wide sales-based estimate with priced-copy coverage."],
+  ["Available", "Interactive value history", "Explore dashboard values with numeric axes, a timeline slider, exact snapshots and a data table."],
 ];
 
 const roadmap = [
-  ["V3", "Custom cards", "Create and manage collectibles that do not have a dependable public catalog."],
-  ["V3", "Scanner workshop", "Fine-tune sideways-card recognition and safely prototype the optional ESP or Arduino card mover."],
-  ["V3", "Solo tabletop practice", "Start with guided Magic and Pokemon camera layouts, then connect saved decks in small steps."],
+  ["V2.8", "Real feeder testing", "Experimental private prototype; not included in this public release. Connect the actual feeder, calibrate the card path, and verify stop, disconnect and scan timing."],
+  ["Testing", "Real-card scanner acceptance", "Split-card matching, ambiguity handling and search recovery are improved. Check your difficult Room, foil and promo cards and long phone/tablet sessions; further tuning follows observed failures."],
+  ["V3", "Solo tabletop and saved decks", "Planned: Magic and Pokémon camera layouts, saved-deck selection, play zones, counters and turn notes. Start with private solo practice."],
+  ["V3.2", "Streamer previews and OBS", "Planned: instant, fade or flip reveals; configurable card details, sounds, mute and optional effects. Add a private pop-out URL for OBS with transparent, green, blue or solid backgrounds."],
+  ["V3.2", "Pack recap and saved video", "Planned: finish a pack, replay confirmed pulls and corrections, choose highlights or every card, and save the recap video or record it in OBS."],
+  ["V3.5", "Wireless feeders and Bluetooth", "Deferred: account-owned Wi-Fi and Bluetooth connections, one controlling session, reconnect and revoke controls. Validate phone and computer compatibility first."],
+  ["Later", "Gameplay tracking and shared displays", "Explore deliberate scans or a second camera, friend/tournament displays, TV/YouTube layouts and companion tablets after solo play works."],
+  ["Later", "Community and hardware compatibility", "Explore multiplayer and community features beyond the existing activity feed. Make supported Raspberry Pi, computer and custom-hardware setup easier using the existing Docker foundation."],
 ];
 
 export function HomePage() {
@@ -130,7 +137,7 @@ export function HomePage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Release notes</p>
-          <h2>V2.5 is ready.</h2>
+          <h2>V2.6 is ready.</h2>
           </div>
           <p>Recent improvements are kept short and useful so members can see what changed at a glance.</p>
         </div>
@@ -163,8 +170,8 @@ export function HomePage() {
       <section className="home-roadmap-section" id="roadmap">
         <div className="home-roadmap-heading">
           <p className="eyebrow">Roadmap</p>
-          <h2>V3, one useful experiment at a time.</h2>
-          <p>Small stages, no invented dates, and nothing promoted until it works on the private test installation.</p>
+          <h2>What’s next for CardVault.</h2>
+          <p>Remaining work only · updated September 10, 2026. Version targets are plans, not release dates. New features are tested privately before public release.</p>
         </div>
         <ol className="home-roadmap-list">
           {roadmap.map(([status, title, copy]) => (

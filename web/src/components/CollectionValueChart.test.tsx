@@ -162,4 +162,26 @@ describe("CollectionValueChart", () => {
     expect(single).toHaveAttribute("cx", "260");
     expect(single).toHaveAttribute("cy", "173");
   });
+  it("positions uneven snapshots by elapsed time, not array order", () => {
+    render(<CollectionValueChart history={{...history, points: [
+      {...history.points[0], timestamp: "2026-08-01T00:00:00Z"},
+      {...history.points[0], timestamp: "2026-08-02T00:00:00Z"},
+      {...history.points[1], timestamp: "2026-08-11T00:00:00Z"},
+    ]}} />);
+    const points = screen.getAllByRole("graphics-symbol");
+    expect(points[1]).toHaveAttribute("cx", "100");
+  });
+
+  it("lets keyboard and touch users scrub snapshots with exact coverage and change", () => {
+    render(<CollectionValueChart history={history} />);
+    const slider = screen.getByRole("slider", {name: /explore recorded values/i});
+    fireEvent.change(slider, {target: {value: "0"}});
+    const selected = screen.getByRole("status", {name: /selected collection value/i});
+    expect(selected).toHaveTextContent("$100.00");
+    expect(selected).toHaveTextContent("7 of 10 copies priced");
+    fireEvent.change(slider, {target: {value: "1"}});
+    expect(selected).toHaveTextContent("+$25.50 since previous snapshot");
+    expect(screen.getByText(/adding or removing cards also changes/i)).toBeVisible();
+  });
+
 });

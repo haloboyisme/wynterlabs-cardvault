@@ -533,7 +533,7 @@ html[data-motion="reduced"] *::after {
 .collection-page > .workspace-page-header { margin-bottom: 1.5rem; }
 .collection-overview {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--workspace-gap);
   margin-bottom: 1.25rem;
 }
@@ -1207,3 +1207,28 @@ html[data-motion="reduced"] *::after {
   .account-management-grid { grid-template-columns: 1fr; }
   .admin-deletion-requests article { flex-direction: column; }
 }
+
+/* Value-history controls remain readable without interacting with tiny SVG points. */
+.collection-value-chart-axis-heading { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; color:var(--ink); font-size:.85rem; }
+.collection-value-chart-scrubber { display:grid; gap:.5rem; font-weight:650; }
+.collection-value-chart-scrubber input { width:100%; min-height:44px; accent-color:var(--accent-link); cursor:pointer; }
+.collection-value-chart-cursor { stroke:var(--ink); stroke-width:1; stroke-dasharray:3 4; pointer-events:none; }
+.collection-value-chart-selected { flex-wrap:wrap; }
+.collection-value-chart-selected strong { color:var(--ink); font-size:1.3rem; }
+.collection-value-chart-selected span { font-size:.9rem; }
+.collection-value-chart-records summary { cursor:pointer; padding:.75rem 0; font-weight:650; }
+.collection-value-chart-table-wrap { overflow:auto; max-height:24rem; }
+.collection-value-chart-records table { width:100%; border-collapse:collapse; font-size:.9rem; }
+.collection-value-chart-records th, .collection-value-chart-records td { text-align:left; padding:.65rem; border-bottom:1px solid var(--line); white-space:nowrap; }
+.collection-value-chart-records caption { text-align:left; padding:.5rem; color:var(--muted); }
+
+.collection-price-details { min-width:0; }
+.collection-price-details h3 { margin:.25rem 0; }
+.collection-price-totals { display:flex; flex-wrap:wrap; gap:1rem; }
+.collection-price-totals dd { margin:0; font-weight:750; font-size:1.25rem; }
+.collection-price-note { color:var(--muted); font-size:.85rem; line-height:1.5; }
+.collection-price-stale { border-left:3px solid var(--state-warning); padding:.6rem; }
+.collection-price-table-wrap { overflow:auto; max-width:100%; }
+.collection-price-table-wrap table { border-collapse:collapse; width:100%; font-size:.85rem; }
+.collection-price-table-wrap th, .collection-price-table-wrap td { text-align:left; padding:.65rem; border-bottom:1px solid var(--line); white-space:nowrap; }
+.collection-price-table-wrap caption { text-align:left; padding:.6rem 0; font-weight:650; }

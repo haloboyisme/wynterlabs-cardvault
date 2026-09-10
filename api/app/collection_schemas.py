@@ -69,7 +69,17 @@ class CollectionSetSummaryOut(BaseModel):
     distinct_items: int = Field(ge=0)
 
 
+class CollectionMarketTotalOut(BaseModel):
+    value_usd: str | None
+    asking_value_usd: str | None
+    priced_copies: int
+    unpriced_copies: int
+    stale_copies: int
+    provider_updated_at: str | None
+
+
 class CollectionSummaryOut(BaseModel):
+    market_total: CollectionMarketTotalOut | None = None
     total_copies: int = Field(ge=0)
     distinct_items: int = Field(ge=0)
     distinct_oracle_cards: int = Field(ge=0)

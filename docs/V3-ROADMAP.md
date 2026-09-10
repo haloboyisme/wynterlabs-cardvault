@@ -1,105 +1,104 @@
-# Version 3 roadmap
+# CardVault roadmap — remaining work
 
-Version 2.5 is the completed self-hosted collection release. Version 3 remains
-experimental and will be developed in small, privately tested stages. These are
-directions, not promised dates or permanent maintenance commitments.
+Updated September 10, 2026. This is the outstanding product backlog, reconciled
+with the original Card Scanner Project and verified implementation records. Version
+labels describe targets, not promised dates. V2.6 remembered scan preferences are
+included in the public V2.6.0 release; physical V2.8 acceptance remains pending.
 
-| Version | Status | Focus |
+Completed work has been removed from this backlog: V2.6 remembered scan game/set
+(per account and game on the current browser), Custom Card Import, daily
+card-price comparisons, the collection-wide sales-based value, interactive
+dashboard history, basic sideways OCR retry, Hardware Lab simulation, multi-board
+firmware support, the existing Home activity feed, and Docker installation and
+recovery. Their release records remain historical evidence.
+
+| Target | Status | Remaining outcome |
 |---|---|---|
-| V2.5.9 | Released | Collection and scanning release with Custom Card Import |
-| V2.5.10 | Private testing | Daily asking-versus-market pricing bubble and interactive dashboard graph |
-| V2.6 | Planned | Remember the last selected scan set when navigating between pages |
-| V3.2 | Planned | Streamer previews, optional feedback, OBS overlays and pack-recap videos |
-| V3.5 | Deferred | Bluetooth feeders for iPhone, Android and computers, subject to compatibility |
+| V2.8 | Physical testing pending | Connect and validate the real feeder using the existing Hardware Lab |
+| V3 | Real-card acceptance pending | Validate difficult cards and long sessions after the matching/recovery improvements |
+| V3 | Planned | Magic/Pokémon solo tabletop practice and saved-deck support |
+| V3.2 | Planned | Configurable scan presentation, OBS overlays and pack-recap video |
+| V3.5 | Deferred | Account-owned wireless feeders and Bluetooth compatibility |
+| Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
 
-The stages below describe work areas, not minor-version numbers.
+## V2.8 — complete real feeder testing
 
-## V2.5.10: detailed prices and useful dashboard history
+The website controls, simulation, board profiles and firmware foundation are
+already built in the private prototype, which is excluded from this public release.
+The remaining work is physical acceptance and subsequent public-release review.
 
-Implemented for private testing after V2.5.9 and before V2.6; not part of the V2.5.9 download.
+- Confirm the selected board, driver, motor and power arrangement match the firmware.
+- Complete the physical feeder/camera mount and card path; calibrate feed,
+  positioning and ejection without damaging cards.
+- Connect the real device through the existing integration and verify scan/movement
+  timing, pause, emergency stop, disconnects, reconnects and fault recovery.
+- Update the setup guide with the tested configuration and remaining limitations.
+- Keep simulation available. Physical acceptance remains pending; software tests
+  alone do not prove that a real mechanism works.
 
-- Add a separate collection price-details bubble with per-copy and quantity estimates.
-- Compare daily TCGplayer low/median/high asking prices against sales-based Market Price through the free TCGCSV feed, with separate finish/variant rows and source timestamps.
-- Show the asking-versus-market gap. Market Price is an aggregate, not individual completed sales; eBay sold-listing links support manual comparison.
-- Keep exact-printing matching, account privacy, missing-price states and stale-data labels. No paid provider account is required.
-- Improve the dashboard with readable numeric axes, proportional time spacing, a keyboard/touch slider, exact snapshot values and coverage, and a data table.
-- Preserve prior releases; publish the candidate after private review.
+## V3 — real-card scanner acceptance
 
-## V2.6: remember the selected scan set
+Basic sideways OCR retry and manual correction already exist. Version 2.6 updates
+add either-half split-card matching, explicit selection for ambiguous printings,
+45-second search recovery with retained photos, and foil/promo/long-session guidance.
+Automated checks pass; physical card/camera acceptance remains outstanding.
 
-- Keep the last set selected in the scanner when moving to another page and back.
-- Restore the selection for the current user and card game; do not mix selections between accounts or games.
-- Let the user change or clear the remembered set, and handle removed sets gracefully.
-- Planned for V2.6; not included in V2.5.9.
+- Test difficult sideways/split-room, double-faced, foil and promo cards.
+- Improve ambiguous printing selection and title/set/collector-number matching
+  where real scans still fail; preserve manual correction.
+- Refine phone/tablet feedback and long multi-card sessions based on observed issues.
+- Validate improvements against ordinary scans to avoid regressions.
 
-## Stage 1: Custom Card Import — delivered in V2.5.9
+## V3 — solo tabletop practice
 
-- A simple account-private form for cards without a dependable catalog is now available.
-- Require a name and game or category; keep image, set, number and value optional.
-- Clearly label custom records so they cannot be mistaken for provider data.
-- Include custom cards in collections, decks, imports, exports and backups.
+- Begin with one camera and Magic/Pokémon alignment layouts for the play surface.
+- Add clear camera start/stop controls and keep video private by default.
+- Let the user select an existing saved deck and view deck lists, zones, counters
+  and turn notes without silently modifying the deck.
+- Start with assisted practice; automatic rules enforcement is outside this stage.
 
-## Stage 2: scanner workshop
+## V3.2 — streamer presentation and pack recap
 
-- Improve sideways and split-room recognition without weakening normal scans.
-- Keep title, set and collector-number correction available for every game.
-- Prototype the existing DIY scanner controls on the private installation only.
-- Add safe limits, stop controls and dry-run feedback before attaching motors.
-- Document USB-C power separation and never power motors directly from a controller pin.
+- Choose instant, fade-in or back-to-front card-flip reveals in the preview.
+- Preserve card details with configurable layout, visibility and plain/fancy styling.
+- Add optional confirmation/rejection sounds, volume and per-effect controls,
+  account master mute and a preview mute. Avoid duplicate audio in OBS.
+- Offer optional pack-opening and lightweight 3D-style effects with plain fallback.
+- Provide a clean pop-out plus a revocable, read-only OBS URL tied to the user's
+  selected session; support transparent, green, blue and solid backgrounds.
+- Finish Pack creates a replayable recap of confirmed pulls, including duplicates
+  and corrections, with all-cards and highlights presentations.
+- Support saving recap video and OBS recording; verify export formats, audio and
+  playback. Transparent overlays do not imply transparent video-export support.
 
-## Stage 3: solo tabletop practice
+Detailed design: [Streamer preview and recap](V3.2-STREAMER-PREVIEW.md).
 
-- Begin with one camera and an alignment overlay for Magic and Pokemon.
-- Let the member select a saved deck; do not attempt automatic rules enforcement.
-- Add optional second-camera recognition only after the basic layout is usable.
-- Keep video local/private and show clear camera and retention controls.
+## V3.5 — wireless ownership and Bluetooth
 
-## V3.2: streamer previews, feedback and pack recap
+- Build on the existing device integration for account-owned Wi-Fi feeder sessions.
+- Enforce device ownership, one active controlling session, rename, disconnect and
+  revoke controls; reconnects must not repeat motor commands.
+- Add Bluetooth only after checking browser/device support on iPhone, Android and
+  computers; use a companion or bridge where direct browser support is unsuitable.
+- Distinguish Bluetooth pairing from permission to control a device in CardVault.
 
-Planned scope; implementation has not started. Add optional presentation tools
-for collectors, YouTube creators and streamers while retaining plain scanning.
+## Later V3+ — gameplay, displays and broader compatibility
 
-- Choose instant appearance, fade-in or card-back-to-front flip directly in the preview.
-- Preserve existing card details with configurable styling, visibility and layout.
-- Offer optional pack-opening effects and 3D-style presentation with a lightweight fallback.
-- Configure confirmation/rejection sounds, individual effects and volume; provide
-  account-page master mute plus a convenient preview mute.
-- Save preferences per user with Plain, Subtle and Streamer presets.
-- Provide a clean pop-out and a revocable, read-only OBS Browser Source URL for
-  the user's selected session, with transparent, green, blue or solid backgrounds.
-- Finish Pack produces a replayable recap of confirmed pulls; target downloadable
-  video as well as OBS recording, with export compatibility validated during design.
-- Keep overlay viewing separate from feeder control and avoid duplicate audio or
-  celebration replay after reconnects.
+These are future directions, not completed features or fully specified releases.
 
-See the [V3.2 streamer preview proposal](V3.2-STREAMER-PREVIEW.md) for scope,
-recap ideas, ownership boundaries and validation requirements.
+- Assisted card tracking through deliberate scans or an optional second camera.
+- Friend/tournament displays, TV/YouTube presentation and companion-tablet views.
+- Expanded community beyond the existing activity feed; multiplayer after solo play
+  is usable and identity, privacy and moderation requirements are designed.
+- Easier supported setup on Raspberry Pi, computers and custom scanner hardware,
+  reusing Docker. Phones/tablets can be clients; do not assume they run Docker.
+- Evaluate additional catalog coverage and infrastructure only when a supported
+  data source or demonstrated installation need justifies the work.
 
-## V3.5: Bluetooth feeder connections
+## Delivery and release boundaries
 
-Deferred until V3.5. Target iPhone, Android and computers, subject to an explicit
-platform/browser compatibility assessment; do not assume direct browser Bluetooth
-works everywhere. Evaluate a companion application or bridge where needed.
-
-- Keep Wi-Fi as the initial feeder transport.
-- Pair each feeder to an individual CardVault account; enforce ownership for all
-  commands and allow only one active scanning session per feeder.
-- Preserve those ownership and session boundaries when adding Bluetooth.
-- Provide device rename, disconnect and revoke controls; reconnects must not
-  repeat motor commands or automatically resume unsafe movement.
-- Treat Bluetooth pairing and CardVault account authorization as distinct checks.
-
-These version targets supplement the stages above; they do not renumber or
-remove custom collectibles, recognition improvements or solo tabletop practice.
-
-## Later experiments
-
-- Consider multiplayer only after identity, moderation, privacy and network safety review.
-- Add new catalog providers only when their data source and image terms are suitable.
-- Revisit advanced database or clustering options only if real installations need them.
-
-## Promotion rule
-
-Every V3 stage is tested first on the private CardVault installation. Public V3
-branches or releases are updated only after owner acceptance. The immutable
-V2.5.2 tag remains the stable fallback throughout experimentation.
+Work is tested on a private installation before owner-approved public publication.
+Physical device testing, multiplayer, external access and paid services require
+separate setup and review. The experimental Hardware Lab and board firmware are
+not included in this public release. Use existing code and supported free data
+sources where practical. Missing prices stay visibly unavailable.

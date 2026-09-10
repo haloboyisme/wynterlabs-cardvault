@@ -21,13 +21,14 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
 
 ## Current release status
 
-- Version 2.5.1 is the completed Version 2 feature release and remains an
-  immutable historical tag.
-- Version 2.5.2 is the final documentation-only Version 2 installation tag.
-- The `v2` branch is the repository landing branch and the supported Version 2
-  line and carries subsequent documentation updates. The `v2.5` branch remains
-  at the V2.5.2 release snapshot; it does not include later roadmap edits.
-- Current release evidence: [V2.5 readiness](v2.5-release-readiness.md),
-  [V2.5.2 notes](v2.5.2-release.md), and the [V3 roadmap](V3-ROADMAP.md).
-- New feature work belongs to Version 3 and must pass private owner acceptance
-  before public promotion.
+- Version 2.6.0 includes remembered scan sets, difficult-card matching refinements,
+  sales-based collection estimates, detailed pricing, and interactive value history.
+- The `v2` branch is the repository landing branch and supported release line.
+  Earlier release tags and the historical `v2.5` branch remain unchanged.
+- See [V2.6.0 release notes](v2.6.0-release.md),
+  [pricing sources and limits](PRICE-COMPARISON.md), and the
+  [remaining roadmap](V3-ROADMAP.md).
+- Automated checks cover application behavior. Real-card camera acceptance and
+  prolonged phone/tablet testing remain open. No new clean-host installation or
+  backup/restore drill was performed for this release.
+- The private Hardware Lab prototype is excluded from this public release.

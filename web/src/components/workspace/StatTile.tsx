@@ -16,7 +16,7 @@ export function StatTile({ label, value, detail, progress, className }: StatTile
     <article className={classes}>
       <p className="workspace-stat-label">{label}</p>
       <strong className="workspace-stat-value">{value}</strong>
-      {detail ? <p className="workspace-stat-detail">{detail}</p> : null}
+      {detail ? <div className="workspace-stat-detail">{detail}</div> : null}
       {hasProgress ? (
         <progress className="workspace-stat-progress" value={progress} max={100} aria-label="Progress" />
       ) : null}

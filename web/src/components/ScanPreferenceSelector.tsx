@@ -2,6 +2,7 @@ import type { CardSet } from "../lib/types";
 import { CATALOG_GAMES, setSelectionValue, setsForGame } from "../scanner/catalog-games";
 
 interface ScanPreferenceSelectorProps {
+  restoreSetOnGameChange?: boolean;
   sets: CardSet[];
   preferredGame: string;
   preferredSet: string;
@@ -10,6 +11,7 @@ interface ScanPreferenceSelectorProps {
 }
 
 export function ScanPreferenceSelector({
+  restoreSetOnGameChange = false,
   sets,
   preferredGame,
   preferredSet,
@@ -23,7 +25,7 @@ export function ScanPreferenceSelector({
     const selectedSetIsAvailable = !preferredSet || availableSetsFor(game)
       .some((set) => setSelectionValue(set) === preferredSet);
     onPreferredGameChange(game);
-    if (!selectedSetIsAvailable) onPreferredSetChange("");
+    if (!restoreSetOnGameChange && !selectedSetIsAvailable) onPreferredSetChange("");
   };
 
   return <div className="scanner-set-preference">
@@ -51,6 +53,13 @@ export function ScanPreferenceSelector({
         </option>)}
       </select>
     </div>
-    <small>Prioritizes likely matches from this set while keeping other sets available for correction.</small>
+    <small>Prioritizes likely matches while keeping other sets available for correction. Your last game and set are remembered for this account on this browser. Choose Auto — all sets to clear the set.</small>
+    <details className="scanner-reading-help">
+      <summary>Split, sideways, foil or promo card?</summary>
+      <p>For Room or split cards, search either printed half-title. Rotate the camera view until the title is upright, or retake from the other direction.</p>
+      <p>For foil glare, tilt the card slightly or move the light so both the title and bottom collector number are clear. Keep the whole card in the frame.</p>
+      <p>Promo and alternate-art cards can share a name. Compare the artwork, set, collector number and language; choose foil/nonfoil and condition yourself before confirming.</p>
+      <p>For long sessions, confirm and add reviewed cards in smaller batches to free preview memory. Unconfirmed photos stay only in this tab.</p>
+    </details>
   </div>;
 }

@@ -90,7 +90,7 @@ it("renders summary, printing metadata, fallback, filters and exact page sizes",
   expect(screen.getByText("$2.50")).toBeVisible();
   expect(screen.getByText(/2 of 2 copies priced/i)).toBeVisible();
   expect(screen.getByText(/prices from.*aug 16, 2026/i)).toBeVisible();
-  expect(document.querySelectorAll(".collection-overview .workspace-stat")).toHaveLength(4);
+  expect(document.querySelectorAll(".collection-overview .workspace-stat")).toHaveLength(5);
   expect(screen.getByText(/limited edition alpha.*161.*EN/i)).toBeVisible();
   expect(document.querySelector(".collection-finish-badge")).toHaveTextContent("Nonfoil");
   expect(screen.getByRole("img", { name: /image unavailable for lightning bolt/i })).toBeVisible();
@@ -645,10 +645,10 @@ it("uses browser display choices and opens only one in-page card detail bubble",
   expect(screen.getByLabelText("2 copies")).toBeVisible();
   expect(screen.queryByText(/language: en/i)).not.toBeInTheDocument();
   expect(screen.queryByText("$1.25")).not.toBeInTheDocument();
-  expect(document.querySelectorAll(".collection-overview .workspace-stat")).toHaveLength(4);
+  expect(document.querySelectorAll(".collection-overview .workspace-stat")).toHaveLength(5);
   expect(screen.getByText("Estimated value")).toBeVisible();
-  expect(screen.getByText("Hidden")).toBeVisible();
-  expect(screen.getByText(/enable prices in account/i)).toBeVisible();
+  expect(screen.getAllByText("Hidden")).toHaveLength(2);
+  expect(screen.getAllByText(/enable prices in account/i)).toHaveLength(2);
   expect(screen.queryByText("$7.50")).not.toBeInTheDocument();
 
   const boltDetails = screen.getByRole("button", { name: "Details for Lightning Bolt" });

@@ -1,5 +1,7 @@
+import asyncio
 import math
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -56,6 +58,7 @@ from app.custom_cards import visible_to
 from app.database import get_db
 from app.dependencies import CurrentAuth, require_ready_auth
 from app.errors import AppError
+from app.market_prices import cache_root, collection_market_total, read_json
 from app.models import CardPrinting, CardSet, CollectionItem, OracleCard, TradeListing
 
 router = APIRouter(prefix="/api/v1/collection", tags=["collection"])
@@ -73,6 +76,63 @@ CollectionSort = Literal[
 ]
 CollectionPriceStatus = Literal["priced", "missing"]
 CollectionValueRange = Literal["hour", "day", "week", "month", "quarter", "year", "all"]
+
+
+@router.get("/items/{item_id}/price-details")
+async def price_details(
+    item_id: uuid.UUID,
+    request: Request,
+    auth: CurrentAuth = Depends(require_ready_auth),
+    database: AsyncSession = Depends(get_db),
+):
+    row = (
+        await database.execute(
+            select(CollectionItem, CardPrinting)
+            .join(CardPrinting, CardPrinting.id == CollectionItem.printing_id)
+            .where(
+                CollectionItem.id == item_id,
+                CollectionItem.user_id == auth.user.id,
+                visible_to(CardPrinting, auth.user.id),
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        raise AppError(404, "item_not_found", "Collection item was not found.")
+    item, printing = row
+    unit = collection_price(item, printing)
+    root = cache_root(request.app.state.settings)
+    feed = (
+        (read_json(root / f"card-{printing.id}.json") or {})
+        if printing.custom_owner_id is None
+        else {}
+    )
+    status = read_json(root / "status.json") or {}
+    timestamp = feed.get("provider_updated_at")
+    stale = True
+    if timestamp:
+        try:
+            stamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            stale = (datetime.now(UTC) - stamp).total_seconds() > 36 * 3600
+        except (ValueError, TypeError):
+            timestamp = None
+    return {
+        "unit_estimate_usd": str(unit) if unit is not None else None,
+        "quantity_estimate_usd": str((unit * item.quantity).quantize(Decimal("0.01")))
+        if unit is not None
+        else None,
+        "estimate_source": "Catalog estimate"
+        if finish_price(printing.prices, item.finish) is not None
+        else "User supplied",
+        "catalog_updated_at": printing.price_snapshot_at,
+        "provider": "TCGplayer via TCGCSV",
+        "provider_updated_at": timestamp,
+        "checked_at": feed.get("checked_at"),
+        "stale": stale,
+        "product_id": feed.get("product_id"),
+        "quotes": feed.get("quotes", []),
+        "sync_status": status.get("status", "pending"),
+        "completed_sales_available": False,
+    }
 
 
 @router.get("", response_model=CollectionPageOut)
@@ -161,11 +221,32 @@ async def list_collection(
 
 @router.get("/summary", response_model=CollectionSummaryOut)
 async def collection_summary(
+    request: Request,
     auth: CurrentAuth = Depends(require_ready_auth),
     database: AsyncSession = Depends(get_db),
 ) -> CollectionSummaryOut:
     await _capture_current_value(database, auth.user.id)
-    return await _summary(database, auth.user.id)
+    summary = await _summary(database, auth.user.id)
+    rows = (
+        await database.execute(
+            select(
+                CardPrinting.id,
+                CollectionItem.finish,
+                CollectionItem.quantity,
+                CardPrinting.custom_owner_id,
+            )
+            .join(CollectionItem, CollectionItem.printing_id == CardPrinting.id)
+            .where(CollectionItem.user_id == auth.user.id, visible_to(CardPrinting, auth.user.id))
+        )
+    ).all()
+    from app.collection_schemas import CollectionMarketTotalOut
+
+    summary.market_total = CollectionMarketTotalOut(
+        **await asyncio.to_thread(
+            collection_market_total, rows, cache_root(request.app.state.settings)
+        )
+    )
+    return summary
 
 
 @router.get("/value-history", response_model=CollectionValueHistoryOut)

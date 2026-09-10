@@ -1,11 +1,11 @@
 # Standalone upgrades
 
 The repaired upgrade helper shipped in Version 2.5.0 and is included in the
-stable **V2.5.9** release. The older `v2.0.1` download still contains the broken
+stable **V2.6.0** release. The older `v2.0.1` download still contains the broken
 helper; do not use that older helper. See [installation](INSTALL.md) and the
 [final V2.5 verification record](v2.5-release-readiness.md).
 
-To upgrade an older standalone installation using V2.5.9:
+To upgrade an older standalone installation using V2.6.0:
 
 1. Keep your original source checkout and escrowed secrets. Obtain the newer
    trusted release separately; never overwrite installation secrets.

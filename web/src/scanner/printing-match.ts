@@ -1,3 +1,4 @@
+import { exactCardTitle } from "./title-confidence";
 import type { ScanCandidate } from "../lib/types";
 
 const normalizedCollector = (value: string) => value
@@ -56,8 +57,7 @@ export function uniqueDetectedPrintingId(
   const title = normalizedTitle(hints.name);
   const titleMatches = title
     ? ranked.filter((candidate) => {
-        const candidateTitle = normalizedTitle(candidate.name);
-        return candidateTitle === title || candidateTitle.startsWith(`${title} `);
+        return exactCardTitle(hints.name ?? "", candidate.name);
       })
     : ranked;
   if (title && titleMatches.length === 0) return "";
@@ -71,7 +71,7 @@ export function uniqueDetectedPrintingId(
     && (!collector || normalizedCollector(candidate.collector_number) === collector)
   );
   if ((setCode || collector) && exactMatches.length) {
-    return exactMatches[0].printing_id;
+    return exactMatches.length === 1 ? exactMatches[0].printing_id : "";
   }
 
   const preference = normalizedSet(preferredSet);
@@ -81,7 +81,7 @@ export function uniqueDetectedPrintingId(
     && normalizedSet(candidate.set.code) === preference
     && (!preferredGameKey || normalizedSet(candidate.set.game) === preferredGameKey),
   );
-  if (preferredMatches.length) return preferredMatches[0].printing_id;
+  if (preferredMatches.length) return preferredMatches.length === 1 ? preferredMatches[0].printing_id : "";
 
-  return titleMatches[0]?.printing_id ?? "";
+  return "";
 }

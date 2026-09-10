@@ -43,3 +43,13 @@ describe("scanner title confidence", () => {
     expect(filterConfidentScanCandidates("Voja, Jaws of the Conclave", [voja])).toEqual([voja]);
   });
 });
+
+it("matches either half of a Room card, including OCR typos", () => {
+  const room = candidate("Surgical Suite // Hospital Room");
+  expect(filterConfidentScanCandidates("Hospital Room", [room])).toEqual([room]);
+  expect(filterConfidentScanCandidates("Hospitai Room", [room])).toEqual([room]);
+  expect(filterConfidentScanCandidates("Surgical Suite", [room])).toEqual([room]);
+});
+it("does not accept a short title just because another title starts with it", () => {
+  expect(filterConfidentScanCandidates("Fire", [candidate("Fire Elemental")])).toEqual([]);
+});

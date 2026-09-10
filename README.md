@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-2.5.9-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.6.0-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -56,16 +56,27 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
-## ✨ New in Version 2.5.9
+## ✨ New in Version 2.6
 
-**Custom Card Import** lets each signed-in member add missing cards to their own
-collection, with optional artwork, set details, collector number, estimated value,
-and quantity. Custom cards work in decks and support portable JSON import/export.
-They are clearly labeled as user supplied and stay private to their account.
+| Update | What you can do now |
+|---|---|
+| 🧠 **Remembered scan sets** | Leave Scan and return to the last game/set, separately for each account and game on that browser. Choose Auto to clear the set. |
+| 💵 **Sales-based collection value** | See a separate total based on matching TCGplayer Market Prices × your quantities, with priced/unpriced coverage and a same-copy asking-price comparison. |
+| 🔎 **Card price details** | Compare daily low/median/high asking prices and sales-based Market Price by finish, with source dates and stale-data labels. |
+| 📈 **Interactive dashboard** | Explore numeric axes, a timeline slider, exact snapshots, pricing coverage and a data table. |
+| 🃏 **Difficult-card matching** | Match either half of split/Room titles, review ambiguous printings explicitly and retry stalled searches without losing the captured photo. |
 
-[Custom Card Import guide](docs/CUSTOM-CARD-IMPORT.md) · [V2.5.9 release notes](docs/v2.5.9-release.md)
+**Custom Card Import**, introduced in V2.5.9, remains available for missing cards,
+optional artwork/set details/values, collections, decks and JSON import/export.
 
-**Planned for V2.6:** remember your last selected scan set when navigating between pages.
+Prices use the free TCGCSV feed; no paid provider key is required. Market Price
+is a sales-based aggregate, not individual eBay completed-sale records. Missing
+prices stay unavailable, and fees, shipping and exact condition are not included.
+Foil/promo guidance helps review; it does not automatically detect foil finish.
+
+[Version 2.6 release notes](docs/v2.6.0-release.md) ·
+[Price comparison guide](docs/PRICE-COMPARISON.md) ·
+[Custom Card Import guide](docs/CUSTOM-CARD-IMPORT.md)
 
 ## 🧪 Version 2 release
 
@@ -117,7 +128,7 @@ seller accounts.
 > privileged accounts, and test backups before trusting the system with a large
 > collection.
 
-## 🧭 Version 2.5 and the road to Version 3
+## 🧭 Version 2.6 and the road to Version 3
 
 The roadmap is intentionally flexible because this is a fun project—not a
 commitment to update the software forever.
@@ -151,18 +162,22 @@ commitment to update the software forever.
   username/password remains available. See [Google setup](docs/GOOGLE-SIGN-IN.md)
   and [email setup](docs/EMAIL-SETUP.md).
 
-Version 2.5 closes the planned account, email, Google sign-in, collection,
-scanner, backup, and self-hosted installation work. Future product changes are
-grouped under Version 3: custom collectibles, continued scanner experiments,
-optional DIY scanner hardware, and staged solo Magic/Pokémon tabletop practice.
-See the [fine-grained V3 roadmap](docs/V3-ROADMAP.md). Planned **V3.2** adds
-optional streamer previews, confirmation/rejection sounds, card reveals,
-OBS overlays and saved pack-recap videos; see the
-[detailed V3.2 proposal](docs/V3.2-STREAMER-PREVIEW.md). **V3.5** defers Bluetooth
-feeder support for iPhone, Android and computers pending platform compatibility.
-Feeder connections are planned to belong to individual user accounts.
-These features are not included in V2.5.9. Roadmap items remain ideas,
-not promised dates or guaranteed features.
+### Remaining roadmap
+
+| Target | Remaining work |
+|---|---|
+| **V2.8 experimental** | Physical feeder acceptance. The private Hardware Lab/firmware prototype is not included in this public release. |
+| **V3** | Real-card scanner acceptance and Magic/Pokémon solo tabletop practice with saved decks, zones and counters. |
+| **V3.2** | Configurable sounds/mute and reveal effects, OBS pop-out overlays, pack recap and saved video. |
+| **V3.5** | Account-owned wireless feeders and Bluetooth, subject to device/browser compatibility. |
+| **Later V3+** | Assisted gameplay tracking, friend/tournament displays, companion tablets, expanded community/multiplayer and broader hardware setup. |
+
+Completed features are removed from the backlog. See the
+[remaining-work roadmap](docs/V3-ROADMAP.md) and
+[V3.2 streamer proposal](docs/V3.2-STREAMER-PREVIEW.md).
+These are future directions without promised dates. Difficult-card and long-session
+acceptance still needs real camera/card testing; automated checks are not a
+substitute for that testing.
 
 ## ⚖️ License and card-data notice
 
@@ -182,7 +197,7 @@ attribution requirements, and acceptable-use rules.
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
 - [Review final V2.5 release readiness](docs/v2.5-release-readiness.md)
-- [Read the final Version 2.5.9 release notes](docs/v2.5.9-release.md)
+- [Read the Version 2.6 release notes](docs/v2.6.0-release.md)
 - [See the staged Version 3 roadmap](docs/V3-ROADMAP.md)
 - [Understand account and private community controls](docs/ACCOUNT-AND-COMMUNITY.md)
 
@@ -204,7 +219,7 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.5.9 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.6.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

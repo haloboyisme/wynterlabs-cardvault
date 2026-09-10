@@ -1,3 +1,5 @@
+import { useAuth } from "../app/auth";
+import { useScanPreference } from "../scanner/use-scan-preference";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { CardImage } from "../components/CardImage";
@@ -67,10 +69,10 @@ function ScanModeToggle({ mode, onChange, children }: {
 }
 
 export function ScannerPage() {
+  const {status, user} = useAuth();
   const [mode, setMode] = useState<ScannerMode>("single");
   const [catalogSets, setCatalogSets] = useState<CardSet[]>([]);
-  const [preferredGame, setPreferredGame] = useState("");
-  const [preferredSet, setPreferredSet] = useState("");
+  const {preferredGame, preferredSet, setPreferredGame, setPreferredSet} = useScanPreference(status === "authenticated" ? user?.id ?? "" : "", catalogSets);
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const [capturedPhoto, setCapturedPhoto] = useState("");
@@ -155,6 +157,8 @@ export function ScannerPage() {
     setConfirmed(false);
     setError("");
     setSuccess("");
+    let timedOut = false;
+    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
     try {
       let privateTitles: string[] = [];
       let privateSet = "";
@@ -217,10 +221,11 @@ export function ScannerPage() {
         }
       }
     } catch (reason) {
-      if (current === generation.current && (reason as Error).name !== "AbortError") {
-        setError(reason instanceof Error ? reason.message : "Card candidates could not be loaded.");
+      if (current === generation.current && (timedOut || (reason as Error).name !== "AbortError")) {
+        setError(timedOut ? "Matching took too long. Your photo is kept; retry the title search or retake with less glare." : reason instanceof Error ? reason.message : "Card candidates could not be loaded.");
       }
     } finally {
+      window.clearTimeout(searchTimeout);
       if (current === generation.current) setSearching(false);
     }
   };
@@ -307,7 +312,7 @@ export function ScannerPage() {
         preferredSetGame={preferredSetGame}
         preferredGame={preferredGame}
         topControls={<ScanModeToggle mode={mode} onChange={setMode}>
-          <ScanPreferenceSelector
+          <ScanPreferenceSelector restoreSetOnGameChange
             sets={catalogSets}
             preferredGame={preferredGame}
             preferredSet={preferredSet}
@@ -326,7 +331,7 @@ export function ScannerPage() {
         preferredSetGame={preferredSetGame}
         preferredGame={preferredGame}
         topControls={<ScanModeToggle mode={mode} onChange={setMode}>
-          <ScanPreferenceSelector
+          <ScanPreferenceSelector restoreSetOnGameChange
             sets={catalogSets}
             preferredGame={preferredGame}
             preferredSet={preferredSet}
@@ -350,7 +355,7 @@ export function ScannerPage() {
           <CardScanner
             topControls={<>
               <ScanModeToggle mode={mode} onChange={setMode}>
-                <ScanPreferenceSelector
+                <ScanPreferenceSelector restoreSetOnGameChange
                   sets={catalogSets}
                   preferredGame={preferredGame}
                   preferredSet={preferredSet}

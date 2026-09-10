@@ -1,3 +1,4 @@
+vi.mock("../app/auth", () => ({useAuth: () => ({status:"authenticated",user:{id:"public-test"}})}));
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -140,6 +141,7 @@ afterEach(() => {
 });
 
 beforeEach(() => {
+  localStorage.clear();
   vi.mocked(expandScanCandidates).mockImplementation(async (seeds) => seeds);
   vi.mocked(getAllCatalogSets).mockResolvedValue({
     items: [

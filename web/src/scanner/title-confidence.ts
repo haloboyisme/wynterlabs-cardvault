@@ -2,7 +2,7 @@ import type { ScanCandidate } from "../lib/types";
 
 const MIN_TITLE_SIMILARITY = 0.72;
 
-function normalizeTitle(value: string) {
+export function normalizeTitle(value: string) {
   return value
     .normalize("NFKD")
     .toLowerCase()
@@ -29,13 +29,22 @@ function editDistance(left: string, right: string) {
   return previous[right.length];
 }
 
+export function exactCardTitle(query: string, candidate: string) {
+  const title = normalizeTitle(query);
+  return Boolean(title) && [candidate, ...candidate.split(/\s*\/\/\s*/)]
+    .some(face => normalizeTitle(face) === title);
+}
+
 function titleMatches(query: string, candidate: string) {
+  return [candidate, ...candidate.split(/\s*\/\/\s*/)].some(face => faceMatches(query, face));
+}
+
+function faceMatches(query: string, candidate: string) {
   const normalizedQuery = normalizeTitle(query);
   const normalizedCandidate = normalizeTitle(candidate);
   if (normalizedQuery.length < 3 || normalizedCandidate.length < 3) return false;
   if (
     normalizedCandidate === normalizedQuery
-    || normalizedCandidate.startsWith(`${normalizedQuery} `)
   ) return true;
   const length = Math.max(normalizedQuery.length, normalizedCandidate.length);
   return 1 - editDistance(normalizedQuery, normalizedCandidate) / length >= MIN_TITLE_SIMILARITY;

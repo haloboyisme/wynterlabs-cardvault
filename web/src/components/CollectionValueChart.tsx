@@ -70,12 +70,23 @@ function chartMaximum(points: CollectionValuePoint[]) {
   return Math.max(1_000, (Math.floor(highest / 1_000) + 1) * 1_000);
 }
 
-function chartPoints(points: CollectionValuePoint[], scaleMaximum: number) {
+function timePosition(points: CollectionValuePoint[], index: number) {
   const width = PLOT.right - PLOT.left;
+  if (points.length === 1) return PLOT.left + width / 2;
+  const start = Date.parse(points[0].timestamp);
+  const end = Date.parse(points.at(-1)!.timestamp);
+  const timestamp = Date.parse(points[index].timestamp);
+  const fraction = Number.isFinite(timestamp) && end > start
+    ? Math.max(0, Math.min(1, (timestamp - start) / (end - start)))
+    : index / (points.length - 1);
+  return PLOT.left + fraction * width;
+}
+
+function chartPoints(points: CollectionValuePoint[], scaleMaximum: number) {
   const height = PLOT.bottom - PLOT.top;
   return points.map((point, index) => ({
     point,
-    x: points.length === 1 ? PLOT.left + width / 2 : PLOT.left + (index / (points.length - 1)) * width,
+    x: timePosition(points, index),
     y: PLOT.bottom - (numericValue(point.estimated_value_usd) / scaleMaximum) * height,
   }));
 }
@@ -116,6 +127,10 @@ export function CollectionValueChart({ history }: CollectionValueChartProps) {
   const first = history.points[0];
   const last = history.points.at(-1);
   const activePoint = history.points.find((point) => point.timestamp === activeTimestamp) ?? last;
+  const activeIndex = Math.max(0, history.points.findIndex(point => point === activePoint));
+  const previous = activeIndex > 0 ? history.points[activeIndex - 1] : null;
+  const delta = activePoint && previous ? Number(activePoint.estimated_value_usd) - Number(previous.estimated_value_usd) : null;
+  const selectIndex = (index: number) => setActiveTimestamp(history.points[index]?.timestamp ?? "");
   const chartName = `Estimated collection value over ${RANGE_LABELS[history.range]}`;
   const chartDescription = first && last
     ? `From ${money(first.estimated_value_usd)} to ${money(last.estimated_value_usd)} across ${history.points.length} recorded values.`
@@ -141,6 +156,7 @@ export function CollectionValueChart({ history }: CollectionValueChartProps) {
       )}
       {history.points.length > 0 && (
         <figure className="collection-value-chart-figure">
+          <div className="collection-value-chart-axis-heading"><span>Estimated value (USD)</span><span>Recorded time (UTC)</span></div>
           <svg role="img" aria-label={chartName} aria-describedby="collection-value-chart-description" viewBox="0 0 480 240">
             <desc id="collection-value-chart-description">{chartDescription}</desc>
             <defs aria-hidden="true">
@@ -164,26 +180,42 @@ export function CollectionValueChart({ history }: CollectionValueChartProps) {
               <circle
                 key={point.timestamp}
                 className={`collection-value-chart-point${Number(point.estimated_value_usd) === extrema?.high ? " is-high" : ""}${Number(point.estimated_value_usd) === extrema?.low ? " is-low" : ""}`}
-                cx={x} cy={y} r="5" role="graphics-symbol" tabIndex={0} aria-label={pointLabel(point)}
+                cx={x} cy={y} r={point === activePoint ? 6 : 2.5} role="graphics-symbol" tabIndex={0} aria-label={pointLabel(point)}
                 onMouseEnter={() => setActiveTimestamp(point.timestamp)}
                 onFocus={() => setActiveTimestamp(point.timestamp)}
                 onClick={() => setActiveTimestamp(point.timestamp)}
               ><title>{pointLabel(point)}</title></circle>
             ))}
+            {activePoint && <line className="collection-value-chart-cursor" x1={timePosition(history.points, activeIndex)} x2={timePosition(history.points, activeIndex)} y1={PLOT.top} y2={PLOT.bottom} aria-hidden="true" />}
             <g role="group" aria-label="Collection value timeline">
               {timelinePoints(history.points).map(({ point, index }) => {
-                const x = history.points.length === 1 ? (PLOT.left + PLOT.right) / 2 : PLOT.left + (index / (history.points.length - 1)) * (PLOT.right - PLOT.left);
+                const x = timePosition(history.points, index);
                 return <text key={point.timestamp} className="collection-value-chart-axis-label" x={x} y="218" textAnchor={index === 0 ? "start" : index === history.points.length - 1 ? "end" : "middle"}>{timelineLabel(point.timestamp, history.range)}</text>;
               })}
             </g>
           </svg>
+          <label className="collection-value-chart-scrubber">Explore recorded values
+            <input type="range" min="0" max={Math.max(0, history.points.length - 1)} step="1" value={activeIndex}
+              disabled={history.points.length < 2} aria-valuetext={activePoint ? pointLabel(activePoint) : "No recorded values"}
+              onChange={event => selectIndex(Number(event.target.value))} />
+          </label>
           <div className="collection-value-chart-selected" role="status" aria-label="Selected collection value">
             <span>{activePoint ? timestampLabel(activePoint) : "No recorded time"}</span>
             <strong>{activePoint ? money(activePoint.estimated_value_usd) : "Unavailable"}</strong>
+            {activePoint && <span>{activePoint.priced_copies} of {activePoint.total_copies} copies priced · {activePoint.unpriced_copies} unpriced</span>}
+            <span>{delta === null ? "First recorded snapshot" : `${delta > 0 ? "+" : delta < 0 ? "−" : ""}${money(Math.abs(delta))} since previous snapshot`}</span>
           </div>
           <figcaption>{chartDescription} <span>Scale: {money(0, false)}–{money(scaleMaximum, false)}</span></figcaption>
         </figure>
       )}
+      <p className="collection-value-chart-coverage">Adding or removing cards also changes this total. Value change is not a measure of market profit.</p>
+      {history.points.length > 0 && <details className="collection-value-chart-records"><summary>View recorded values as a table</summary>
+        <div className="collection-value-chart-table-wrap" tabIndex={0} role="region" aria-label="Scrollable recorded collection values"><table>
+          <caption>Recorded collection values (USD, UTC)</caption>
+          <thead><tr><th scope="col">Recorded at</th><th scope="col">Value</th><th scope="col">Priced copies</th><th scope="col">Unpriced copies</th></tr></thead>
+          <tbody>{history.points.map(point => <tr key={point.timestamp}><td>{timestampLabel(point)}</td><td>{money(point.estimated_value_usd)}</td><td>{point.priced_copies} / {point.total_copies}</td><td>{point.unpriced_copies}</td></tr>)}</tbody>
+        </table></div>
+      </details>}
       <p className="collection-value-chart-coverage">
         {history.priced_copies} of {history.total_copies} copies priced; {history.unpriced_copies} {history.unpriced_copies === 1 ? "copy is" : "copies are"} unpriced and excluded from this estimate.
       </p>

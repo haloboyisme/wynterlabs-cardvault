@@ -9,6 +9,7 @@ from app.catalog.scheduler import catalog_scheduler_loop
 from app.config import Settings
 from app.database import create_engine, create_session_factory
 from app.errors import install_error_handlers
+from app.market_prices import market_price_loop
 from app.routers import (
     account,
     admin,
@@ -16,8 +17,8 @@ from app.routers import (
     branding,
     catalog,
     collection,
-    custom_cards,
     community,
+    custom_cards,
     decks,
     email,
     google,
@@ -46,9 +47,15 @@ def create_app(
             name="catalog-refresh-scheduler",
         )
         application.state.catalog_scheduler_task = task
+        market_task = asyncio.create_task(
+            market_price_loop(resolved_settings, session_factory), name="daily-market-prices"
+        )
         try:
             yield
         finally:
+            market_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await market_task
             task.cancel()
             with suppress(asyncio.CancelledError):
                 await task

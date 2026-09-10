@@ -129,7 +129,7 @@ describe("uniqueDetectedPrintingId", () => {
       .toBe("");
   });
 
-  it("preselects the leading suggestion when duplicate exact matches remain", () => {
+  it("leaves duplicate exact matches for explicit selection", () => {
     const candidates = [
       printing("first", "PIP", "232"),
       printing("second", "PIP", "232"),
@@ -138,7 +138,7 @@ describe("uniqueDetectedPrintingId", () => {
     expect(uniqueDetectedPrintingId(candidates, {
       name: "Black Lotus", set: "pip", collector: "232",
     }))
-      .toBe("first");
+      .toBe("");
   });
 });
 
@@ -177,4 +177,13 @@ describe("rankScanCandidates", () => {
     expect(rankScanCandidates(candidates, {}, "m10", "pokemon").map((item) => item.printing_id))
       .toEqual(["pokemon-m10", "mtg-m10", "yugioh-lob"]);
   });
+});
+
+it("selects a uniquely identified second Room half", () => {
+  expect(uniqueDetectedPrintingId([printing("room", "DSK", "34", "Surgical Suite // Hospital Room")], {name:"Hospital Room",set:"dsk",collector:"0034"})).toBe("room");
+});
+it("leaves same-name promo printings for explicit selection", () => {
+  const options = [printing("normal", "FDN", "12"), printing("promo", "FDN", "99")];
+  expect(uniqueDetectedPrintingId(options, {name:"Black Lotus"}, "fdn", "mtg")).toBe("");
+  expect(uniqueDetectedPrintingId(options, {name:"Black Lotus",collector:"99"}, "fdn", "mtg")).toBe("promo");
 });

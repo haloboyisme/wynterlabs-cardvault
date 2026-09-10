@@ -206,7 +206,17 @@ export interface CollectionManualPriceResult {
   revision: number;
 }
 
+export interface CollectionMarketTotal {
+  value_usd: string | null;
+  asking_value_usd: string | null;
+  priced_copies: number;
+  unpriced_copies: number;
+  stale_copies: number;
+  provider_updated_at: string | null;
+}
+
 export interface CollectionSummary {
+  market_total?: CollectionMarketTotal | null;
   total_copies: number;
   distinct_items: number;
   distinct_oracle_cards: number;

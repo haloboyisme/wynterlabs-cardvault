@@ -1,3 +1,5 @@
+import { CollectionMarketValue } from "../components/CollectionMarketValue";
+import { CollectionPriceDetails } from "../components/CollectionPriceDetails";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -488,6 +490,7 @@ export function CollectionPage() {
             <small>Informational USD estimate · condition is not adjusted.</small>
           </> : <span>Enable prices in Account to show this estimate.</span>}
         />
+        <CollectionMarketValue data={summary.market_total} showPrices={display.showPrices} />
         <StatTile label="Total copies" value={summary.total_copies} detail={`${summary.total_copies} total copies`} />
         <StatTile
           label="Unique cards"
@@ -755,6 +758,7 @@ export function CollectionPage() {
                   setEdit(null);
                 }}
               >{expanded ? "Close details" : "View details"}</button>
+              {display.showPrices && !selectionMode && <CollectionPriceDetails item={item} />}
               {expanded && <section
                 id={`${item.id}-details`}
                 className="collection-detail-bubble"
