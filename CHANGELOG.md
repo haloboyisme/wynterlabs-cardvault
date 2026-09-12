@@ -1,5 +1,12 @@
 # Changelog
 
+## Documentation follow-up — September 12, 2026
+
+- Refresh contributing and security guidance for the V2.7.5 release line.
+- Document the current private-reporting gap, OBS-link exposure and shared branding/media boundaries.
+- Clarify third-party assets and original theme inspiration in NOTICE.
+- Keep the license terms, application version and existing release tags unchanged.
+
 ## 2.7.5 — streamer, personalization and shared design
 
 - Add configurable reveals, backgrounds, layouts, custom flip backs and pack video.

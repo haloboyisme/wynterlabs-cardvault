@@ -142,6 +142,8 @@ seller accounts.
   proxy is the intended entry point.
 - Installation secrets are generated locally and are never included in this
   repository.
+- OBS links are private viewing credentials; rotate or disable an exposed link.
+  Shared branding is readable before sign-in, so keep private information out of it.
 - Card prices are estimates for reference—not appraisals or guaranteed sale
   values.
 
@@ -215,7 +217,7 @@ attribution requirements, and acceptable-use rules.
 ## 🚦 Start here
 
 - [Install with the standalone Docker workflow](docs/INSTALL.md)
-- [Read the security policy](SECURITY.md)
+- [Read the security policy and current private-reporting limitations](SECURITY.md)
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
 - [Review final V2.5 release readiness](docs/v2.5-release-readiness.md)

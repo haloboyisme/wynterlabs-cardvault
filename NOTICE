@@ -2,9 +2,19 @@ Required Notice: Copyright 2026 WynterLabs
 
 WynterLabs CardVault is source-available for noncommercial use under the
 PolyForm Noncommercial License 1.0.0. Commercial use or resale requires
-separate written permission from WynterLabs.
-This license choice is not legal advice.
+separate written permission from WynterLabs. See LICENSE for the complete,
+unchanged license text. This notice does not replace those terms.
 
-Card names, images, rules text, set data, and price references belong to
-their respective owners and providers. Provider-specific attribution and
-acceptable-use requirements continue to apply.
+Card names, images, rules text, set data, trademarks and price references belong
+to their respective owners and providers. Provider-specific attribution and
+acceptable-use requirements continue to apply. Market-price estimates are not
+guaranteed sale proceeds; see docs/PRICE-COMPARISON.md for sources and limits.
+
+Desktop/console-inspired themes use original interface styling. References to
+Windows, PlayStation and other products describe inspiration, not affiliation,
+endorsement, an operating-system emulator or permission to redistribute vendor
+assets. Built-in presentation effects and synthesized tones do not grant rights
+to third-party card artwork or uploaded media. Use custom card backs and other
+media only when you have permission for their intended use and sharing.
+
+Third-party software dependencies retain their own licenses and notices.
