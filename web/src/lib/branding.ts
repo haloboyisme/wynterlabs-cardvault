@@ -1,3 +1,4 @@
+import type { BrandDesign } from "./brand-design";
 import { apiRequest } from "./api";
 
 export interface Branding {
@@ -6,6 +7,7 @@ export interface Branding {
   tagline: string;
   has_custom_logo: boolean;
   logo_revision: string | null;
+  design?: BrandDesign;
 }
 
 export interface BrandingUpdate {
@@ -13,6 +15,7 @@ export interface BrandingUpdate {
   product_name: string;
   tagline: string;
   logo_data_url: string | null;
+  design?: BrandDesign;
 }
 
 export const DEFAULT_BRANDING: Branding = {

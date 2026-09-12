@@ -1,3 +1,4 @@
+import { EXTRA_BASE_MODES } from "./base-modes";
 export const ACCENT_BASE = {
   frost: "#5BE7E7", arctic: "#9DEBFF", sky: "#65C7FF", azure: "#3FA7FF",
   cobalt: "#3977FF", navy: "#5C7CFA", indigo: "#6C63FF", iris: "#7E6BFF",
@@ -29,6 +30,7 @@ const DARK_SURFACE = "#08111D";
 const FROST_SURFACE = "#0C1520";
 const LIGHT_SURFACE = "#F6F8FB";
 const THEME_SURFACES = {
+  ...Object.fromEntries(EXTRA_BASE_MODES.map(mode => [mode.value, mode.surface])) as Record<(typeof EXTRA_BASE_MODES)[number]["value"], string>,
   midnight: DARK_SURFACE,
   frost: FROST_SURFACE,
   light: LIGHT_SURFACE,

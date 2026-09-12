@@ -1,3 +1,5 @@
+import { ScanReveal } from "../presentation/ScanReveal";
+import { savedPull, rejectedPull, previewPull } from "../presentation/model";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { expandScanCandidates, getScanCandidates } from "../lib/catalog";
@@ -253,6 +255,7 @@ export function MultiScanSession({
   const selectedCandidate = selected?.candidates.find(
     (candidate) => candidate.printing_id === selected.selectedPrintingId,
   );
+  useEffect(() => { previewPull(selectedCandidate, selected?.finish ?? "", selected?.quantity ?? 1, selected?.id ?? ""); }, [selectedCandidate, selected?.finish, selected?.quantity, selected?.id]);
   const selectedPrice = selectedCandidate
     ? previewPrice(selectedCandidate, selected?.finish ?? "")
     : null;
@@ -309,6 +312,8 @@ export function MultiScanSession({
             condition: item.condition as CollectionCondition,
             quantity: item.quantity,
           });
+          const savedCard = item.candidates.find(c => c.printing_id === item.selectedPrintingId);
+          if (savedCard) savedPull(savedCard, item.finish, item.quantity);
           saved += 1;
           captures.current.delete(item.id);
           generations.current.delete(item.id);
@@ -388,11 +393,7 @@ export function MultiScanSession({
         <span className="scanner-status-chip">Selected printing</span>
         <h3 id="multi-scan-selected-preview-title">Selected card preview</h3>
         {selectedCandidate ? <>
-          <CardImage
-            className="multi-scan-selected-preview-image"
-            name={selectedCandidate.name}
-            imageUris={selectedCandidate.image_uris}
-          />
+          <ScanReveal name={selectedCandidate.name} imageUris={selectedCandidate.image_uris} revealKey={(selected?.id ?? "") + selectedCandidate.printing_id}/>
           <div className="multi-scan-selected-preview-details">
             <strong>{selectedCandidate.name}</strong>
             <span>{selectedCandidate.set.name}</span>
@@ -467,6 +468,7 @@ export function MultiScanSession({
           <button type="button" onClick={() => {
             requests.current.get(selected.id)?.abort();
             captures.current.delete(selected.id);
+            rejectedPull();
             URL.revokeObjectURL?.(selected.previewUrl);
             setSession((current) => removeSessionItem(current, selected.id));
           }}>Remove selected card</button>

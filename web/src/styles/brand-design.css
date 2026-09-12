@@ -1,0 +1,63 @@
+:root { --brand-accent:#5be7e7; --brand-secondary:#8ba9ff; --brand-radius:16px; --brand-width:1200px; }
+:root[data-brand-width="wide"] { --brand-width:1440px; }
+:root[data-brand-width="full"] { --brand-width:100%; }
+:root[data-brand-corners="square"] { --brand-radius:3px; }
+:root[data-brand-corners="rounded"] { --brand-radius:26px; }
+:root[data-brand-surface="charcoal"][data-theme-choice="system"]:not([data-contrast="high"]) { --deep:#111316; --panel:#1b1e24; --panel-strong:#22262e; --control-bg:#15181e; --ink:#f5f7fc; --muted:#b1bac8; --body-background:linear-gradient(160deg,#111316,#1a1e25); --header-bg:#171b22; color-scheme:dark; }
+:root[data-brand-surface="navy"][data-theme-choice="system"]:not([data-contrast="high"]) { --deep:#080e19; --panel:#101b2d; --panel-strong:#17253b; --control-bg:#0c1525; --ink:#f5f8ff; --muted:#aebdd2; --body-background:radial-gradient(ellipse at 90% 0%,#183144 0%,transparent 55%),linear-gradient(160deg,#080e19,#0c1626); --header-bg:#101b2d; color-scheme:dark; }
+:root[data-brand-surface="light"][data-theme-choice="system"]:not([data-contrast="high"]) { --deep:#edf2f8; --panel:#fff; --panel-strong:#e4ecf6; --control-bg:#f4f7fb; --ink:#132238; --muted:#475b72; --line:#c3cfdc; --header-bg:#f8fbff; --body-background:linear-gradient(150deg,#edf2f8,#f8fbff); color-scheme:light; }
+html[data-brand-typography="editorial"] :is(h1,h2,h3) { font-family:Georgia,"Times New Roman",serif; font-weight:600; }
+html[data-brand-typography="rounded"] :is(h1,h2,h3) { font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif; letter-spacing:-.025em; }
+html[data-brand-typography="modern"] :is(h1,h2,h3) { letter-spacing:-.035em; }
+html[data-brand-width] .site-frame { max-width:calc(var(--brand-width) + 64px); }
+html[data-brand-width] :is(.overview-page,.admin-page,.account-page) { max-width:var(--brand-width); width:100%; }
+html[data-brand-corners] :is(.dashboard-widget,.home-quick-card,.home-update-card,.home-activity-card,.admin-card,.account-welcome,.admin-welcome,.dashboard-header,.home-hero,.account-overview>a,.dashboard-metric-strip>article) { border-radius:var(--brand-radius); }
+html[data-brand-finish] :is(.site-header,.home-hero,.dashboard-header,.admin-welcome,.account-welcome) { border-color:color-mix(in srgb,var(--brand-accent) 25%,var(--line)); }
+html[data-brand-finish="glow"] :is(.home-hero,.dashboard-header,.admin-welcome,.account-welcome) { background:radial-gradient(ellipse at top right,color-mix(in srgb,var(--brand-secondary) 15%,transparent),transparent 70%),var(--panel); border-left-color:var(--brand-accent); box-shadow:0 18px 60px #00000012; }
+html[data-brand-finish="outline"] :is(.home-hero,.dashboard-header,.admin-welcome,.account-welcome) { background:var(--panel); border:1px solid var(--brand-accent); box-shadow:none; }
+html[data-brand-finish="plain"] :is(.home-hero,.dashboard-header,.admin-welcome,.account-welcome) { background:var(--panel); box-shadow:none; border:1px solid var(--line); }
+html[data-brand-finish="plain"] :is(.orb,.scan-line) { display:none; }
+.site-header .brand strong { letter-spacing:-.035em; font-size:1.25rem; }
+.site-header .brand small { letter-spacing:.24em; }
+html[data-brand-finish="glow"] .site-header .logo-mark { filter:drop-shadow(0 0 12px color-mix(in srgb,var(--brand-accent) 30%,transparent)); }
+.home-page .card-art { background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--brand-accent) 24%,var(--panel)),var(--deep)); }
+.home-page .display-card { border-color:color-mix(in srgb,var(--brand-secondary) 35%,var(--line)); }
+.home-page .home-quick-code { border:1px solid color-mix(in srgb,var(--brand-accent) 30%,var(--line)); padding:.4rem .6rem; border-radius:7px; }
+.brand-announcement { padding:.8rem 1rem; border:1px solid var(--line); border-left:3px solid var(--brand-accent); background:var(--panel); color:var(--ink); margin:1rem 0; border-radius:8px; text-align:center; overflow-wrap:anywhere; }
+.site-footer { flex-wrap:wrap; gap:1rem; }
+.site-footer>small { flex-basis:100%; color:var(--muted); }
+html[data-brand-navigation="top"] :is(.overview-layout,.admin-workspace-layout,.account-layout) { grid-template-columns:1fr; }
+html[data-brand-navigation="top"] :is(.overview-nav,.admin-jump-nav,.account-jump-nav) { position:static; display:flex; flex-wrap:wrap; }
+html[data-brand-navigation="top"] :is(.overview-nav,.admin-jump-nav,.account-jump-nav)>span { display:none; }
+html[data-brand-navigation="hidden"] :is(.overview-nav,.admin-jump-nav,.account-jump-nav) { display:none; }
+html[data-brand-navigation="hidden"] :is(.overview-layout,.admin-workspace-layout,.account-layout) { grid-template-columns:1fr; }
+html[data-brand-hero-art="false"] .home-hero .hero-visual { display:none; }
+html[data-brand-hero-art="false"] .home-hero { grid-template-columns:1fr; }
+html[data-brand-home-explore="false"] :is(#home-explore,a[href="#home-explore"]),html[data-brand-home-updates="false"] :is(#whats-new,a[href="#whats-new"]),html[data-brand-home-community="false"] :is(#home-community,a[href="#home-community"]),html[data-brand-home-roadmap="false"] :is(#roadmap,a[href="#roadmap"]) { display:none; }
+html[data-brand-dashboard-history="false"] :is(#dashboard-history,a[href="#dashboard-history"]),html[data-brand-dashboard-recent="false"] :is(#dashboard-recent,a[href="#dashboard-recent"]),html[data-brand-dashboard-decks="false"] :is(#dashboard-decks,a[href="#dashboard-decks"]),html[data-brand-dashboard-sets="false"] :is(#dashboard-sets,a[href="#dashboard-sets"]),html[data-brand-dashboard-attention="false"] :is(#dashboard-attention,a[href="#dashboard-attention"]) { display:none; }
+.brand-design-controls { grid-column:1/-1; display:grid; gap:1.2rem; min-width:0; }
+.brand-design-controls fieldset { border:1px solid var(--line); border-radius:12px; padding:1rem; min-width:0; }
+.brand-design-controls legend { font-weight:750; padding:0 .4rem; }
+.brand-design-controls p { color:var(--muted); font-size:.85rem; line-height:1.6; }
+.brand-design-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.brand-design-grid label { display:grid; gap:.45rem; }
+.brand-design-grid textarea { width:100%; resize:vertical; background:var(--control-bg); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:.7rem; font:inherit; }
+.brand-design-grid input[type="color"] { width:100%; height:44px; padding:4px; }
+.brand-visibility-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; }
+.brand-visibility-grid label { display:flex; align-items:center; gap:.6rem; padding:.6rem; border:1px solid var(--line); border-radius:8px; }
+.brand-design-preview { padding:1.5rem; color:var(--preview-ink); background:var(--preview-bg); border:1px solid var(--preview-accent); overflow-wrap:anywhere; }
+.brand-design-preview.preview-glow { background:radial-gradient(ellipse at top right,color-mix(in srgb,var(--preview-secondary) 22%,transparent),transparent 70%),var(--preview-bg); }
+.brand-design-preview.preview-plain { border-color:color-mix(in srgb,var(--preview-ink) 20%,transparent); }
+.brand-design-preview h3 { font:700 clamp(1.4rem,3vw,2.2rem)/1.2 inherit; margin:1rem 0; }
+.brand-design-preview p { color:inherit; opacity:.8; }
+.brand-preview-wordmark { display:flex; align-items:center; gap:.7rem; margin-bottom:2rem; font-weight:800; }
+.brand-preview-wordmark img { width:42px; height:42px; object-fit:contain; }
+.brand-preview-wordmark small { display:block; font-size:.65rem; letter-spacing:.16em; }
+.brand-preview-badge { margin-left:auto; font:500 .65rem system-ui; border:1px solid currentColor; padding:.35rem .5rem; border-radius:20px; }
+.brand-preview-panels { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin:1.4rem 0; }
+.brand-preview-panels span { padding:.9rem; border:1px solid color-mix(in srgb,var(--preview-accent) 35%,transparent); border-radius:8px; font-size:.8rem; }
+.brand-preview-panels b { float:right; }
+@media(max-width:600px) { .brand-design-grid,.brand-visibility-grid,.brand-preview-panels { grid-template-columns:1fr; } .brand-design-preview { padding:1rem; } .brand-preview-wordmark { flex-wrap:wrap; } }
+.brand-design-preview h3 { font-family:inherit; font-size:clamp(1.4rem,3vw,2.2rem); font-weight:700; line-height:1.2; }
+html[data-brand-width="full"] .site-frame { max-width:100%; }
+html[data-brand-width] .site-frame { margin-left:auto; margin-right:auto; }

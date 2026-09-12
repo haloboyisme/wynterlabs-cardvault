@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.branding import branding_out, read_branding
 from app.branding_schemas import BrandingOut
 from app.database import get_db
-from app.dependencies import CurrentAuth, require_ready_auth
 from app.errors import AppError
 
 router = APIRouter(prefix="/api/v1/branding", tags=["branding"])
@@ -12,7 +11,6 @@ router = APIRouter(prefix="/api/v1/branding", tags=["branding"])
 
 @router.get("", response_model=BrandingOut)
 async def get_branding(
-    _auth: CurrentAuth = Depends(require_ready_auth),
     database: AsyncSession = Depends(get_db),
 ) -> BrandingOut:
     return branding_out(await read_branding(database))
@@ -20,7 +18,6 @@ async def get_branding(
 
 @router.get("/logo")
 async def get_branding_logo(
-    _auth: CurrentAuth = Depends(require_ready_auth),
     database: AsyncSession = Depends(get_db),
 ) -> Response:
     branding = await read_branding(database)

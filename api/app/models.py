@@ -54,6 +54,7 @@ class SiteBranding(Base):
     site_name: Mapped[str] = mapped_column(String(48))
     product_name: Mapped[str] = mapped_column(String(48))
     tagline: Mapped[str] = mapped_column(String(100))
+    design: Mapped[dict | None] = mapped_column(json_document(), nullable=True)
     logo_media_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
     logo_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     logo_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -1000,3 +1001,13 @@ class TradeModerationEvent(Base):
     incident_reference: Mapped[str | None] = mapped_column(String(24))
     details: Mapped[dict[str, object]] = mapped_column(json_document(), default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Presentation(Base):
+    __tablename__ = "presentations"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    document: Mapped[dict] = mapped_column(json_document(), default=dict)
+    token_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

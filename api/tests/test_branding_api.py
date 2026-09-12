@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from test_admin_api import _authenticated_client
 
+from app.branding_schemas import BrandDesign
 from app.models import Role
 
 OWNER_ID = uuid.UUID("55555555-5555-5555-5555-555555555555")
@@ -20,6 +21,7 @@ DEFAULT_BRANDING = {
     "tagline": "Scan it. Sort it. Own your collection.",
     "has_custom_logo": False,
     "logo_revision": None,
+    "design": BrandDesign().model_dump(),
 }
 
 
@@ -120,6 +122,7 @@ def test_owner_and_admin_can_save_normalized_branding(request, client_fixture: s
         "tagline": "Private collection",
         "has_custom_logo": False,
         "logo_revision": None,
+        "design": BrandDesign().model_dump(),
     }
 
 
@@ -275,6 +278,7 @@ def test_delete_logo_preserves_branding_text(owner_client: TestClient):
         "tagline": "Private collection",
         "has_custom_logo": False,
         "logo_revision": None,
+        "design": BrandDesign().model_dump(),
     }
 
 
@@ -311,8 +315,46 @@ def test_reset_returns_builtin_defaults(owner_client: TestClient):
     assert response.json() == DEFAULT_BRANDING
 
 
-def test_unauthenticated_branding_reads_require_a_session(client: TestClient):
+def test_brand_identity_is_available_on_sign_in(client: TestClient):
     branding = client.get("/api/v1/branding")
     logo = client.get("/api/v1/branding/logo")
-    assert branding.status_code == 401
-    assert logo.status_code == 401
+    assert branding.status_code == 200
+    assert logo.status_code == 404
+
+
+def test_design_persists_and_is_visible_without_login(owner_client, client):
+    response = owner_client.put(
+        "/api/v1/admin/branding",
+        json=_branding_payload(
+            design={"accent": "#123456", "navigation": "top", "home_roadmap": False}
+        ),
+    )
+    assert response.status_code == 200
+    design = client.get("/api/v1/branding").json()["design"]
+    assert design["accent"] == "#123456"
+    assert design["navigation"] == "top"
+    assert design["home_roadmap"] is False
+    assert design["dashboard_history"] is True
+    owner_client.put("/api/v1/admin/branding", json=_branding_payload())
+    assert client.get("/api/v1/branding").json()["design"] == design
+
+
+@pytest.mark.parametrize(
+    "design", [{"accent": "url(evil)"}, {"navigation": "script"}, {"announcement": "a" * 201}]
+)
+def test_design_rejects_invalid_values(owner_client, design):
+    assert (
+        owner_client.put(
+            "/api/v1/admin/branding", json=_branding_payload(design=design)
+        ).status_code
+        == 422
+    )
+
+
+def test_member_cannot_change_design(member_client):
+    assert (
+        member_client.put(
+            "/api/v1/admin/branding", json=_branding_payload(design={"home_roadmap": False})
+        ).status_code
+        == 403
+    )

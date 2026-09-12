@@ -85,6 +85,8 @@ async def update_branding(
             branding.site_name = payload.site_name
             branding.product_name = payload.product_name
             branding.tagline = payload.tagline
+        if payload.design is not None:
+            branding.design = payload.design.model_dump()
         if logo is not None:
             branding.logo_media_type, branding.logo_bytes, branding.logo_sha256 = logo
     return branding_out(branding)

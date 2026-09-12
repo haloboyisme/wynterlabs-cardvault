@@ -177,3 +177,15 @@ it("keeps the editable draft when saving fails", async () => {
   expect(await screen.findByText(/could not be saved/i)).toBeVisible();
   expect(screen.getByLabelText("Site name")).toHaveValue("Winter Lab");
 });
+
+it("saves design choices with branding and keeps changes local until Save", async () => {
+  const user = userEvent.setup();
+  vi.mocked(updateBranding).mockResolvedValue(brandingState.branding);
+  render(<BrandStudio />);
+  await user.selectOptions(screen.getByLabelText("Section navigation"), "top");
+  await user.click(screen.getByLabelText("Home roadmap"));
+  await user.type(screen.getByLabelText("Site announcement (optional)"), "Welcome collectors");
+  expect(updateBranding).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(updateBranding).toHaveBeenCalledWith(expect.objectContaining({ design: expect.objectContaining({ navigation: "top", home_roadmap: false, announcement: "Welcome collectors" }) }));
+});

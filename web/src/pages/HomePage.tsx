@@ -1,3 +1,5 @@
+import { brandDesign } from "../lib/brand-design";
+import "../styles/overview-refresh.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -34,6 +36,7 @@ const quickActions = [
 ];
 
 const updates = [
+  ["V2.7.5", "Streamer preview and pack video", "Choose seven reveals, custom card backs, prize jingles, a private OBS pop-out, and a replayable recap with local video export. Open Streamer preview on Scan to begin."],
   ["Available", "Difficult-card matching refinements", "Either half of a split card can match. Ambiguous printings require a choice, stalled searches can be retried, and Scan includes foil/promo guidance."],
   ["V2.6", "Remembered scanning set", "Return to Scan with your last game and preferred set restored for this account and browser. Each game remembers its own set; Auto clears it."],
   ["Available", "Custom Card Import", "Add missing cards privately, with optional images, set details and values. Use them in collections, decks, imports and exports."],
@@ -42,11 +45,9 @@ const updates = [
 ];
 
 const roadmap = [
-  ["V2.8", "Real feeder testing", "Experimental private prototype; not included in this public release. Connect the actual feeder, calibrate the card path, and verify stop, disconnect and scan timing."],
-  ["Testing", "Real-card scanner acceptance", "Split-card matching, ambiguity handling and search recovery are improved. Check your difficult Room, foil and promo cards and long phone/tablet sessions; further tuning follows observed failures."],
+  ["V2.7.5", "Real-card scanner acceptance", "Split-card matching, ambiguity handling and search recovery are improved. Check your difficult Room, foil and promo cards and long phone/tablet sessions; further tuning follows observed failures."],
+  ["V2.8", "Real feeder testing", "Physical testing and public-release review are pending. The private feeder prototype is excluded from this release."],
   ["V3", "Solo tabletop and saved decks", "Planned: Magic and Pokémon camera layouts, saved-deck selection, play zones, counters and turn notes. Start with private solo practice."],
-  ["V3.2", "Streamer previews and OBS", "Planned: instant, fade or flip reveals; configurable card details, sounds, mute and optional effects. Add a private pop-out URL for OBS with transparent, green, blue or solid backgrounds."],
-  ["V3.2", "Pack recap and saved video", "Planned: finish a pack, replay confirmed pulls and corrections, choose highlights or every card, and save the recap video or record it in OBS."],
   ["V3.5", "Wireless feeders and Bluetooth", "Deferred: account-owned Wi-Fi and Bluetooth connections, one controlling session, reconnect and revoke controls. Validate phone and computer compatibility first."],
   ["Later", "Gameplay tracking and shared displays", "Explore deliberate scans or a second camera, friend/tournament displays, TV/YouTube layouts and companion tablets after solo play works."],
   ["Later", "Community and hardware compatibility", "Explore multiplayer and community features beyond the existing activity feed. Make supported Raspberry Pi, computer and custom-hardware setup easier using the existing Docker foundation."],
@@ -68,17 +69,14 @@ export function HomePage() {
     return () => controller.abort();
   }, [signedIn]);
 
+  const design = brandDesign(branding.design);
   return (
-    <>
+    <div className="home-page overview-page">
       <section className="hero home-hero">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="status-dot" /> {branding.site_name} {branding.product_name} · Private by design</p>
+          <p className="eyebrow"><span className="status-dot" /> {branding.site_name} {branding.product_name} · {design.home_eyebrow}</p>
           <h1>{branding.tagline}</h1>
-          <p className="hero-lede">
-            A private card workspace built for real collections: fast enough
-            for a new stack, detailed enough for every exact printing, and
-            personal enough to feel like your own.
-          </p>
+          <p className="hero-lede">{design.home_description}</p>
           <div className="hero-actions">
             {signedIn ? (
               <>
@@ -102,18 +100,21 @@ export function HomePage() {
           <div className="orb orb-one" />
           <div className="orb orb-two" />
           <article className="display-card card-back">
-            <span className="mini-mark">W</span>
+            <span className="mini-mark">{branding.site_name.slice(0, 1)}</span>
             <div className="card-grid" />
           </article>
           <article className="display-card card-front">
-            <div className="card-art"><span>&</span></div>
-            <div className="card-meta"><strong>First Light</strong><small>Foundation - 001</small></div>
+            <div className="card-art"><span>{branding.product_name.slice(0, 1)}</span></div>
+            <div className="card-meta"><strong>{branding.product_name}</strong><small>{branding.site_name} · Collector edition</small></div>
           </article>
           <div className="scan-line" />
         </div>
       </section>
 
-      <section className="home-quick-section">
+      <div className="overview-layout">
+        <nav className="overview-nav" aria-label="Home sections"><span>ON THIS PAGE</span><a href="#home-explore">Explore CardVault</a><a href="#whats-new">Latest updates</a>{signedIn && <a href="#home-community">Community</a>}<a href="#roadmap">What's next</a></nav>
+        <div className="overview-content">
+      <section className="home-quick-section" id="home-explore">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Start anywhere</p>
@@ -137,7 +138,7 @@ export function HomePage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Release notes</p>
-          <h2>V2.6 is ready.</h2>
+          <h2>V2.7.5 is on this server.</h2>
           </div>
           <p>Recent improvements are kept short and useful so members can see what changed at a glance.</p>
         </div>
@@ -150,7 +151,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {signedIn && <section className="home-activity-section" aria-labelledby="community-activity-heading">
+      {signedIn && <section className="home-activity-section" id="home-community" aria-labelledby="community-activity-heading">
         <div className="section-heading"><div><p className="eyebrow">Private community</p><h2 id="community-activity-heading">What collectors are doing.</h2></div><p>Only members who opt in appear here. Collection values and private details stay hidden.</p></div>
         {activityState === "loading" && <p role="status">Loading community activity&hellip;</p>}
         {activityState === "unavailable" && <p role="status">Community activity is temporarily unavailable.</p>}
@@ -171,7 +172,7 @@ export function HomePage() {
         <div className="home-roadmap-heading">
           <p className="eyebrow">Roadmap</p>
           <h2>What’s next for CardVault.</h2>
-          <p>Remaining work only · updated September 10, 2026. Version targets are plans, not release dates. New features are tested privately before public release.</p>
+          <p>Remaining work only · updated September 12, 2026. Version targets are plans, not release dates. Changes are tested here first; GitHub publication requires your explicit request.</p>
         </div>
         <ol className="home-roadmap-list">
           {roadmap.map(([status, title, copy]) => (
@@ -182,6 +183,8 @@ export function HomePage() {
           ))}
         </ol>
       </section>
-    </>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { EXTRA_BASE_MODES } from "./base-modes";
 import {
   APPEARANCE_ACCENTS,
   accentTokens,
@@ -13,7 +14,7 @@ export const LEGACY_APPEARANCE_STORAGE_KEY = "wynterlabs.cards.appearance.v1";
 
 export const APPEARANCE_THEMES = [
   "system", "midnight", "frost", "light", "aurora", "amethyst", "ember", "forest",
-  "sandstone", "slate",
+  "sandstone", "slate", ...EXTRA_BASE_MODES.map(mode => mode.value),
 ] as const;
 export const APPEARANCE_COMPLEXITIES = ["simple", "advanced"] as const;
 export const APPEARANCE_DENSITIES = ["comfortable", "compact", "spacious"] as const;

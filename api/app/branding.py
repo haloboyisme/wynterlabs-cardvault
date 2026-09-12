@@ -5,7 +5,7 @@ import hashlib
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.branding_schemas import INVALID_LOGO_MESSAGE, BrandingOut
+from app.branding_schemas import INVALID_LOGO_MESSAGE, BrandDesign, BrandingOut
 from app.errors import AppError
 from app.models import SiteBranding
 
@@ -35,6 +35,7 @@ def branding_out(branding: SiteBranding | None) -> BrandingOut:
         tagline=branding.tagline,
         has_custom_logo=branding.logo_bytes is not None,
         logo_revision=branding.logo_sha256,
+        design=BrandDesign.model_validate(branding.design or {}),
     )
 
 

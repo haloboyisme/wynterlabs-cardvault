@@ -25,6 +25,7 @@ from app.routers import (
     health,
     invitations,
     mfa,
+    presentation,
     scanner,
     setup,
     trades,
@@ -72,6 +73,7 @@ def create_app(
     app.include_router(health.router)
     app.include_router(branding.router)
     app.include_router(setup.router)
+    app.include_router(presentation.router)
     app.include_router(scanner.router)
     app.include_router(catalog.router)
     app.include_router(collection.router)

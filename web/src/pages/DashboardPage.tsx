@@ -1,3 +1,6 @@
+import { useBranding } from "../app/branding";
+import { brandDesign } from "../lib/brand-design";
+import "../styles/overview-refresh.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -109,6 +112,8 @@ const VALUE_HISTORY_RANGES: Array<{ value: CollectionValueRange; label: string }
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { branding } = useBranding();
+  const design = brandDesign(branding.design);
   const [catalogState, setCatalogState] = useState<StatusState>({ kind: "loading" });
   const [summaryState, setSummaryState] = useState<WidgetState<CollectionSummary>>({ kind: "loading" });
   const [cardsState, setCardsState] = useState<WidgetState<CollectionItem[]>>({ kind: "loading" });
@@ -188,10 +193,10 @@ export function DashboardPage() {
   const priceSnapshot = summary ? priceSnapshotView(summary.price_snapshot_at) : null;
 
   return (
-    <section className="dashboard">
+    <section className="dashboard dashboard-page overview-page">
       <header className="dashboard-header">
         <div>
-          <p className="eyebrow">Collection command center</p>
+          <p className="eyebrow">{design.dashboard_eyebrow}</p>
           <h1>{greeting(new Date().getHours())}, {user?.display_name}.</h1>
           <p>{view.intro}</p>
         </div>
@@ -209,6 +214,9 @@ export function DashboardPage() {
         {canAdmin && <Link className="button dashboard-admin-shortcut" aria-label="Administration" to="/admin">Admin</Link>}
       </nav>
 
+      <div className="overview-layout">
+        <nav className="overview-nav" aria-label="Dashboard sections"><span>ON THIS PAGE</span><a href="#dashboard-overview">Collection overview</a><a href="#dashboard-history">Value history</a><a href="#dashboard-recent">Recent cards</a><a href="#dashboard-decks">Recent decks</a><a href="#dashboard-sets">Top sets</a><a href="#dashboard-attention">Needs attention</a></nav>
+        <div className="overview-content">
       {emptyWorkspace && (
         <section className="dashboard-checklist" role="region" aria-labelledby="dashboard-get-started">
           <div>
@@ -224,7 +232,7 @@ export function DashboardPage() {
         </section>
       )}
 
-      <section aria-labelledby="collection-overview-heading">
+      <section id="dashboard-overview" aria-labelledby="collection-overview-heading">
         <div className="dashboard-section-heading">
           <div><p className="eyebrow">At a glance</p><h2 id="collection-overview-heading">Collection overview</h2></div>
           <Link className="dashboard-inline-action" to="/collection">View collection</Link>
@@ -246,7 +254,7 @@ export function DashboardPage() {
         )}
       </section>
 
-      <section className="dashboard-widget dashboard-value-history" aria-labelledby="collection-value-history-heading">
+      <section id="dashboard-history" className="dashboard-widget dashboard-value-history" aria-labelledby="collection-value-history-heading">
         <div className="dashboard-widget-heading">
           <div><p className="eyebrow">Value over time</p><h2 id="collection-value-history-heading">Collection value history</h2></div>
         </div>
@@ -280,7 +288,7 @@ export function DashboardPage() {
       </section>
 
       <div className="dashboard-content-grid">
-        <article className="dashboard-widget dashboard-recent-cards" aria-labelledby="recent-cards-heading">
+        <article className="dashboard-widget dashboard-recent-cards" id="dashboard-recent" aria-labelledby="recent-cards-heading">
           <div className="dashboard-widget-heading"><div><p className="eyebrow">Latest inventory</p><h2 id="recent-cards-heading">Recent cards</h2></div><Link className="dashboard-inline-action" to="/collection">See all</Link></div>
           {cardsState.kind === "loading" && <p role="status">Loading recent cards…</p>}
           {cardsState.kind === "error" && (
@@ -302,7 +310,7 @@ export function DashboardPage() {
           )}
         </article>
 
-        <article className="dashboard-widget" aria-labelledby="recent-decks-heading">
+        <article className="dashboard-widget" id="dashboard-decks" aria-labelledby="recent-decks-heading">
           <div className="dashboard-widget-heading"><div><p className="eyebrow">Keep building</p><h2 id="recent-decks-heading">Recent decks</h2></div><Link className="dashboard-inline-action" to="/decks">See all</Link></div>
           {decksState.kind === "loading" && <p role="status">Loading recent decks…</p>}
           {decksState.kind === "error" && (
@@ -319,7 +327,7 @@ export function DashboardPage() {
           )}
         </article>
 
-        <article className="dashboard-widget" aria-labelledby="top-sets-heading">
+        <article className="dashboard-widget" id="dashboard-sets" aria-labelledby="top-sets-heading">
           <div className="dashboard-widget-heading"><div><p className="eyebrow">Collection shape</p><h2 id="top-sets-heading">Top sets</h2></div></div>
           {summaryState.kind === "loading" && <p role="status">Loading top sets…</p>}
           {summaryState.kind === "error" && <p>Top sets are unavailable with the collection summary.</p>}
@@ -327,7 +335,7 @@ export function DashboardPage() {
           {summary && summary.sets.length > 0 && <ol className="dashboard-set-list">{summary.sets.slice(0, 5).map((entry) => <li key={entry.code}><div><strong>{entry.name}</strong><span>{entry.distinct_items} unique</span></div><b>{entry.copies}</b></li>)}</ol>}
         </article>
 
-        <article className="dashboard-widget" aria-labelledby="attention-heading">
+        <article className="dashboard-widget" id="dashboard-attention" aria-labelledby="attention-heading">
           <div className="dashboard-widget-heading"><div><p className="eyebrow">Data quality</p><h2 id="attention-heading">Needs attention</h2></div></div>
           {summaryState.kind === "loading" && <p role="status">Checking collection coverage…</p>}
           {summaryState.kind === "error" && <p>Coverage is unavailable with the collection summary.</p>}
@@ -360,6 +368,8 @@ export function DashboardPage() {
           )}
           {catalogState.kind === "unavailable" && <button className="text-button dashboard-widget-retry" type="button" onClick={() => setCatalogRequest((value) => value + 1)}>Retry catalog status</button>}
         </article>
+      </div>
+        </div>
       </div>
     </section>
   );

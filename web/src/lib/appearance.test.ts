@@ -181,3 +181,17 @@ describe("appearance application", () => {
     expect(document.documentElement.dataset.motion).toBe("system");
   });
 });
+
+it("persists and applies every additional Base Mode through the shared appearance layer", async () => {
+  const { EXTRA_BASE_MODES } = await import("./base-modes");
+  expect(EXTRA_BASE_MODES).toHaveLength(32);
+  expect(new Set(EXTRA_BASE_MODES.map(mode => mode.value)).size).toBe(32);
+  for (const mode of EXTRA_BASE_MODES) {
+    const preference = { ...DEFAULT_APPEARANCE, theme: mode.value };
+    expect(writeAppearance(preference)).toBe(true);
+    expect(readAppearance().theme).toBe(mode.value);
+    applyAppearance(preference);
+    expect(document.documentElement.dataset.theme).toBe(mode.value);
+    expect(document.documentElement.style.getPropertyValue("--accent-link")).toMatch(/^#[0-9a-f]{6}$/i);
+  }
+});

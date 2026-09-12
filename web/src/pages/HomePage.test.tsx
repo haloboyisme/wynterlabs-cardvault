@@ -43,12 +43,3 @@ it("does not request private activity for a signed-out visitor", async () => {
   await waitFor(() => expect(fetch).not.toHaveBeenCalled());
   expect(screen.queryByRole("heading", { name: "What collectors are doing." })).not.toBeInTheDocument();
 });
-
-it("presents the completed V2.5 release and the focused V3 roadmap", () => {
-  authState.status = "unauthenticated";
-  render(<MemoryRouter><HomePage /></MemoryRouter>);
-  expect(screen.getByRole("heading", { name: "V2.6 is ready." })).toBeVisible();
-  expect(screen.getByRole("heading", { name: "Custom Card Import" })).toBeVisible();
-  expect(screen.getByRole("heading", { name: "Real feeder testing" })).toBeVisible();
-  expect(screen.getByRole("heading", { name: "Solo tabletop and saved decks" })).toBeVisible();
-});

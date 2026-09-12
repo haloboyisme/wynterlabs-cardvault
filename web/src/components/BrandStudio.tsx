@@ -1,3 +1,5 @@
+import { brandDesign, DEFAULT_DESIGN, type BrandDesign } from "../lib/brand-design";
+import { BrandDesignControls } from "./BrandDesignControls";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
 import { useBranding } from "../app/branding";
@@ -13,6 +15,7 @@ interface BrandStudioProps {
 
 export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
   const { branding, applyBranding } = useBranding();
+  const [design, setDesign] = useState(() => brandDesign(branding.design));
   const [siteName, setSiteName] = useState(branding.site_name);
   const [productName, setProductName] = useState(branding.product_name);
   const [tagline, setTagline] = useState(branding.tagline);
@@ -25,9 +28,11 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
   const draftIsDirty = siteName !== syncedBranding.site_name
     || productName !== syncedBranding.product_name
     || tagline !== syncedBranding.tagline
-    || logoDataUrl !== null;
+    || logoDataUrl !== null
+    || JSON.stringify(design) !== JSON.stringify(brandDesign(syncedBranding.design));
 
   function synchronizeDraft(current: Branding) {
+    setDesign(brandDesign(current.design));
     setSiteName(current.site_name);
     setProductName(current.product_name);
     setTagline(current.tagline);
@@ -87,7 +92,7 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
     if (!draft) return;
     setBusy(true); setMessage({ tone: "info", text: "Saving brand settings…" });
     try {
-      const current = await updateBranding({ ...draft, logo_data_url: logoDataUrl });
+      const current = await updateBranding({ ...draft, logo_data_url: logoDataUrl, design });
       finish(current, "Brand settings saved.");
     } catch {
       setMessage({ tone: "error", text: "Brand settings could not be saved. Review the details and try again." });
@@ -118,7 +123,7 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
     <section className="admin-card brand-studio" aria-labelledby="brand-studio-heading">
       <p className="eyebrow">Shared workspace identity</p>
       <h2 id="brand-studio-heading">Brand Studio</h2>
-      <p>Set the safe text and optional logo shown across this private workspace.</p>
+      <p>Shape your shared CardVault experience. Preview your changes here, then save to apply them across the site.</p>
       <div className="brand-studio-preview">
         <img src={previewSource} alt="Current logo preview" onError={(event) => { event.currentTarget.src = FALLBACK_LOGO; }} />
       </div>
@@ -127,6 +132,9 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
         <label>Product name<input value={productName} onChange={(event) => setProductName(event.target.value)} minLength={2} maxLength={48} required disabled={busy} /></label>
         <label>Tagline<input value={tagline} onChange={(event) => setTagline(event.target.value)} maxLength={100} disabled={busy} /></label>
         <label>Logo file<input aria-label="Logo file" type="file" accept=".png,.jpg,.jpeg,.webp" onChange={onFileChange} disabled={busy} /></label>
+        <BrandDesignControls design={design} onChange={setDesign} disabled={busy} siteName={siteName} productName={productName} tagline={tagline} logo={previewSource} />
+        <button type="button" disabled={busy} onClick={() => setDesign({ ...DEFAULT_DESIGN })}>Use WynterLabs design</button>
+        <button type="button" disabled={busy || !draftIsDirty} onClick={() => synchronizeDraft(branding)}>Discard changes</button>
         <button type="submit" disabled={busy}>{busy ? "Saving brand settings" : "Save"}</button>
       </form>
       <div className="admin-actions workspace-danger-zone">
@@ -134,7 +142,7 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
         <button className="admin-destructive" type="button" onClick={() => setConfirmReset(true)} disabled={busy}>Restore defaults</button>
       </div>
       {confirmReset && <div className="admin-confirmation admin-warning">
-        <p>Restore the default name, product, tagline, and logo?</p>
+        <p>Restore the default name, product, tagline, logo, and site design?</p>
         <button className="admin-destructive" type="button" onClick={() => void restoreDefaults()} disabled={busy}>Confirm restore defaults</button>
         <button type="button" onClick={() => setConfirmReset(false)} disabled={busy}>Cancel</button>
       </div>}

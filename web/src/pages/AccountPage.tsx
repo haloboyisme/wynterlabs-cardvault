@@ -1,3 +1,7 @@
+import { WorkspaceEffectsSettings } from "../components/WorkspaceEffects";
+import { EXTRA_BASE_MODES } from "../lib/base-modes";
+import "../styles/account.css";
+import { Studio } from "../presentation/Studio";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../app/auth";
@@ -46,6 +50,7 @@ const THEME_OPTIONS: ReadonlyArray<{ value: AppearanceTheme; name: string; detai
   { value: "forest", name: "Forest", detail: "Deep evergreen workspace." },
   { value: "sandstone", name: "Sandstone", detail: "Warm cream and natural neutrals." },
   { value: "slate", name: "Slate", detail: "Balanced blue-gray workspace." },
+  ...EXTRA_BASE_MODES,
 ];
 
 function isAbort(reason: unknown) {
@@ -192,12 +197,22 @@ export function AccountPage() {
 
   return (
     <section className="account-page">
-      <PageHeader eyebrow="Account security" description={user?.email}>
+      <PageHeader eyebrow="Your account" description={user?.email}>
         {user?.display_name}
       </PageHeader>
-      <div className="account-grid">
-        <GoogleAccountPanel />
+      <div className="account-welcome">
         <article className="profile-card"><span className="avatar">{user?.display_name.slice(0, 1).toUpperCase()}</span><div><strong>{user?.display_name}</strong><p>{roleLabel(user?.role)}</p></div></article>
+        <div className="account-welcome-copy"><span className="account-pill">Your personal CardVault</span><p>A comfortable workspace, smooth scanning, and control over your account—all in one place.</p><div className="account-quick-links"><a href="/scan">Open scanner <span aria-hidden="true">↗</span></a><a href="/collection">Your collection <span aria-hidden="true">↗</span></a></div></div>
+      </div>
+      <div className="account-overview" aria-label="Account overview">
+        <a href="#account-look"><span className="account-overview-icon" aria-hidden="true">◐</span><span><small>Workspace style</small><strong>{appearance.theme === "system" ? "Follows your device" : appearance.theme[0].toUpperCase()+appearance.theme.slice(1)}</strong><em>{appearance.complexity === "simple" ? "Simple controls" : "Advanced controls"}</em></span></a>
+        <a href="#account-scan"><span className="account-overview-icon" aria-hidden="true">↵</span><span><small>Capture shortcut</small><strong>{captureShortcutLabel(captureShortcut)}</strong><em>Ready for your next scan</em></span></a>
+        <a href="#account-security"><span className="account-overview-icon" aria-hidden="true">◎</span><span><small>Signed-in browsers</small><strong>{loading ? "Loading…" : error ? "Unavailable" : `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`}</strong><em>Review where you are signed in</em></span></a>
+      </div>
+      <div className="account-layout">
+        <nav className="account-jump-nav" aria-label="Account sections"><span>ON THIS PAGE</span><a href="#account-look">Look & comfort</a><a href="#account-scan">Scan & stream</a><a href="#account-security">Sign-in & security</a><a href="#account-privacy">Account & privacy</a></nav>
+        <div className="account-content">
+          <section id="account-look" className="account-section" aria-labelledby="account-look-title"><header className="account-section-heading"><span aria-hidden="true">01</span><div><h2 id="account-look-title">Look & comfort</h2><p>Make CardVault feel like yours. These appearance choices save automatically in this browser.</p></div></header><div className="account-grid">
         <section className="account-appearance-card" aria-labelledby="account-appearance-heading">
           <div className="account-card-heading">
             <div>
@@ -215,6 +230,7 @@ export function AccountPage() {
             <label><input type="radio" name="appearance-complexity" checked={appearance.complexity === "simple"} onChange={() => updateAppearance({ ...appearance, complexity: "simple" })} />Simple workspace</label>
             <label><input type="radio" name="appearance-complexity" checked={appearance.complexity === "advanced"} onChange={() => updateAppearance({ ...appearance, complexity: "advanced" })} />Advanced workspace</label>
           </fieldset>
+          <WorkspaceEffectsSettings />
           <fieldset className="theme-options">
             <legend>Base mode</legend>
             {THEME_OPTIONS.map((option) => (
@@ -312,6 +328,8 @@ export function AccountPage() {
             </div>
           )}
         </section>
+          </div></section>
+          <section id="account-scan" className="account-section" aria-labelledby="account-scan-title"><header className="account-section-heading"><span aria-hidden="true">02</span><div><h2 id="account-scan-title">Scan & stream</h2><p>Set your capture shortcut, tune your scanner, and choose how each pull looks and sounds.</p></div></header><div className="account-grid">
         <section className="account-scanner-shortcut-card" aria-labelledby="scanner-shortcut-heading">
           <div>
             <p className="eyebrow">Fast scanning</p>
@@ -348,6 +366,10 @@ export function AccountPage() {
           </div>
         </section>
         {user && <AutoScannerSettingsPanel role={user.role} />}
+          </div><Studio account /></section>
+          <section id="account-security" className={`account-section ${user?.must_setup_mfa ? "account-priority" : ""}`} aria-labelledby="account-security-title"><header className="account-section-heading"><span aria-hidden="true">03</span><div><h2 id="account-security-title">Sign-in & security</h2><p>Manage connected sign-in, account protection, and active browser sessions.</p></div></header><div className="account-grid">
+        <GoogleAccountPanel />
+        {user && <MfaSettings role={user.role} required={user.must_setup_mfa} onEnrollmentComplete={refresh} />}
         <section className="sessions-card">
           <div><p className="eyebrow">Active sessions</p><h2>Where you are signed in</h2></div>
           {loading && <p role="status">Loading account details&hellip;</p>}
@@ -360,7 +382,8 @@ export function AccountPage() {
             </article>
           ))}
         </section>
-        {user && <MfaSettings role={user.role} required={user.must_setup_mfa} onEnrollmentComplete={refresh} />}
+          </div></section>
+          <section id="account-privacy" className="account-section" aria-labelledby="account-privacy-title"><header className="account-section-heading"><span aria-hidden="true">04</span><div><h2 id="account-privacy-title">Account & privacy</h2><p>Your profile, privacy choices, and account management.</p></div></header><div className="account-grid">
         {user && <AccountManagementPanel user={user} />}
         {trading && (
           <section className={`account-trading-card ${trading.status}`} aria-labelledby="account-trading-heading">
@@ -376,6 +399,8 @@ export function AccountPage() {
             )}
           </section>
         )}
+          </div></section>
+        </div>
       </div>
     </section>
   );

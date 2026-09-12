@@ -1,6 +1,8 @@
+import { ScanReveal } from "../presentation/ScanReveal";
+import { savedPull, rejectedPull, previewPull } from "../presentation/model";
 import { useAuth } from "../app/auth";
 import { useScanPreference } from "../scanner/use-scan-preference";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { CardImage } from "../components/CardImage";
 import { AutoScanWorkspace } from "../components/AutoScanWorkspace";
@@ -251,6 +253,9 @@ export function ScannerPage() {
   const selected = candidates.find((item) => item.printing_id === selectedId);
   const selectedPrice = selected ? previewPrice(selected, finish) : null;
 
+  const previewScanKey = useMemo(() => crypto.randomUUID(), [capturedPhoto]);
+  useEffect(() => { previewPull(selected, finish, quantity, previewScanKey); }, [selected, finish, quantity, previewScanKey]);
+
   const save = async () => {
     if (!selected || !confirmed || !finish) return;
     const current = generation.current;
@@ -271,6 +276,7 @@ export function ScannerPage() {
         } catch {
           if (current === generation.current) setCollectionTotal(null);
         }
+        savedPull(selected, finish, quantity);
         setSuccess(selected.name + " was added to your collection.");
         setSessionAdded((value) => value + 1);
         setConfirmed(false);
@@ -370,7 +376,7 @@ export function ScannerPage() {
               </section>
             </>}
             onResult={(result) => void receiveScan(result)}
-            onReset={resetScan}
+            onReset={() => { if (capturedPhoto) rejectedPull(); resetScan(); }}
             nextCardSignal={nextCardSignal}
           />
           {capturedPhoto && <article className="single-scan-captured-photo">
@@ -387,11 +393,7 @@ export function ScannerPage() {
           <span className="scanner-status-chip">Selected printing</span>
           <h2 id="single-scan-selected-preview-title">Selected card preview</h2>
           {selected ? <>
-            <CardImage
-              className="multi-scan-selected-preview-image"
-              name={selected.name}
-              imageUris={selected.image_uris}
-            />
+            <ScanReveal name={selected.name} imageUris={selected.image_uris} revealKey={selected.printing_id + capturedPhoto}/>
             <div className="multi-scan-selected-preview-details">
               <strong>{selected.name}</strong>
               <span>{selected.set.name}</span>

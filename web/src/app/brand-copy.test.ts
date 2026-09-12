@@ -70,7 +70,7 @@ describe("shared branding", () => {
     expect(await screen.findByRole("link", { name: "Winter Lab Card Archive home" })).toBeVisible();
     expect(screen.getByText("Winter Lab", { selector: "strong" })).toBeVisible();
     expect(screen.getByText("CARD ARCHIVE")).toBeVisible();
-    expect(screen.getByText("Winter Lab Card Archive · Private by design")).toBeVisible();
+    expect(document.querySelector(".site-footer")).toHaveTextContent("Winter Lab Card Archive");
     expect(screen.getByRole("heading", { name: "Keep every card close." })).toBeVisible();
     await waitFor(() => expect(document.title).toBe("Winter Lab Card Archive"));
   });

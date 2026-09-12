@@ -135,7 +135,7 @@ it("opens secondary Collection filters by default in Advanced mode", async () =>
   expect(screen.getByText("Advanced collection filters").closest("details"))
     .toHaveAttribute("open");
   expect(screen.getByText("More collection stats").closest("details"))
-    .toHaveAttribute("open");
+    .not.toHaveAttribute("open");
 });
 
 it("keeps the game filter inside Advanced collection filters and serializes Magic without changing Auto totals", async () => {

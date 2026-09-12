@@ -216,7 +216,7 @@ it("shows a visual preview for every base mode and applies a new mode immediatel
   expect(await screen.findByRole("heading", { name: "Personalization" })).toBeVisible();
 
   const baseModes = screen.getByRole("group", { name: "Base mode" });
-  expect(baseModes.querySelectorAll(".theme-option-preview")).toHaveLength(10);
+  expect(baseModes.querySelectorAll(".theme-option-preview")).toHaveLength(42);
 
   await user.click(screen.getByRole("radio", { name: /^Aurora/i }));
   expect(document.documentElement.dataset.theme).toBe("aurora");

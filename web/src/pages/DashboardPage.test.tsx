@@ -9,6 +9,8 @@ import { listDecks } from "../lib/decks";
 import type { CardSummary, CollectionItem, CollectionSummary, CollectionValueHistory, Deck } from "../lib/types";
 import { DashboardPage } from "./DashboardPage";
 
+vi.mock("../app/branding", () => ({ useBranding: () => ({ branding: {} }) }));
+
 const authState = vi.hoisted(() => ({ role: "owner" as "owner" | "admin" | "member" }));
 vi.mock("../app/auth", () => ({
   useAuth: () => ({
@@ -103,7 +105,7 @@ it("turns collection, card, and deck data into a useful command center", async (
   expect(screen.getByRole("link", { name: /scan/i })).toHaveAttribute("href", "/scan");
   expect(screen.getByRole("link", { name: /browse/i })).toHaveAttribute("href", "/cards");
   expect(screen.getByRole("link", { name: /import/i })).toHaveAttribute("href", "/collection/import");
-  expect(screen.getByRole("link", { name: /decks/i })).toHaveAttribute("href", "/decks");
+  expect(within(screen.getByRole("navigation", { name: "Quick actions" })).getByRole("link", { name: /decks/i })).toHaveAttribute("href", "/decks");
   expect(screen.getByRole("link", { name: /2 copies need pricing/i }))
     .toHaveAttribute("href", "/collection/pricing");
   expect(screen.getByText(/limited edition alpha/i)).toBeVisible();

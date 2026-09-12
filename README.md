@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-2.6.0-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.7.5-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -56,7 +56,29 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
-## ✨ New in Version 2.6
+## ✨ New in Version 2.7.5
+
+- **Scan & stream:** seven reveal styles, eight backgrounds, four layouts,
+  custom card backs, private OBS links, pack recaps and local video downloads.
+- **Pull celebrations:** separate found/accepted sounds and configurable
+  $5, $10, $20, $50 and $100 jingles, comic messages, confetti and sparks.
+- **Personal workspace:** 42 Base Modes, including seven original desktop/console-inspired
+  themes, optional interface sounds and low-power background motion.
+- **Refreshed pages:** clearer Account, Admin, Home and Dashboard layouts;
+  additional collection statistics start closed.
+- **Brand Studio:** shared colors, typography, finishes, navigation, page sections,
+  welcome copy, footer and announcements, with preview and saved settings.
+
+Start in **Account → Look & comfort** for themes, **Scan → Streamer preview**
+for presentation, or **Admin → Site & branding** for shared design.
+Interface sounds default off; streamer master mute defaults off for new settings.
+Saved choices are preserved. Browser audio still requires a user gesture.
+
+[Release notes](docs/v2.7.5-release.md) ·
+[Streamer guide](docs/STREAMER-PREVIEW.md) ·
+[Personalization and branding](docs/PERSONALIZATION.md)
+
+## Previous update: Version 2.6
 
 | Update | What you can do now |
 |---|---|
@@ -128,7 +150,7 @@ seller accounts.
 > privileged accounts, and test backups before trusting the system with a large
 > collection.
 
-## 🧭 Version 2.6 and the road to Version 3
+## 🧭 Version 2.7.5 and the road to Version 3
 
 The roadmap is intentionally flexible because this is a fun project—not a
 commitment to update the software forever.
@@ -166,15 +188,15 @@ commitment to update the software forever.
 
 | Target | Remaining work |
 |---|---|
+| **V2.7.5 follow-up** | Real-card difficult-scan and prolonged phone/tablet acceptance; real OBS audio-routing checks. |
 | **V2.8 experimental** | Physical feeder acceptance. The private Hardware Lab/firmware prototype is not included in this public release. |
-| **V3** | Real-card scanner acceptance and Magic/Pokémon solo tabletop practice with saved decks, zones and counters. |
-| **V3.2** | Configurable sounds/mute and reveal effects, OBS pop-out overlays, pack recap and saved video. |
+| **V3** | Magic/Pokémon solo tabletop practice with saved decks, zones and counters. |
 | **V3.5** | Account-owned wireless feeders and Bluetooth, subject to device/browser compatibility. |
 | **Later V3+** | Assisted gameplay tracking, friend/tournament displays, companion tablets, expanded community/multiplayer and broader hardware setup. |
 
 Completed features are removed from the backlog. See the
 [remaining-work roadmap](docs/V3-ROADMAP.md) and
-[V3.2 streamer proposal](docs/V3.2-STREAMER-PREVIEW.md).
+[streamer setup guide](docs/STREAMER-PREVIEW.md).
 These are future directions without promised dates. Difficult-card and long-session
 acceptance still needs real camera/card testing; automated checks are not a
 substitute for that testing.
@@ -197,7 +219,7 @@ attribution requirements, and acceptable-use rules.
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
 - [Review final V2.5 release readiness](docs/v2.5-release-readiness.md)
-- [Read the Version 2.6 release notes](docs/v2.6.0-release.md)
+- [Read the Version 2.7.5 release notes](docs/v2.7.5-release.md)
 - [See the staged Version 3 roadmap](docs/V3-ROADMAP.md)
 - [Understand account and private community controls](docs/ACCOUNT-AND-COMMUNITY.md)
 
@@ -219,7 +241,7 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.6.0 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.7.5 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates

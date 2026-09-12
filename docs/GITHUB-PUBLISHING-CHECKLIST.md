@@ -21,14 +21,20 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
 
 ## Current release status
 
-- Version 2.6.0 includes remembered scan sets, difficult-card matching refinements,
-  sales-based collection estimates, detailed pricing, and interactive value history.
-- The `v2` branch is the repository landing branch and supported release line.
-  Earlier release tags and the historical `v2.5` branch remain unchanged.
-- See [V2.6.0 release notes](v2.6.0-release.md),
-  [pricing sources and limits](PRICE-COMPARISON.md), and the
-  [remaining roadmap](V3-ROADMAP.md).
-- Automated checks cover application behavior. Real-card camera acceptance and
-  prolonged phone/tablet testing remain open. No new clean-host installation or
-  backup/restore drill was performed for this release.
-- The private Hardware Lab prototype is excluded from this public release.
+- V2.7.5 includes streamer/OBS/video, prize feedback, dynamic personalization and
+  shared branding. See [release notes](v2.7.5-release.md).
+- `v2` remains the landing branch; older version tags remain unchanged.
+- Private infrastructure, hardware experiments and credentials are excluded.
+- Real-card/long-camera-session and OBS desktop audio acceptance remain open.
+- No new clean-host install or backup/restore drill is claimed for this update.
+- Final public-candidate automated results are recorded below after checks finish.
+
+### V2.7.5 public-candidate checks — September 12, 2026
+
+- 602 frontend tests passed across 74 files.
+- 58 focused API tests passed (presentation, branding, custom cards and scanner OCR).
+- TypeScript and production build passed; the existing large-chunk advisory remains.
+- Changed-file Ruff passed; the pre-existing Role enum UP042 advisory was excluded
+  for models.py rather than changing unrelated enum behavior in this release.
+- Migration graph has one head, 0023_brand_design; installer shell syntax passed.
+- Changed files were scanned for private host paths, addresses and credential markers.

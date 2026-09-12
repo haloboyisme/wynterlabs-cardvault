@@ -1,3 +1,4 @@
+import "../styles/admin-refresh.css";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { TradeModerationPanel } from "../components/TradeModerationPanel";
@@ -465,11 +466,19 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
         </section>
       )}
 
-      <BrandStudio />
-      {isRoleManager && <EmailSettingsPanel />}
-      {isRoleManager && <GoogleSettingsPanel />}
-
-      <div className="admin-grid">
+      <div className="admin-welcome"><div><span className="eyebrow">Your workspace, at a glance</span><h2>Keep CardVault running smoothly.</h2><p>Manage card data, personalize your site, and help your community from one place.</p></div><span className="admin-role-pill">{isOwner ? "Owner workspace" : isRoleManager ? "Super administrator" : "Administrator"}</span></div>
+      <div className="admin-workspace-layout">
+        <nav className="admin-jump-nav" aria-label="Admin sections">
+          <span>ON THIS PAGE</span>
+          <a href="#admin-catalog">Catalog & updates</a>
+          <a href="#admin-brand">Site & branding</a>
+          {isRoleManager && <a href="#admin-connections">Email & sign-in</a>}
+          <a href="#admin-moderation">Trade moderation</a>
+          {isRoleManager && <a href="#admin-access">Account access</a>}
+        </nav>
+        <div className="admin-workspace-content">
+      <section id="admin-catalog" className="admin-workspace-section" aria-labelledby="admin-catalog-title">
+        <header className="admin-section-heading"><span aria-hidden="true">01</span><div><h2 id="admin-catalog-title">Catalog & updates</h2><p>Check your card data and choose when catalogs refresh.</p></div></header>
         <section className="admin-card" aria-labelledby="catalog-admin-heading">
           <div className="admin-card-header workspace-routine-actions">
             <div>
@@ -581,8 +590,22 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
           <p className="admin-note">If a refresh fails, the previous working catalog stays active.</p>
         </section>
 
+      </section>
+      <section id="admin-brand" className="admin-workspace-section" aria-labelledby="admin-brand-title">
+        <header className="admin-section-heading"><span aria-hidden="true">02</span><div><h2 id="admin-brand-title">Site & branding</h2><p>Give your workspace its own name, logo, and personality.</p></div></header>
+        <BrandStudio />
+      </section>
+      {isRoleManager && <section id="admin-connections" className="admin-workspace-section" aria-labelledby="admin-connections-title">
+        <header className="admin-section-heading"><span aria-hidden="true">03</span><div><h2 id="admin-connections-title">Email & sign-in</h2><p>Manage account emails and your Google sign-in connection.</p></div></header>
+        <EmailSettingsPanel /><GoogleSettingsPanel />
+      </section>}
+      <section id="admin-moderation" className="admin-workspace-section" aria-labelledby="admin-moderation-title">
+        <header className="admin-section-heading"><span aria-hidden="true">04</span><div><h2 id="admin-moderation-title">Community & trades</h2><p>Review community activity using the existing moderation tools.</p></div></header>
         <TradeModerationPanel />
+      </section>
         {isRoleManager && (
+          <section id="admin-access" className="admin-workspace-section" aria-labelledby="admin-access-title">
+          <header className="admin-section-heading"><span aria-hidden="true">05</span><div><h2 id="admin-access-title">People & permissions</h2><p>Manage invitations, account roles, and access requests.</p></div></header>
           <DisclosurePanel
             title={isOwner ? "Owner maintenance" : "Account access"}
             defaultOpen={advanced}
@@ -599,7 +622,9 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
               />
             </div>
           </DisclosurePanel>
+          </section>
         )}
+        </div>
       </div>
     </section>
   );

@@ -1,11 +1,11 @@
 # Standalone upgrades
 
 The repaired upgrade helper shipped in Version 2.5.0 and is included in the
-stable **V2.6.0** release. The older `v2.0.1` download still contains the broken
+stable **V2.7.5** release. The older `v2.0.1` download still contains the broken
 helper; do not use that older helper. See [installation](INSTALL.md) and the
 [final V2.5 verification record](v2.5-release-readiness.md).
 
-To upgrade an older standalone installation using V2.6.0:
+To upgrade an older standalone installation using V2.7.5:
 
 1. Keep your original source checkout and escrowed secrets. Obtain the newer
    trusted release separately; never overwrite installation secrets.
@@ -57,3 +57,10 @@ counts, and API readiness. Never enable this test against a production server.
   application test-suite rerun was needed for this focused installer repair.
 - The disposable clone was removed afterward; the original test installation,
   live site, published V2 branch, and immutable release tags were not changed.
+
+## V2.7.5 additions
+
+Migrations 0022_presentations and 0023_brand_design add the presentation table and
+site design column. Save a backup before upgrading. Check sign-in, collection,
+streamer settings and shared branding afterward. Existing V2.6 scanner/pricing
+behavior remains. See [release notes](v2.7.5-release.md).

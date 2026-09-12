@@ -1,3 +1,5 @@
+import { Overlay } from "../presentation/Overlay";
+import { Studio } from "../presentation/Studio";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
@@ -28,6 +30,7 @@ import { BrandProvider } from "./branding";
 import { MEMBER_TRADING_ENABLED } from "./features";
 
 export function App() {
+  if (window.location.pathname === "/overlay") return <Overlay />;
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
@@ -62,7 +65,7 @@ export function App() {
               path="/collection/import"
               element={<ProtectedRoute><CollectionImportPage /></ProtectedRoute>}
             />
-            <Route path="/scan" element={<ProtectedRoute><ScannerPage /></ProtectedRoute>} />
+            <Route path="/scan" element={<ProtectedRoute><Studio /><ScannerPage /></ProtectedRoute>} />
             {MEMBER_TRADING_ENABLED && (
               <Route path="/trades" element={<ProtectedRoute><TradingPage /></ProtectedRoute>} />
             )}

@@ -78,7 +78,7 @@ it("renders the WynterLabs product homepage", async () => {
   expect(
     screen.getByRole("heading", { name: /scan it\. sort it\. own your collection/i }),
   ).toBeVisible();
-  expect(screen.getByText(/private card workspace built for real collections/i)).toBeVisible();
+  expect(document.querySelector(".hero-lede")).toHaveTextContent(/collection/i);
   const heroActions = within(document.querySelector(".hero-actions") as HTMLElement);
   expect(heroActions.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   expect(heroActions.getByRole("link", { name: /see what is new/i })).toHaveAttribute("href", "#whats-new");
@@ -86,8 +86,8 @@ it("renders the WynterLabs product homepage", async () => {
   const quickActions = screen.getByRole("navigation", { name: /explore wynterlabs cardvault/i });
   expect(within(quickActions).getByRole("link", { name: /browse cards/i })).toHaveAttribute("href", "/cards");
   expect(within(quickActions).getByRole("link", { name: /scan cards/i })).toHaveAttribute("href", "/scan");
-  expect(screen.getByRole("heading", { name: /V2.5 is ready/i })).toBeVisible();
-  expect(screen.getByRole("heading", { name: /V3, one useful experiment at a time/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: /V2.7.5 is on this server/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: /What’s next for CardVault/i })).toBeVisible();
   expect(screen.queryByText("Private trading")).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 2/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 5/i)).not.toBeInTheDocument();

@@ -1,3 +1,5 @@
+import "../styles/brand-design.css";
+import { applyBrandDesign, brandDesign } from "../lib/brand-design";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "./auth";
@@ -38,15 +40,11 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    applyBrandDesign(brandDesign(branding.design));
     document.title = `${branding.site_name} ${branding.product_name}`;
   }, [branding]);
 
   useEffect(() => {
-    if (status !== "authenticated") {
-      ++requestGeneration.current;
-      setBranding(DEFAULT_BRANDING);
-      return;
-    }
     const controller = new AbortController();
     const generation = ++requestGeneration.current;
     void getBranding(controller.signal)

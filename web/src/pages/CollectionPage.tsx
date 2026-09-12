@@ -501,7 +501,6 @@ export function CollectionPage() {
         <div className="collection-overview-details">
           <details
             className="collection-more-stats"
-            open={readAppearance().complexity === "advanced" ? true : undefined}
           >
             <summary>More collection stats</summary>
             <dl>

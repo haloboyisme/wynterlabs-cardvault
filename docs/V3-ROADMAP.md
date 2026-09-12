@@ -1,6 +1,6 @@
 # CardVault roadmap — remaining work
 
-Updated September 10, 2026. This is the outstanding product backlog, reconciled
+Updated September 12, 2026. This is the outstanding product backlog, reconciled
 with the original Card Scanner Project and verified implementation records. Version
 labels describe targets, not promised dates. V2.6 remembered scan preferences are
 included in the public V2.6.0 release; physical V2.8 acceptance remains pending.
@@ -14,12 +14,34 @@ recovery. Their release records remain historical evidence.
 
 | Target | Status | Remaining outcome |
 |---|---|---|
+| V2.7.5 | Real-card acceptance pending | Validate difficult cards and long sessions after the matching/recovery improvements |
+| V2.7.5 follow-up | Device checks pending | Verify OBS desktop audio routing and longer camera sessions |
 | V2.8 | Physical testing pending | Connect and validate the real feeder using the existing Hardware Lab |
-| V3 | Real-card acceptance pending | Validate difficult cards and long sessions after the matching/recovery improvements |
 | V3 | Planned | Magic/Pokémon solo tabletop practice and saved-deck support |
-| V3.2 | Planned | Configurable scan presentation, OBS overlays and pack-recap video |
 | V3.5 | Deferred | Account-owned wireless feeders and Bluetooth compatibility |
 | Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
+
+## V2.7.5 — real-card scanner acceptance
+
+Basic sideways OCR retry and manual correction already exist. Version 2.6 updates
+add either-half split-card matching, explicit selection for ambiguous printings,
+45-second search recovery with retained photos, and foil/promo/long-session guidance.
+Automated checks pass; physical card/camera acceptance remains outstanding.
+
+- Test difficult sideways/split-room, double-faced, foil and promo cards.
+- Improve ambiguous printing selection and title/set/collector-number matching
+  where real scans still fail; preserve manual correction.
+- Refine phone/tablet feedback and long multi-card sessions based on observed issues.
+- Validate improvements against ordinary scans to avoid regressions.
+
+## Completed in V2.7.5
+
+Streamer reveals, layouts, backgrounds, custom card backs, sound controls, prize
+celebrations, revocable OBS links, pack recap and local video export are delivered.
+Refreshed Account/Admin/Home/Dashboard layouts, 42 Base Modes, low-power dynamic
+themes and shared Brand Studio controls are also included. These are no longer
+backlog items. See the [release notes](v2.7.5-release.md) and
+[streamer guide](STREAMER-PREVIEW.md). Real OBS audio routing remains a device check.
 
 ## V2.8 — complete real feeder testing
 
@@ -36,19 +58,6 @@ The remaining work is physical acceptance and subsequent public-release review.
 - Keep simulation available. Physical acceptance remains pending; software tests
   alone do not prove that a real mechanism works.
 
-## V3 — real-card scanner acceptance
-
-Basic sideways OCR retry and manual correction already exist. Version 2.6 updates
-add either-half split-card matching, explicit selection for ambiguous printings,
-45-second search recovery with retained photos, and foil/promo/long-session guidance.
-Automated checks pass; physical card/camera acceptance remains outstanding.
-
-- Test difficult sideways/split-room, double-faced, foil and promo cards.
-- Improve ambiguous printing selection and title/set/collector-number matching
-  where real scans still fail; preserve manual correction.
-- Refine phone/tablet feedback and long multi-card sessions based on observed issues.
-- Validate improvements against ordinary scans to avoid regressions.
-
 ## V3 — solo tabletop practice
 
 - Begin with one camera and Magic/Pokémon alignment layouts for the play surface.
@@ -56,22 +65,6 @@ Automated checks pass; physical card/camera acceptance remains outstanding.
 - Let the user select an existing saved deck and view deck lists, zones, counters
   and turn notes without silently modifying the deck.
 - Start with assisted practice; automatic rules enforcement is outside this stage.
-
-## V3.2 — streamer presentation and pack recap
-
-- Choose instant, fade-in or back-to-front card-flip reveals in the preview.
-- Preserve card details with configurable layout, visibility and plain/fancy styling.
-- Add optional confirmation/rejection sounds, volume and per-effect controls,
-  account master mute and a preview mute. Avoid duplicate audio in OBS.
-- Offer optional pack-opening and lightweight 3D-style effects with plain fallback.
-- Provide a clean pop-out plus a revocable, read-only OBS URL tied to the user's
-  selected session; support transparent, green, blue and solid backgrounds.
-- Finish Pack creates a replayable recap of confirmed pulls, including duplicates
-  and corrections, with all-cards and highlights presentations.
-- Support saving recap video and OBS recording; verify export formats, audio and
-  playback. Transparent overlays do not imply transparent video-export support.
-
-Detailed design: [Streamer preview and recap](V3.2-STREAMER-PREVIEW.md).
 
 ## V3.5 — wireless ownership and Bluetooth
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.7.5 — streamer, personalization and shared design
+
+- Add configurable reveals, backgrounds, layouts, custom flip backs and pack video.
+- Add private revocable OBS links, found/accepted sounds and five prize tiers.
+- Add 42 Base Modes, dynamic looks, optional interface sounds and low-power controls.
+- Refresh Account, Admin, Home and Dashboard; close extra collection stats by default.
+- Extend Brand Studio with shared design and page controls.
+- Add presentation/branding migrations; reduce idle overlay payload and rendering.
+- See [release notes](docs/v2.7.5-release.md) for upgrade, verification and limits.
+
 ## 2.6.0 — scanner preferences, pricing and history
 
 - Remember scan game/set per account and game on the current browser.

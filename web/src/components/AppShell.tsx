@@ -1,3 +1,6 @@
+import { ScanPrizeFeedback } from "../presentation/rewards";
+import { WorkspaceEffects } from "./WorkspaceEffects";
+import { brandDesign } from "../lib/brand-design";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
@@ -87,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="site-frame">
+      <WorkspaceEffects /><ScanPrizeFeedback />
       <a className="skip-link" href="#main">Skip to content</a>
       <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
         <div className="header-topline">
@@ -129,10 +133,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
         </nav>
       </header>
+      {brandDesign(branding.design).announcement && <aside className="brand-announcement" aria-label="Site announcement">{brandDesign(branding.design).announcement}</aside>}
       <main id="main">{children}</main>
       <footer className="site-footer">
         <span>{siteName} {productName}</span>
         <span>{tagline}</span>
+        <small>{brandDesign(branding.design).footer_text}</small>
       </footer>
     </div>
   );
