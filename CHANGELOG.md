@@ -1,5 +1,12 @@
 # Changelog
 
+## Sound library and session recovery — September 13, 2026
+
+- Offer 15 synthesized sounds plus Off for found, accepted, rejected, pack-complete and prize events, with Try buttons.
+- Finish Pack replays saved cards; the next accepted card starts a fresh pack.
+- Preserve one previous session per account and add Replay last session after refresh/restart.
+- Keep archived recaps out of OBS responses and revoke the old link when a fresh pack begins.
+
 ## Scanner set-loading fix — after V2.7.5
 
 - Request the selected game or brand’s catalog sets and reload when it changes.

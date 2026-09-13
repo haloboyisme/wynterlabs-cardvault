@@ -18,7 +18,10 @@ the built-in back. Use artwork you have permission to share.
 Found and accepted are different events: finding a printing previews it; a successful
 collection save accepts it. Only accepted cards enter the pack. Repeated captures of
 the same printing get fresh feedback; quantity edits do not repeat the found sound.
-Use master mute, volume, temporary mute, per-event sound/off choices and test buttons.
+Use master mute, volume, temporary mute, per-event sound/off choices and Try buttons.
+There are 15 original synthesized cues: Chime, Arcade, Fanfare, Bell, Bubbles, Radar,
+Sparkle, Coin, Powerup, Victory, Error, Warning, Sonar, Twinkle and Drumroll, plus Off.
+These choices also apply to prize tiers and exported recaps; no downloads are required.
 Select scanner or overlay audio output to avoid doubled sound. Browser autoplay rules
 apply: enable audio with a click; use OBS Interact where necessary.
 
@@ -42,11 +45,23 @@ It grants no account editing or device control. Your OBS computer must reach the
 Initial load/reconnect shows current content without replaying old celebrations.
 Transparent live overlays are supported; check audio routing on your OBS computer.
 
-**Finish Pack** freezes additions. Remove or highlight presentation pulls without
-editing the collection. Duplicates and quantities are retained. Replay all cards or
-highlights; save/export before starting a new pack, which clears the presentation
-and revokes its link. Maximum 100 saved pulls per pack. Failed delivery can be retried
-while the page remains open.
+**Finish Pack & replay** completes the current session and automatically replays
+its confirmed cards. Remove or highlight presentation pulls without editing the
+collection. Duplicates and quantities are retained. The next accepted card starts
+a fresh pack automatically; Start new pack also starts one explicitly.
+
+**Replay last session** on Scan replays the previous saved session without changing
+the current pack or collection. It survives page refreshes and browser restarts
+because the cards are stored with the account. One previous session is kept, up
+to 100 pulls; the next outgoing session replaces it. Repeated new-pack actions on
+an empty pack preserve the last recap. Unsaved photos and undelivered browser-queue
+events cannot be recovered. Capture saved pulls must be enabled.
+
+Starting a fresh pack revokes the old OBS link; create a new link for the new pack.
+Archived history is excluded from OBS responses. Last-session replay is local to
+the signed-in scanner. Export videos you want to keep before moving on; downloaded
+files are separate from the one-session recovery feature. Failed delivery can be
+retried while the page remains open.
 
 ## Save a video
 

@@ -22,11 +22,31 @@ from app.models import Presentation, User
 router = APIRouter(prefix="/api/v1/presentation", tags=["presentation"])
 
 
+SoundChoice = Literal[
+    "off",
+    "chime",
+    "arcade",
+    "fanfare",
+    "bell",
+    "bubbles",
+    "radar",
+    "sparkle",
+    "coin",
+    "powerup",
+    "victory",
+    "error",
+    "warning",
+    "sonar",
+    "twinkle",
+    "drumroll",
+]
+
+
 class RewardTier(BaseModel):
     threshold: Literal[5, 10, 20, 50, 100]
     label: str = Field(min_length=1, max_length=40)
     enabled: bool = True
-    sound: Literal["off", "chime", "arcade", "fanfare"] = "chime"
+    sound: SoundChoice = "chime"
     effect: Literal["none", "confetti", "sparks", "burst"] = "confetti"
 
 
@@ -62,10 +82,10 @@ class Preferences(BaseModel):
     muted: bool = False
     volume: float = Field(default=0.35, ge=0, le=1)
     audio: Literal["scanner", "overlay"] = "scanner"
-    confirm: Literal["off", "chime", "arcade"] = "chime"
-    reject: Literal["off", "chime", "arcade"] = "chime"
-    complete: Literal["off", "chime", "arcade"] = "arcade"
-    found: Literal["off", "chime", "arcade"] = "chime"
+    confirm: SoundChoice = "chime"
+    reject: SoundChoice = "chime"
+    complete: SoundChoice = "arcade"
+    found: SoundChoice = "chime"
     rewards: bool = True
     particles: bool = True
     reward_tiers: list[RewardTier] = Field(
@@ -152,8 +172,8 @@ async def owned(db, auth):
     return row
 
 
-def public(doc):
-    return {k: v for k, v in doc.items() if k != "seen"}
+def public(doc, history=True):
+    return {k: v for k, v in doc.items() if k != "seen" and (history or k != "last_session")}
 
 
 def no_cache(response):
@@ -209,7 +229,11 @@ async def event(
         doc["preview"] = {**body.card.model_dump(), "id": body.id}
     if body.kind == "confirm":
         if doc["finished"]:
-            raise AppError(409, "pack_finished", "Start a new pack before adding another pull.")
+            doc["last_session"] = copy.deepcopy(doc["cards"])
+            doc["cards"] = []
+            doc["finished"] = False
+            row.token_hash = None
+            row.token_expires = None
         if body.card is None or len(doc["cards"]) >= 100:
             raise AppError(
                 422,
@@ -227,8 +251,17 @@ async def event(
                     card["highlight"] = not card["highlight"]
     if body.kind == "finish":
         doc["finished"] = True
+        if doc["cards"]:
+            doc["last_session"] = copy.deepcopy(doc["cards"])
     if body.kind == "new":
-        doc = {**initial(), "settings": doc["settings"], "revision": doc["revision"]}
+        last_session = copy.deepcopy(doc["cards"] or doc.get("last_session", []))
+        doc = {
+            **initial(),
+            "settings": doc["settings"],
+            "revision": doc["revision"],
+            "seen": doc["seen"],
+            "last_session": last_session,
+        }
         row.token_hash = None
         row.token_expires = None
     doc["revision"] += 1
@@ -306,4 +339,4 @@ async def overlay(
     ).scalar_one_or_none()
     if row is None:
         raise AppError(404, "overlay_unavailable", "This preview link is unavailable or expired.")
-    return public(row.document)
+    return public(row.document, history=False)

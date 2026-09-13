@@ -1,3 +1,4 @@
+import { SOUND_PATTERNS, type SoundId } from "./sounds";
 import { rewardFor, type RewardTier } from "./rewards";
 import { apiRequest } from "../lib/api";
 import type { CardSummary } from "../lib/types";
@@ -6,13 +7,13 @@ export type Settings = {
   color: string; accent: string; layout: "landscape" | "portrait" | "square" | "reverse"; duration: number; hold: number;
   scale: number; glow: boolean; pack: boolean; details: boolean; prices: boolean;
   muted: boolean; volume: number; audio: "scanner" | "overlay";
-  confirm: "off" | "chime" | "arcade"; reject: "off" | "chime" | "arcade"; complete: "off" | "chime" | "arcade";
-  found?: "off" | "chime" | "arcade"; rewards?: boolean; particles?: boolean; reward_tiers?: RewardTier[];
+  confirm: SoundId; reject: SoundId; complete: SoundId;
+  found?: SoundId; rewards?: boolean; particles?: boolean; reward_tiers?: RewardTier[];
   card_back?: string; highlights: boolean; enabled: boolean;
 };
 export type Pull = { preview_key?: string; id: string; name: string; printing_id: string; image: string; set: string; number: string;
   language: string; finish: string; price: string; rarity: string; quantity: number; highlight: boolean };
-export type Presentation = { preview?: Pull | null; settings: Settings; cards: Pull[]; revision: number; finished: boolean;
+export type Presentation = { last_session?: Pull[]; preview?: Pull | null; settings: Settings; cards: Pull[]; revision: number; finished: boolean;
   event: { id: string; kind: string } | null };
 export const defaults: Settings = { reveal: "instant", background: "solid", color: "#121826", accent: "#a78bfa",
   layout: "landscape", duration: .7, hold: 3, scale: 1, glow: false, pack: false, details: true, prices: true,
@@ -52,10 +53,13 @@ export function tone(context: AudioContext, s: Settings, kind: "confirm" | "reje
   const prize = reward && reward.sound !== "off" ? reward : undefined;
   if (!prize && s[kind] === "off") return;
   const freqs = prize ? [523,659,784,...(prize.threshold>=10?[1047]:[]),...(prize.threshold>=20?[1319]:[]),...(prize.threshold>=50?[1568]:[]),...(prize.threshold>=100?[2093]:[])] : kind === "found" ? [440,660] : kind === "reject" ? [220, 160] : kind === "complete" ? [523, 659, 784, 1047] : [659, 880];
-  const notes = prize?.sound === "fanfare" ? [...freqs,...freqs.slice(-2).reverse()] : freqs;
+  const sound = prize?.sound ?? s[kind] ?? "chime";
+  const pattern = SOUND_PATTERNS[sound === "off" ? "chime" : sound];
+  const legacy = sound === "chime" || sound === "arcade" || (Boolean(prize) && sound === "fanfare");
+  const notes = legacy ? (prize?.sound === "fanfare" ? [...freqs,...freqs.slice(-2).reverse()] : freqs) : pattern.notes;
   notes.forEach((frequency, i) => {
     const oscillator = context.createOscillator(); const gain = context.createGain();
-    oscillator.type = (prize?.sound ?? s[kind]) === "arcade" ? "triangle" : "sine"; oscillator.frequency.value = frequency;
+    oscillator.type = legacy ? (sound === "arcade" ? "triangle" : "sine") : pattern.wave; oscillator.frequency.value = frequency;
     const start = context.currentTime + i * .12;
     gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(s.volume * .15, start + .015);
     gain.gain.exponentialRampToValueAtTime(.0001, start + .22);

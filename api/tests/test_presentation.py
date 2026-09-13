@@ -40,7 +40,7 @@ def test_private_overlay_lifecycle(app):
                 first.post(
                     "/api/v1/presentation/events", json={**payload, "id": "pull-2"}
                 ).status_code
-                == 409
+                == 200
             )
             first.delete("/api/v1/presentation/link")
             assert viewer.get("/api/v1/presentation/overlay", headers=headers).status_code == 404
@@ -207,3 +207,41 @@ def test_reward_settings_are_validated_and_saved(app):
         )
         prefs["reward_tiers"][4]["threshold"] = 5
         assert owner.put("/api/v1/presentation/settings", json=prefs).status_code == 422
+
+
+def test_all_sound_choices_validate_for_events_and_prizes():
+    from typing import get_args
+
+    from app.routers.presentation import Preferences, RewardTier, SoundChoice
+    choices = get_args(SoundChoice)
+    assert len(choices) == 16  # 15 cues plus Off
+    for sound in choices:
+        settings = Preferences(found=sound, confirm=sound, reject=sound, complete=sound)
+        assert settings.model_dump()["found"] == sound
+        assert RewardTier(threshold=5, label="Nice pull", sound=sound).sound == sound
+
+
+def test_last_session_survives_refresh_and_next_confirm_starts_fresh(app):
+    with member(app, "recap-owner") as owner:
+        base = "/api/v1/presentation"
+        first = {"id": "first-card", "kind": "confirm", "card": {"name": "First", "quantity": 1}}
+        assert owner.post(base + "/events", json=first).status_code == 200
+        owner.post(base + "/events", json={"id": "finish-session", "kind": "finish"})
+        assert owner.get(base).json()["last_session"][0]["name"] == "First"
+        second = {"id": "second-card", "kind": "confirm", "card": {"name": "Second", "quantity": 1}}
+        response = owner.post(base + "/events", json=second)
+        assert response.status_code == 200
+        state = owner.get(base).json()
+        assert [c["name"] for c in state["cards"]] == ["Second"]
+        assert not state["finished"]
+        assert [c["name"] for c in state["last_session"]] == ["First"]
+        owner.post(base + "/events", json=first)
+        assert len(owner.get(base).json()["cards"]) == 1
+        owner.post(base + "/events", json={"id": "new-session", "kind": "new"})
+        owner.post(base + "/events", json={"id": "empty-new", "kind": "new"})
+        assert owner.get(base).json()["last_session"][0]["name"] == "Second"
+        token = owner.post(base + "/link").json()["token"]
+        from fastapi.testclient import TestClient
+        with TestClient(app) as viewer:
+            result = viewer.get(base + "/overlay", headers={"Authorization": f"Bearer {token}"})
+            assert "last_session" not in result.json()

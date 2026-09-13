@@ -40,3 +40,12 @@ it("recognizes each capture once without duplicating feedback on quantity change
  expect(feedback).toHaveBeenCalledTimes(2);expect(feedback.mock.calls[0][0].detail.kind).toBe("found");expect(apiRequest).toHaveBeenCalledTimes(1);
  window.removeEventListener("cardvault-pull-feedback",feedback);
 });
+
+it("replays the persisted last session after remount without changing saved cards",async()=>{
+ vi.mocked(apiRequest).mockResolvedValue({...state,cards:[],last_session:[{...card,name:"Previous pull"}]});
+ const first=render(<Studio/>);await screen.findByText("Replay last session");first.unmount();
+ const second=render(<Studio/>);const button=await screen.findByText("Replay last session");
+ expect(button).not.toBeDisabled();fireEvent.click(button);
+ expect(second.container.querySelector(".presentation-stage")).toHaveTextContent("Previous pull");
+ expect(apiRequest).toHaveBeenCalledTimes(2);
+});

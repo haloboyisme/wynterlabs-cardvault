@@ -60,6 +60,8 @@ and reprints can produce an incorrect match.
 
 - **Scan & stream:** seven reveal styles, eight backgrounds, four layouts,
   custom card backs, private OBS links, pack recaps and local video downloads.
+- **Sound library:** 15 original cues plus Off, with per-event Try buttons.
+- **Session recovery:** automatic finished-pack replay and Replay last session after refresh/restart.
 - **Pull celebrations:** separate found/accepted sounds and configurable
   $5, $10, $20, $50 and $100 jingles, comic messages, confetti and sparks.
 - **Personal workspace:** 42 Base Modes, including seven original desktop/console-inspired
