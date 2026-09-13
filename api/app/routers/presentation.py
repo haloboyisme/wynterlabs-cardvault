@@ -205,6 +205,8 @@ async def settings(
     row = await owned(db, auth)
     doc = copy.deepcopy(row.document)
     doc["settings"] = body.model_dump()
+    doc["revision"] += 1
+    doc["event"] = None
     row.document = doc
     await db.commit()
     return public(doc)

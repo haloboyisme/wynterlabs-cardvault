@@ -213,6 +213,7 @@ def test_all_sound_choices_validate_for_events_and_prizes():
     from typing import get_args
 
     from app.routers.presentation import Preferences, RewardTier, SoundChoice
+
     choices = get_args(SoundChoice)
     assert len(choices) == 16  # 15 cues plus Off
     for sound in choices:
@@ -242,6 +243,34 @@ def test_last_session_survives_refresh_and_next_confirm_starts_fresh(app):
         assert owner.get(base).json()["last_session"][0]["name"] == "Second"
         token = owner.post(base + "/link").json()["token"]
         from fastapi.testclient import TestClient
+
         with TestClient(app) as viewer:
             result = viewer.get(base + "/overlay", headers={"Authorization": f"Bearer {token}"})
             assert "last_session" not in result.json()
+
+
+def test_saved_audio_settings_update_connected_overlay_without_replaying_pull(app):
+    from fastapi.testclient import TestClient
+
+    with member(app, "overlay-settings") as owner:
+        base = "/api/v1/presentation"
+        owner.post(
+            base + "/events", json={"id": "heard", "kind": "confirm", "card": {"name": "Card"}}
+        )
+        before = owner.get(base).json()
+        token = owner.post(base + "/link").json()["token"]
+        owner.put(
+            base + "/settings", json={**before["settings"], "audio": "overlay", "muted": True}
+        )
+        with TestClient(app) as viewer:
+            response = viewer.get(
+                base + "/overlay",
+                params={"after_revision": before["revision"]},
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            assert response.status_code == 200
+            changed = response.json()
+            assert changed["settings"]["muted"] is True
+            assert changed["settings"]["audio"] == "overlay"
+            assert changed["event"] is None
+            assert changed["cards"] == before["cards"]

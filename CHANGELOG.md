@@ -1,5 +1,12 @@
 # Changelog
 
+## OBS settings refresh — September 13, 2026
+
+- Notify connected overlays when presentation settings change, including mute, volume and audio destination.
+- Clear the previous event so a settings update does not replay an old pull or celebration.
+- Add a regression test for conditional overlay polling and preserved cards.
+- Physical-card, prolonged phone/tablet and actual OBS audio-routing acceptance remain pending.
+
 ## Sound library and session recovery — September 13, 2026
 
 - Offer 15 synthesized sounds plus Off for found, accepted, rejected, pack-complete and prize events, with Try buttons.
