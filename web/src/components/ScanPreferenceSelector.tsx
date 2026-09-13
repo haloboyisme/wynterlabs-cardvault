@@ -2,6 +2,9 @@ import type { CardSet } from "../lib/types";
 import { CATALOG_GAMES, setSelectionValue, setsForGame } from "../scanner/catalog-games";
 
 interface ScanPreferenceSelectorProps {
+  loading?: boolean;
+  error?: string;
+  onRetry?: () => void;
   restoreSetOnGameChange?: boolean;
   sets: CardSet[];
   preferredGame: string;
@@ -11,6 +14,7 @@ interface ScanPreferenceSelectorProps {
 }
 
 export function ScanPreferenceSelector({
+  loading = false, error = "", onRetry,
   restoreSetOnGameChange = false,
   sets,
   preferredGame,
@@ -43,16 +47,19 @@ export function ScanPreferenceSelector({
     <div className="scan-preference-field">
       <label htmlFor="scanner-preferred-set">Preferred set</label>
       <select
+        disabled={loading || Boolean(error)}
         id="scanner-preferred-set"
         value={preferredSet}
         onChange={(event) => onPreferredSetChange(event.target.value)}
       >
-        <option value="">Auto — all sets</option>
+        <option value="">{loading ? "Loading sets…" : "Auto — all sets"}</option>
         {availableSets.map((set) => <option key={set.id} value={setSelectionValue(set)}>
           {set.name} ({set.code.toUpperCase()})
         </option>)}
       </select>
     </div>
+    {error && <div role="alert">{error} <button type="button" onClick={onRetry}>Retry sets</button></div>}
+    {!loading && !error && availableSets.length === 0 && <p role="status">No imported sets are available for this game yet. Refresh its catalog in Admin.</p>}
     <small>Prioritizes likely matches while keeping other sets available for correction. Your last game and set are remembered for this account on this browser. Choose Auto — all sets to clear the set.</small>
     <details className="scanner-reading-help">
       <summary>Split, sideways, foil or promo card?</summary>

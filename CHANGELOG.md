@@ -1,5 +1,11 @@
 # Changelog
 
+## Scanner set-loading fix — after V2.7.5
+
+- Request the selected game or brand’s catalog sets and reload when it changes.
+- Show loading, retry and empty-catalog feedback instead of silently leaving only Auto.
+- Preserve remembered set selections and ignore responses from cancelled loads.
+
 ## Documentation follow-up — September 12, 2026
 
 - Refresh contributing and security guidance for the V2.7.5 release line.

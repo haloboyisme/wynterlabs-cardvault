@@ -38,17 +38,17 @@ export function buildCardSearch(params: CardSearchParams): string {
 
 export const getCatalogStatus = (signal?: AbortSignal) =>
   apiRequest<CatalogStatus>(`${API}/status`, { signal });
-export const getCatalogSets = (page = 1, signal?: AbortSignal) =>
-  apiRequest<SetPage>(`${API}/sets?page=${page}&page_size=200`, { signal });
-export async function getAllCatalogSets(signal?: AbortSignal, pageCeiling = 100) {
-  const first = await getCatalogSets(1, signal);
+export const getCatalogSets = (page = 1, signal?: AbortSignal, game = "") =>
+  apiRequest<SetPage>(`${API}/sets?page=${page}&page_size=200${game ? `&game=${encodeURIComponent(game.trim().toLowerCase())}` : ""}`, { signal });
+export async function getAllCatalogSets(signal?: AbortSignal, pageCeiling = 100, game = "") {
+  const first = await getCatalogSets(1, signal, game);
   if (!Number.isInteger(first.pages) || first.pages < 0 || first.pages > pageCeiling) {
     throw new Error("Catalog set page count is outside safe bounds.");
   }
   if (first.pages <= 1) return first;
   const remaining = await Promise.all(
     Array.from({ length: first.pages - 1 }, (_, index) =>
-      getCatalogSets(index + 2, signal),
+      getCatalogSets(index + 2, signal, game),
     ),
   );
   return { ...first, items: [first, ...remaining].flatMap((page) => page.items) };

@@ -118,3 +118,14 @@ it("keeps a selected game on every expanded oracle-printing request", async () =
   const url = new URL(String(fetchMock.mock.calls[0][0]), "https://local.test");
   expect(url.searchParams.get("game")).toBe("pokemon");
 });
+
+
+it("requests only the selected game's sets on every page", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = new URL(String(input), "https://local.test");
+    expect(url.searchParams.get("game")).toBe("pokemon");
+    return json({ items: [], page: Number(url.searchParams.get("page")), pages: 2 });
+  }));
+  await getAllCatalogSets(undefined, 100, "pokemon");
+  expect(fetch).toHaveBeenCalledTimes(2);
+});

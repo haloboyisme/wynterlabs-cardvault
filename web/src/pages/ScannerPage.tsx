@@ -74,6 +74,9 @@ export function ScannerPage() {
   const {status, user} = useAuth();
   const [mode, setMode] = useState<ScannerMode>("single");
   const [catalogSets, setCatalogSets] = useState<CardSet[]>([]);
+  const [setsLoading, setSetsLoading] = useState(true);
+  const [setsError, setSetsError] = useState("");
+  const [setsRetry, setSetsRetry] = useState(0);
   const {preferredGame, preferredSet, setPreferredGame, setPreferredSet} = useScanPreference(status === "authenticated" ? user?.id ?? "" : "", catalogSets);
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
@@ -103,13 +106,18 @@ export function ScannerPage() {
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
     const controller = new AbortController();
-    void getAllCatalogSets(controller.signal)
-      .then((page) => setCatalogSets(page.items))
+    setSetsLoading(true);
+    setSetsError("");
+    setCatalogSets([]);
+    void getAllCatalogSets(controller.signal, 100, preferredGame)
+      .then((page) => { if (!controller.signal.aborted) setCatalogSets(page.items); })
       .catch((reason) => {
-        if ((reason as Error).name !== "AbortError") setCatalogSets([]);
-      });
+        if (!controller.signal.aborted && (reason as Error).name !== "AbortError")
+          setSetsError("Sets could not be loaded. Please retry.");
+      })
+      .finally(() => { if (!controller.signal.aborted) setSetsLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [preferredGame, setsRetry]);
 
   const selectCandidate = (candidate: ScanCandidate) => {
     setSelectedId(candidate.printing_id);
@@ -318,7 +326,7 @@ export function ScannerPage() {
         preferredSetGame={preferredSetGame}
         preferredGame={preferredGame}
         topControls={<ScanModeToggle mode={mode} onChange={setMode}>
-          <ScanPreferenceSelector restoreSetOnGameChange
+          <ScanPreferenceSelector loading={setsLoading} error={setsError} onRetry={() => setSetsRetry(n => n + 1)} restoreSetOnGameChange
             sets={catalogSets}
             preferredGame={preferredGame}
             preferredSet={preferredSet}
@@ -337,7 +345,7 @@ export function ScannerPage() {
         preferredSetGame={preferredSetGame}
         preferredGame={preferredGame}
         topControls={<ScanModeToggle mode={mode} onChange={setMode}>
-          <ScanPreferenceSelector restoreSetOnGameChange
+          <ScanPreferenceSelector loading={setsLoading} error={setsError} onRetry={() => setSetsRetry(n => n + 1)} restoreSetOnGameChange
             sets={catalogSets}
             preferredGame={preferredGame}
             preferredSet={preferredSet}
@@ -361,7 +369,7 @@ export function ScannerPage() {
           <CardScanner
             topControls={<>
               <ScanModeToggle mode={mode} onChange={setMode}>
-                <ScanPreferenceSelector restoreSetOnGameChange
+                <ScanPreferenceSelector loading={setsLoading} error={setsError} onRetry={() => setSetsRetry(n => n + 1)} restoreSetOnGameChange
                   sets={catalogSets}
                   preferredGame={preferredGame}
                   preferredSet={preferredSet}
