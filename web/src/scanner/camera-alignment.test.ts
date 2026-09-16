@@ -40,3 +40,9 @@ describe("camera alignment state", () => {
     expect(rotateCameraOrientation(90, "right")).toBe(180);
   });
 });
+
+it("persists zoom-out and rejects values below the supported range", () => {
+  const zoomedOut = { orientation: 0 as const, straighten: 0, viewZoom: 0.5 };
+  expect(parseCameraAlignment(serializeCameraAlignment(zoomedOut))).toEqual(zoomedOut);
+  expect(parseCameraAlignment('{"orientation":0,"straighten":0,"viewZoom":0.45}')).toEqual(DEFAULT_CAMERA_ALIGNMENT);
+});

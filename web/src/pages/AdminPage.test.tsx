@@ -134,7 +134,7 @@ beforeEach(() => {
     if (path === "/api/v1/admin/catalog/schedule" && init?.method === "PUT") {
       return json({ ...catalogSchedule, ...JSON.parse(String(init.body)), next_run_at: "2026-09-03T01:30:00Z" });
     }
-    if (path === "/api/v1/admin/catalog/refresh") return json({ status: "complete", import_id: activeCatalog.import_id, imported_records: 116703, rejected_records: 0, skipped: false });
+    if (path === "/api/v1/admin/catalog/refresh?game=all") return json({ status: "complete", import_id: activeCatalog.import_id, imported_records: 116703, rejected_records: 0, skipped: false });
     if (path === "/api/v1/admin/trade-moderation/reports") return json([]);
     if (path === "/api/v1/admin/users" && (!init?.method || init.method === "GET")) return json(administrators);
     if (path === "/api/v1/admin/users" && init?.method === "POST") {
@@ -266,11 +266,11 @@ it("refreshes a selected game and shows per-game freshness", async () => {
   )).toBe(true));
 });
 
-it("uses the all-games refresh contract when requested", async () => {
+it("defaults to all supported games and refreshes all without changing the selection", async () => {
   const user = userEvent.setup();
   render(<AdminPage />);
   await screen.findByText(firstAdmin.email);
-  await user.selectOptions(screen.getByLabelText("Catalog game"), "all");
+  expect(screen.getByLabelText("Catalog game")).toHaveValue("all");
   await user.click(screen.getByRole("button", { name: /refresh card database/i }));
   await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([input, init]) =>
     String(input) === "/api/v1/admin/catalog/refresh?game=all" && init?.method === "POST",
@@ -382,7 +382,7 @@ it("keeps the newest catalog status when a pre-refresh load resolves last", asyn
       requests.push({ response, signal: init?.signal });
       return response.promise;
     }
-    if (path === "/api/v1/admin/catalog/refresh") {
+    if (path === "/api/v1/admin/catalog/refresh?game=all") {
       return json({ status: "complete", import_id: activeCatalog.import_id, imported_records: 200002, rejected_records: 0, skipped: false });
     }
     if (path === "/api/v1/admin/users") return json(administrators);
@@ -474,7 +474,7 @@ it("prevents duplicate refreshes, reports completion, and reloads status", async
     const path = requestPath(input);
     if (path === "/api/v1/admin/catalog/status") { statusCalls += 1; return json(catalogStatus); }
     if (path === "/api/v1/admin/users") return json(administrators);
-    if (path === "/api/v1/admin/catalog/refresh" && init?.method === "POST") {
+    if (path === "/api/v1/admin/catalog/refresh?game=all" && init?.method === "POST") {
       refreshCalls += 1;
       return new Promise<Response>((resolve) => { releaseRefresh = resolve; });
     }
@@ -506,7 +506,7 @@ it.each([
   vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
     const path = requestPath(input);
     if (path === "/api/v1/admin/catalog/status") return json(catalogStatus);
-    if (path === "/api/v1/admin/catalog/refresh") return response.clone();
+    if (path === "/api/v1/admin/catalog/refresh?game=all") return response.clone();
     if (path === "/api/v1/admin/trade-moderation/reports") return json([]);
     return errorJson("not_found", "Not found.", 404);
   });
@@ -526,7 +526,7 @@ it("announces a failed refresh as an alert without exposing server detail", asyn
   vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
     const path = requestPath(input);
     if (path === "/api/v1/admin/catalog/status") return json(catalogStatus);
-    if (path === "/api/v1/admin/catalog/refresh") {
+    if (path === "/api/v1/admin/catalog/refresh?game=all") {
       return errorJson("catalog_refresh_failed", "Internal database password leaked here.", 503);
     }
     if (path === "/api/v1/admin/trade-moderation/reports") return json([]);
@@ -618,4 +618,16 @@ it("renders controlled loading errors as alerts", async () => {
   render(<AdminPage />);
   expect(await screen.findByRole("alert")).toHaveTextContent(/could not load catalog status/i);
   expect(screen.queryByText(/sensitive internal detail/i)).not.toBeInTheDocument();
+});
+
+it("retries failed games without importing successful catalogs", async () => {
+  const fallback = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    if (requestPath(input).startsWith("/api/v1/admin/catalog/refresh")) return json({status:"complete",import_id:activeCatalog.import_id,imported_records:1,rejected_records:0,skipped:false});
+    return fallback(input, init);
+  });
+  const user = userEvent.setup(); render(<AdminPage/>);
+  await screen.findByText(firstAdmin.email);
+  await user.click(screen.getByRole("button", {name:/retry failed games/i}));
+  await waitFor(() => expect(vi.mocked(fetch).mock.calls.filter(([input,init]) => requestPath(input).includes("/catalog/refresh") && init?.method === "POST").map(([input])=>requestPath(input))).toEqual(["/api/v1/admin/catalog/refresh","/api/v1/admin/catalog/refresh?game=yugioh"]));
 });

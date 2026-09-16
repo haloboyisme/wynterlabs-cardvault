@@ -216,11 +216,12 @@ async def refresh_catalog(
             "catalog_refresh_busy",
             "A catalog refresh is already running.",
         )
-    if outcome.status == "complete":
+    if outcome.status in ("complete", "partial"):
         with suppress(Exception):
             await capture_collection_price_snapshots(request.app.state.session_factory)
     return CatalogRefreshOut(
         status=outcome.status,
+        failed_games=list(outcome.failed_games),
         import_id=outcome.import_id,
         imported_records=outcome.imported_records,
         rejected_records=outcome.rejected_records,

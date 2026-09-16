@@ -1,3 +1,5 @@
+import {BackgroundSettings} from "./BackgroundSettings";
+import {backgroundSettings} from "../lib/backgrounds";
 import type { CSSProperties } from "react";
 import type { BrandDesign } from "../lib/brand-design";
 
@@ -34,6 +36,7 @@ export function BrandDesignControls({ design, onChange, disabled, siteName, prod
       <div className="brand-preview-panels"><span>Scan your next card <b>→</b></span><span>Your collection <b>▤</b></span></div>
       <small>{design.footer_text}</small>
     </div>
+    <BackgroundSettings value={backgroundSettings(design.background)} onChange={background=>onChange({...design,background})} disabled={disabled}/>
     <fieldset disabled={disabled}><legend>Colors & character</legend><p>Site background is the default for System mode. Personal themes, text size, contrast, and reduced motion remain available in Account.</p>
       <div className="brand-design-grid">
         <label>Primary brand color<input type="color" value={design.accent} onChange={e => update("accent", e.target.value)} /></label>

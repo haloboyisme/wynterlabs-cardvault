@@ -93,7 +93,7 @@ export function captureGuidedCardFrame(
     || !finitePositive(options.guideRect.height)
     || !Number.isFinite(angle)
     || !Number.isFinite(viewZoom)
-    || viewZoom < 1
+    || viewZoom < 0.5
     || viewZoom > 2
   ) {
     throw new Error("The live camera guide is not ready.");
@@ -245,9 +245,10 @@ export async function startCardCamera(deviceId?: string): Promise<MediaStream> {
   }
   return navigator.mediaDevices.getUserMedia({
     audio: false,
-    video: deviceId
-      ? { deviceId: { exact: deviceId } }
-      : { facingMode: { ideal: "environment" } },
+    video: {
+      ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } }),
+      width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 },
+    },
   });
 }
 

@@ -1,3 +1,4 @@
+import {PersonalBackground} from "../components/WorkspaceBackground";
 import { WorkspaceEffectsSettings } from "../components/WorkspaceEffects";
 import { EXTRA_BASE_MODES } from "../lib/base-modes";
 import "../styles/account.css";
@@ -230,7 +231,7 @@ export function AccountPage() {
             <label><input type="radio" name="appearance-complexity" checked={appearance.complexity === "simple"} onChange={() => updateAppearance({ ...appearance, complexity: "simple" })} />Simple workspace</label>
             <label><input type="radio" name="appearance-complexity" checked={appearance.complexity === "advanced"} onChange={() => updateAppearance({ ...appearance, complexity: "advanced" })} />Advanced workspace</label>
           </fieldset>
-          <WorkspaceEffectsSettings />
+          <PersonalBackground/><WorkspaceEffectsSettings />
           <fieldset className="theme-options">
             <legend>Base mode</legend>
             {THEME_OPTIONS.map((option) => (

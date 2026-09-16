@@ -77,13 +77,13 @@ describe("private one-card capture", () => {
     expect(await startCardCamera()).toBe(stream);
     expect(getUserMedia).toHaveBeenCalledWith({
       audio: false,
-      video: { facingMode: { ideal: "environment" } },
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
     });
 
     await startCardCamera("usb-id");
     expect(getUserMedia).toHaveBeenLastCalledWith({
       audio: false,
-      video: { deviceId: { exact: "usb-id" } },
+      video: { deviceId: { exact: "usb-id" }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
     });
   });
 
@@ -557,7 +557,7 @@ describe("guided card capture", () => {
     expect(outputContext.drawImage).toHaveBeenCalledTimes(1);
   });
 
-  it("renders arbitrary alignment and view zoom before cropping the visible guide", () => {
+  it.each([0.5, 0.75, 1.25])("renders alignment and %s view zoom before cropping the visible guide", (viewZoom) => {
     const stageContext = {
       drawImage: vi.fn(),
       translate: vi.fn(),
@@ -578,12 +578,12 @@ describe("guided card capture", () => {
       viewportRect: { x: 0, y: 0, width: 1024, height: 576 },
       guideRect: { x: 358, y: 29, width: 308, height: 518 },
       angle: 35,
-      viewZoom: 1.25,
+      viewZoom,
     });
 
     expect(stageContext.translate).toHaveBeenCalledWith(800, 450);
     expect(stageContext.rotate).toHaveBeenCalledWith(35 * Math.PI / 180);
-    expect(stageContext.scale).toHaveBeenCalledWith(1.25, 1.25);
+    expect(stageContext.scale).toHaveBeenCalledWith(viewZoom, viewZoom);
     expect(stageContext.drawImage).toHaveBeenCalledWith(
       video,
       -800,
@@ -834,9 +834,9 @@ describe("guided live viewfinder", () => {
     const viewfinder = screen.getByRole("region", { name: "Card viewfinder" });
     const guide = screen.getByRole("img", { name: "Card framing guide" });
     fireEvent.change(screen.getByLabelText("Fine straighten"), { target: { value: "-35" } });
-    fireEvent.change(screen.getByLabelText("View zoom"), { target: { value: "1.25" } });
+    fireEvent.change(screen.getByLabelText("View zoom"), { target: { value: "0.75" } });
 
-    expect(video).toHaveStyle({ transform: "rotate(-35deg) scale(1.25)" });
+    expect(video).toHaveStyle({ transform: "rotate(-35deg) scale(0.75)" });
     vi.spyOn(viewfinder, "getBoundingClientRect").mockReturnValue({
       x: 10, y: 20, width: 800, height: 450,
     } as DOMRect);
@@ -847,12 +847,12 @@ describe("guided live viewfinder", () => {
 
     expect(captureFrame).toHaveBeenCalledWith(video, {
       viewportRect: { x: 10, y: 20, width: 800, height: 450 },
-      guideRect: { x: 275, y: 35, width: 270, height: 420 },
+      guideRect: { x: 264.2, y: 18.2, width: 291.6, height: 453.6 },
       angle: -35,
-      viewZoom: 1.25,
+      viewZoom: 0.75,
     });
     expect(localStorage.getItem("wynterlabs.cards.camera-alignment.v2")).toBe(
-      '{"orientation":0,"straighten":-35,"viewZoom":1.25}',
+      '{"orientation":0,"straighten":-35,"viewZoom":0.75}',
     );
   });
 
@@ -1046,7 +1046,7 @@ describe("guided live viewfinder", () => {
 
     expect(captureFrame).toHaveBeenCalledWith(video, {
       viewportRect: { x: 10, y: 20, width: 800, height: 450 },
-      guideRect: { x: 275, y: 35, width: 270, height: 420 },
+      guideRect: { x: 264.2, y: 18.2, width: 291.6, height: 453.6 },
       angle: 0,
       viewZoom: 1,
     });

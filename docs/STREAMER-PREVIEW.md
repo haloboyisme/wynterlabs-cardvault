@@ -77,3 +77,8 @@ Effects use bounded CSS particles rather than a 3D engine. Unchanged OBS polls
 return an empty response; hidden tabs poll less often. Account-owned settings,
 pack data and a bounded custom card back are stored on the installation.
 The overlay exposes the selected presentation only. Never publish an OBS link.
+
+
+## V2.7.7 update
+
+See [V2.7.7 release notes](v2.7.7-release.md) for background uploads and static fallbacks, account/browser scope, motion speed and interface cues, larger recap export behavior and the exact OBS/device verification limits.

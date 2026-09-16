@@ -1,13 +1,15 @@
 import asyncio
+import base64
+import time
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from mfa_helpers import enroll_current_user
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 
+from app.mfa import totp_at
 from app.catalog.media import CachedImage
 from app.models import CardFace, CardPrinting, CardSet, CatalogImport, OracleCard, User
 from app.routers.catalog import (
@@ -44,9 +46,9 @@ def _sign_in(client: TestClient, secret: str) -> None:
     response = client.post(
         "/api/v1/setup/owner",
         json={
-            "email": "member-67dcd60ec598@example.com",
+            "email": "catalog-owner@example.com",
             "display_name": "Wynter Owner",
-            "password": "test-only-credential-f0bb2c82b013",
+            "password": "TestOnly-Catalog-Owner-123!",
         },
         headers={"X-Bootstrap-Secret": secret},
     )
@@ -54,12 +56,16 @@ def _sign_in(client: TestClient, secret: str) -> None:
     response = client.post(
         "/api/v1/auth/login",
         json={
-            "email": "member-67dcd60ec598@example.com",
-            "password": "test-only-credential-f0bb2c82b013",
+            "email": "catalog-owner@example.com",
+            "password": "TestOnly-Catalog-Owner-123!",
         },
     )
     assert response.status_code == 200
-    enroll_current_user(client, "test-only-credential-f0bb2c82b013")
+    enrollment = client.post("/api/v1/account/mfa/enrollment", json={"current_password": "TestOnly-Catalog-Owner-123!"})
+    assert enrollment.status_code == 200
+    secret = enrollment.json()["secret"]
+    code = totp_at(base64.b32decode(secret + "=" * (-len(secret) % 8)), int(time.time()))
+    assert client.post("/api/v1/account/mfa/enrollment/confirm", json={"code": code}).status_code == 200
 
 
 def test_catalog_media_requires_authentication(client: TestClient) -> None:

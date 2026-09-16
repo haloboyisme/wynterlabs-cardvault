@@ -1,3 +1,4 @@
+import {WorkspaceBackground} from "./WorkspaceBackground";
 import { ScanPrizeFeedback } from "../presentation/rewards";
 import { WorkspaceEffects } from "./WorkspaceEffects";
 import { brandDesign } from "../lib/brand-design";
@@ -90,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="site-frame">
-      <WorkspaceEffects /><ScanPrizeFeedback />
+      <WorkspaceBackground/><WorkspaceEffects /><ScanPrizeFeedback />
       <a className="skip-link" href="#main">Skip to content</a>
       <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
         <div className="header-topline">

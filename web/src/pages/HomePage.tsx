@@ -36,7 +36,8 @@ const quickActions = [
 ];
 
 const updates = [
-  ["V2.7.5", "Streamer preview and pack video", "Choose seven reveals, custom card backs, prize jingles, a private OBS pop-out, and a replayable recap with local video export. Open Streamer preview on Scan to begin."],
+  ["V2.7.7", "Your background, better refreshes", "Layer PNG, JPEG or GIF uploads over three original backgrounds. Choose interface cues and motion speed, restore shared branding, retry failed catalogs and export larger recaps using less memory per card."],
+  ["V2.7.5", "Streamer preview and pack video", "Choose instant, fade or flip reveals, account sound/mute settings, a private OBS pop-out, and a replayable recap with local video export. Open Streamer preview on Scan to begin."],
   ["Available", "Difficult-card matching refinements", "Either half of a split card can match. Ambiguous printings require a choice, stalled searches can be retried, and Scan includes foil/promo guidance."],
   ["V2.6", "Remembered scanning set", "Return to Scan with your last game and preferred set restored for this account and browser. Each game remembers its own set; Auto clears it."],
   ["Available", "Custom Card Import", "Add missing cards privately, with optional images, set details and values. Use them in collections, decks, imports and exports."],
@@ -45,8 +46,8 @@ const updates = [
 ];
 
 const roadmap = [
-  ["V2.7.5", "Real-card scanner acceptance", "Split-card matching, ambiguity handling and search recovery are improved. Check your difficult Room, foil and promo cards and long phone/tablet sessions; further tuning follows observed failures."],
-  ["V2.8", "Real feeder testing", "Physical testing and public-release review are pending. The private feeder prototype is excluded from this release."],
+  ["Follow-up", "Real-card scanner acceptance", "Split-card matching, ambiguity handling and search recovery are improved. Check your difficult Room, foil and promo cards and long phone/tablet sessions; further tuning follows observed failures."],
+  ["V2.8", "Real feeder testing", "Physical testing pending: connect and validate a real feeder. This public release includes simulation; private Hardware Lab and firmware experiments are not included."],
   ["V3", "Solo tabletop and saved decks", "Planned: Magic and Pokémon camera layouts, saved-deck selection, play zones, counters and turn notes. Start with private solo practice."],
   ["V3.5", "Wireless feeders and Bluetooth", "Deferred: account-owned Wi-Fi and Bluetooth connections, one controlling session, reconnect and revoke controls. Validate phone and computer compatibility first."],
   ["Later", "Gameplay tracking and shared displays", "Explore deliberate scans or a second camera, friend/tournament displays, TV/YouTube layouts and companion tablets after solo play works."],
@@ -64,7 +65,7 @@ export function HomePage() {
     if (!signedIn) { setActivityState("ready"); return; }
     const controller = new AbortController();
     void getCommunityActivity(controller.signal).then((result) => {
-      setActivity(result.items); setActivityState("ready");
+      setActivity(Array.isArray(result.items) ? result.items : []); setActivityState("ready");
     }).catch(() => { if (!controller.signal.aborted) setActivityState("unavailable"); });
     return () => controller.abort();
   }, [signedIn]);
@@ -138,7 +139,7 @@ export function HomePage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Release notes</p>
-          <h2>V2.7.5 is on this server.</h2>
+          <h2>V2.7.7 is on this server.</h2>
           </div>
           <p>Recent improvements are kept short and useful so members can see what changed at a glance.</p>
         </div>
@@ -172,7 +173,7 @@ export function HomePage() {
         <div className="home-roadmap-heading">
           <p className="eyebrow">Roadmap</p>
           <h2>What’s next for CardVault.</h2>
-          <p>Remaining work only · updated September 12, 2026. Version targets are plans, not release dates. Changes are tested here first; GitHub publication requires your explicit request.</p>
+          <p>Remaining work only · updated September 16, 2026. Version targets are plans, not release dates. See the GitHub release notes for completed features and device-testing limits.</p>
         </div>
         <ol className="home-roadmap-list">
           {roadmap.map(([status, title, copy]) => (

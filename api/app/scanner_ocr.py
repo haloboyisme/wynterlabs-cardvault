@@ -220,15 +220,25 @@ class RapidCardOcr:
         height, width = image.shape[:2]
         if width * height > 20_000_000:
             raise ScannerOcrError("The uploaded image dimensions are too large.")
-        candidates = [
-            image,
-            cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE),
-            cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE),
-        ]
+
+        def candidates():
+            # Generate only on demand so ordinary upright scans stay one pass.
+            yield image
+            yield cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+            yield cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            yield np.ascontiguousarray(np.rot90(image, 2))
+            # One bounded recovery pass for uneven illumination and soft edges.
+            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+            light, a, b = cv2.split(lab)
+            light = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(light)
+            balanced = cv2.cvtColor(cv2.merge((light, a, b)), cv2.COLOR_LAB2BGR)
+            soft = cv2.GaussianBlur(balanced, (0, 0), 1.0)
+            yield cv2.addWeighted(balanced, 1.4, soft, -0.4, 0)
+
         best: ScannerOcrHints | None = None
         with self._lock:
             engine = self._load_engine()
-            for candidate in candidates:
+            for candidate in candidates():
                 candidate_height, candidate_width = candidate.shape[:2]
                 result = engine(candidate)
                 texts = result.txts if result.txts is not None else []

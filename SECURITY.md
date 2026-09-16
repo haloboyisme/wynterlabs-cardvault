@@ -56,3 +56,7 @@ Application tests are not a security audit. Browser/OBS behavior, third-party
 catalog providers and the host operating system have their own security and
 update requirements. The private experimental hardware integration is excluded
 from this public release.
+
+## Background uploads (V2.7.7)
+
+Shared background uploads require existing branding-administration permission. Only bounded embedded PNG/JPEG/GIF data is accepted; SVG and remote tracking URLs are rejected. GIFs require a static fallback. Personal backgrounds stay in browser storage scoped by account. Do not upload secrets or private artwork to shared branding: shared design is served to site visitors.

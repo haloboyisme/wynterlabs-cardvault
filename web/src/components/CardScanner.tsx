@@ -1,3 +1,4 @@
+import { captureQualityMessage } from "../scanner/capture-quality";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -172,6 +173,7 @@ export function CardScanner({
   const [choosingConsent, setChoosingConsent] = useState(false);
   const [cameraStatus, setCameraStatus] = useState("");
   const [captureStatus, setCaptureStatus] = useState("");
+  const [qualityMessage, setQualityMessage] = useState("");
   const [controls, setControls] = useState<CameraControlState>(emptyControls);
   const [controlBusy, setControlBusy] = useState(false);
   const [alignment, setAlignment] = useState<CameraAlignment>(readAlignment);
@@ -258,6 +260,7 @@ export function CardScanner({
     activeOcrRequest.current = request;
     setBusy(true);
     setCaptureStatus("Reading card and finding the exact printing…");
+    setQualityMessage(captureQualityMessage(canvas));
     setError("");
     setProgress(0);
     let resultPreview = "";
@@ -471,10 +474,10 @@ export function CardScanner({
         height: viewportBounds.height,
       },
       guideRect: {
-        x: guideBounds.x,
-        y: guideBounds.y,
-        width: guideBounds.width,
-        height: guideBounds.height,
+        x: guideBounds.x - guideBounds.width * .04,
+        y: guideBounds.y - guideBounds.height * .04,
+        width: guideBounds.width * 1.08,
+        height: guideBounds.height * 1.08,
       },
       angle: effectiveCameraAngle(alignment),
       viewZoom: alignment.viewZoom,
@@ -636,6 +639,7 @@ export function CardScanner({
 
   return (
     <section className="card-scanner" aria-labelledby="scanner-capture-title">
+      {qualityMessage && <p className="scanner-live-status" role="status">{qualityMessage}</p>}
       <h2 id="scanner-capture-title">{continuous ? "Scan multiple cards" : "Scan one card"}</h2>
       <p>Your photos are processed only by this browser and your private WynterLabs server, then discarded.</p>
       <section className="scanner-control-bar scanner-capture-control-bar" aria-label="Scanner controls">
@@ -794,7 +798,8 @@ export function CardScanner({
               View zoom
               <input
                 type="range"
-                min={1}
+                aria-label="View zoom"
+                min={0.5}
                 max={2}
                 step={0.05}
                 value={alignment.viewZoom}
@@ -804,6 +809,7 @@ export function CardScanner({
                 }))}
               />
               <output>{alignment.viewZoom.toFixed(2)}×</output>
+              <small>Zoom out ← · 1× normal · → Zoom in</small>
             </label>
           </fieldset>
           <section ref={viewfinderRef} className="scanner-viewfinder" aria-label="Card viewfinder">

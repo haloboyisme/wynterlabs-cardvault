@@ -222,7 +222,9 @@ async def event(
     no_cache(response)
     row = await owned(db, auth)
     doc = copy.deepcopy(row.document)
-    if body.id in doc["seen"]:
+    if body.id in doc["seen"] or (
+        body.kind == "confirm" and any(card["id"] == body.id for card in doc["cards"])
+    ):
         await db.commit()
         return public(doc)
     if body.kind == "found":
@@ -236,11 +238,11 @@ async def event(
             doc["finished"] = False
             row.token_hash = None
             row.token_expires = None
-        if body.card is None or len(doc["cards"]) >= 100:
+        if body.card is None:
             raise AppError(
                 422,
-                "pack_limit",
-                "A pack supports up to 100 saved pulls. Finish it and start a new pack.",
+                "preview_card_required",
+                "A confirmed card is required.",
             )
         doc["cards"].append({**body.card.model_dump(), "id": body.id})
         doc["preview"] = None

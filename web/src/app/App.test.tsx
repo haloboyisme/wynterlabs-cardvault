@@ -78,7 +78,7 @@ it("renders the WynterLabs product homepage", async () => {
   expect(
     screen.getByRole("heading", { name: /scan it\. sort it\. own your collection/i }),
   ).toBeVisible();
-  expect(document.querySelector(".hero-lede")).toHaveTextContent(/collection/i);
+  expect(screen.getByText(/Your collection. Beautifully in focus/i)).toBeVisible();
   const heroActions = within(document.querySelector(".hero-actions") as HTMLElement);
   expect(heroActions.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   expect(heroActions.getByRole("link", { name: /see what is new/i })).toHaveAttribute("href", "#whats-new");
@@ -86,7 +86,7 @@ it("renders the WynterLabs product homepage", async () => {
   const quickActions = screen.getByRole("navigation", { name: /explore wynterlabs cardvault/i });
   expect(within(quickActions).getByRole("link", { name: /browse cards/i })).toHaveAttribute("href", "/cards");
   expect(within(quickActions).getByRole("link", { name: /scan cards/i })).toHaveAttribute("href", "/scan");
-  expect(screen.getByRole("heading", { name: /V2.7.5 is on this server/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: /V2.7.7 is on this server/i })).toBeVisible();
   expect(screen.getByRole("heading", { name: /What’s next for CardVault/i })).toBeVisible();
   expect(screen.queryByText("Private trading")).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 2/i)).not.toBeInTheDocument();
@@ -182,16 +182,13 @@ it("reveals the hidden header from a touch at the top edge", async () => {
 
 it("gives a signed-in member direct Home shortcuts and identity feedback", async () => {
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
-    if (String(input).endsWith("/api/v1/community/activity")) {
-      return new Response(JSON.stringify({ items: [] }), { headers: { "content-type": "application/json" } });
-    }
     if (String(input).endsWith("/api/v1/auth/me")) {
       return new Response(JSON.stringify({
         id: "member-id", email: "member-ea28fda2ddaf@example.invalid", display_name: "Winter Collector",
         role: "member", created_at: "2026-08-20T00:00:00Z",
       }), { status: 200, headers: { "content-type": "application/json" } });
     }
-    return new Response(JSON.stringify({}), { status: 200, headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({items: []}), { status: 200, headers: { "content-type": "application/json" } });
   }));
 
   renderAt("/");

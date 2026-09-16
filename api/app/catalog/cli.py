@@ -38,11 +38,12 @@ async def run(
                     file=sys.stderr,
                 )
                 return 1
-            if outcome.status == "complete":
+            if outcome.status in ("complete", "partial"):
                 with suppress(Exception):
                     await capture_collection_price_snapshots(session_factory)
             payload = {
                 "status": outcome.status,
+                "failed_games": list(outcome.failed_games),
                 "import_id": str(outcome.import_id) if outcome.import_id else None,
                 "imported_records": outcome.imported_records,
                 "rejected_records": outcome.rejected_records,
@@ -51,7 +52,7 @@ async def run(
         else:
             payload = await read_catalog_status(session_factory)
         print(json.dumps(payload, sort_keys=True))
-        return 0
+        return 1 if command == "refresh" and outcome.failed_games else 0
     finally:
         if engine is not None:
             await engine.dispose()

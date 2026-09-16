@@ -209,3 +209,44 @@ def test_private_ocr_retries_a_sideways_room_card_only_after_upright_text_fails(
     assert hints.name == "Surgical Suite"
     assert hints.set == "dsk"
     assert hints.collector == "34"
+
+
+@pytest.mark.parametrize("success_pass", [1, 4, 5, None])
+def test_recovery_passes_are_lazy_and_bounded(monkeypatch, success_pass):
+    image = np.arange(200 * 100 * 3, dtype=np.uint8).reshape((200, 100, 3))
+    enhanced = np.full_like(image, 88)
+    fake_cv2 = SimpleNamespace(
+        IMREAD_COLOR=1,
+        ROTATE_90_CLOCKWISE=0,
+        ROTATE_90_COUNTERCLOCKWISE=1,
+        COLOR_BGR2LAB=2,
+        COLOR_LAB2BGR=3,
+        imdecode=lambda *_args: image,
+        rotate=lambda candidate, direction: np.rot90(candidate, 1 if direction else -1),
+        cvtColor=lambda candidate, _code: candidate,
+        split=lambda candidate: tuple(candidate[:, :, i] for i in range(3)),
+        createCLAHE=lambda **_kwargs: SimpleNamespace(apply=lambda channel: channel),
+        merge=lambda channels: np.stack(channels, axis=2),
+        GaussianBlur=lambda candidate, *_args: candidate,
+        addWeighted=lambda *_args: enhanced,
+    )
+    monkeypatch.setitem(sys.modules, "cv2", fake_cv2)
+    calls = []
+
+    def engine(candidate):
+        calls.append(candidate)
+        if len(calls) == success_pass:
+            return SimpleNamespace(
+                txts=["Lightning Bolt"], scores=[0.99], boxes=[[[5, 5], [90, 5], [90, 20], [5, 20]]]
+            )
+        return SimpleNamespace(txts=[], scores=[], boxes=[])
+
+    service = RapidCardOcr()
+    service._engine = engine
+    hints = service.recognize(b"test")
+    assert len(calls) == (success_pass or 5)
+    assert hints.name == ("Lightning Bolt" if success_pass else "")
+    if len(calls) >= 4:
+        np.testing.assert_array_equal(calls[3], np.rot90(image, 2))
+    if len(calls) == 5:
+        np.testing.assert_array_equal(calls[4], enhanced)

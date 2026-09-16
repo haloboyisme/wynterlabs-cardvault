@@ -108,6 +108,7 @@ class ImportOutcome:
     imported_records: int
     rejected_records: int
     skipped: bool
+    failed_games: tuple[str, ...] = ()
 
 
 class CatalogValidationError(ValueError):
@@ -414,13 +415,21 @@ class CatalogImporter:
             if not acquired:
                 return ImportOutcome("busy", None, 0, 0, True)
             if requested == "all":
-                outcomes = [await self._refresh_locked(key) for key in SUPPORTED_GAME_KEYS]
+                outcomes = []
+                failures = []
+                for key in SUPPORTED_GAME_KEYS:
+                    try:
+                        outcomes.append(await self._refresh_locked(key))
+                    except Exception:
+                        failures.append(key)
+                # Independent catalogs can complete even when one provider fails.
                 return ImportOutcome(
-                    "complete",
+                    "partial" if failures else "complete",
                     None,
                     sum(outcome.imported_records for outcome in outcomes),
                     sum(outcome.rejected_records for outcome in outcomes),
                     False,
+                    tuple(failures),
                 )
             return await self._refresh_locked(requested)
 
@@ -468,10 +477,7 @@ class CatalogImporter:
             from app.catalog.tcgjson import TcgJsonClient, catalog_url, normalize_tcgjson_card
 
             provider = self.providers.get(game) or TcgJsonClient(self.settings, game)
-
-            def normalizer(record):
-                return normalize_tcgjson_card(record, game)
-
+            normalizer = lambda record: normalize_tcgjson_card(record, game)
         metadata = BulkMetadata(
             uuid.uuid5(uuid.NAMESPACE_URL, f"wynterlabs:catalog:{game}"),
             datetime.now(UTC),
@@ -702,6 +708,18 @@ class CatalogImporter:
                 )
             ).all()
         }
+        # Providers sometimes reuse an abbreviation for distinct set identities.
+        # Reserve existing codes before updates so older saved set filters stay stable.
+        code_owners = {
+            code: identity
+            for code, identity in (
+                await session.execute(
+                    select(CardSet.code_normalized, CardSet.scryfall_id).where(
+                        CardSet.game == item.game
+                    )
+                )
+            ).all()
+        }
         affected_printing_ids: list[uuid.UUID] = []
         face_rows: list[CardFace] = []
 
@@ -716,6 +734,23 @@ class CatalogImporter:
                 sets[card.card_set.scryfall_id] = set_row
                 session.add(set_row)
             self._update_set(set_row, card.card_set, item.id)
+            base_code = set_row.code
+            owner = code_owners.get(set_row.code_normalized)
+            if owner is not None and owner != set_row.scryfall_id:
+                attempt = 0
+                while True:
+                    suffix = hashlib.sha256(
+                        f"{set_row.scryfall_id}:{attempt}".encode()
+                    ).hexdigest()[:8]
+                    candidate = f"{base_code[:7]}-{suffix}"
+                    owner = code_owners.get(candidate.casefold())
+                    if owner is None or owner == set_row.scryfall_id:
+                        set_row.code = candidate
+                        set_row.code_normalized = candidate.casefold()
+                        break
+                    attempt += 1
+            code_owners[set_row.code_normalized] = set_row.scryfall_id
+
             oracle_row = oracles.get(card.oracle.scryfall_id)
             oracle_was_new = oracle_row is None
             if oracle_row is None:

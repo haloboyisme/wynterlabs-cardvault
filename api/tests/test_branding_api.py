@@ -5,10 +5,10 @@ from collections.abc import Iterator
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from test_admin_api import _authenticated_client
 
-from app.branding_schemas import BrandDesign
 from app.models import Role
+from app.branding_schemas import BrandDesign
+from test_admin_api import _authenticated_client
 
 OWNER_ID = uuid.UUID("55555555-5555-5555-5555-555555555555")
 ADMIN_ID = uuid.UUID("66666666-6666-6666-6666-666666666666")
@@ -358,3 +358,18 @@ def test_member_cannot_change_design(member_client):
         ).status_code
         == 403
     )
+
+
+def test_background_formats_and_restore(owner_client):
+    png = "data:image/png;base64," + base64.b64encode(
+        b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + (1).to_bytes(4,"big") * 2
+    ).decode()
+    gif = "data:image/gif;base64," + base64.b64encode(b"GIF89a\x01\x00\x01\x00").decode()
+    background = {"preset":"magic", "upload":gif, "still":png, "opacity":.4}
+    response = owner_client.put("/api/v1/admin/branding", json=_branding_payload(design={"background":background}))
+    assert response.status_code == 200
+    assert owner_client.get("/api/v1/branding").json()["design"]["background"]["upload"] == gif
+    assert owner_client.post("/api/v1/admin/branding/reset").status_code == 200
+    assert owner_client.get("/api/v1/branding").json()["design"]["background"]["upload"] == ""
+    for invalid in [{"upload":gif}, {"upload":"data:image/svg+xml;base64,PHN2Zz4="}, {"opacity":2}, {"upload":png,"still":gif}]:
+        assert owner_client.put("/api/v1/admin/branding",json=_branding_payload(design={"background":invalid})).status_code == 422

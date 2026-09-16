@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.7.7 — backgrounds, catalog recovery and scanner polish
+
+- Add three original still backgrounds and bounded PNG/JPEG/GIF uploads, preset layering, personal account/browser choices and shared admin branding. Restore defaults includes backgrounds.
+- Add adjustable ambient speed and soft/glass/retro interface cues; pause animated uploads when hidden, scanning or in reduced-motion/low-power mode.
+- Show per-game catalog attempts and retry only failed games; continue all-game imports after provider failures and avoid duplicate Digimon set-code collisions. Reduce catalog-status reads to two queries.
+- Improve camera framing/quality guidance, zoom out/in and lazy rotation/contrast OCR retries. Remove recap card-count caps, retain previous-session recovery and bound export image resolution/concurrency.
+- Reconcile current docs and roadmap. V2.7.6 planned scope is delivered in this release.
+- Controlled 108-card browser video export and four-cue OBS recording passed. Physical missed-card/iPhone and long-session acceptance remains pending; see [release evidence](docs/v2.7.7-release.md).
+
 ## OBS settings refresh — September 13, 2026
 
 - Notify connected overlays when presentation settings change, including mute, volume and audio destination.

@@ -26,7 +26,7 @@ const isAlignment = (value: unknown): value is CameraAlignment => {
     && straighten >= -45
     && straighten <= 45
     && Number.isFinite(viewZoom)
-    && viewZoom >= 1
+    && viewZoom >= 0.5
     && viewZoom <= 2
     && Math.abs(viewZoom * 20 - Math.round(viewZoom * 20)) < 1e-8;
 };

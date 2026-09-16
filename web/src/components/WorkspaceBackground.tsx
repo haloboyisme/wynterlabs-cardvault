@@ -1,0 +1,16 @@
+import {useEffect,useState} from "react";
+import {useLocation} from "react-router-dom";
+import {useBranding} from "../app/branding";
+import {useAuth} from "../app/auth";
+import {BackgroundSettings} from "./BackgroundSettings";
+import {BACKGROUNDS,backgroundSettings,type BackgroundSettings as Value} from "../lib/backgrounds";
+import {readEffects} from "../lib/workspace-effects";
+const key=(id?:string)=>`wynterlabs.background.v277.${id??"guest"}`;
+function read(id?:string):Value|null{try{const value=localStorage.getItem(key(id));return value?backgroundSettings(JSON.parse(value)):null;}catch{return null;}}
+export function PersonalBackground(){const{user}=useAuth();const{branding}=useBranding();const [value,setValue]=useState(()=>read(user?.id));const[error,setError]=useState("");useEffect(()=>setValue(read(user?.id)),[user?.id]);function save(next:Value|null){try{if(next)localStorage.setItem(key(user?.id),JSON.stringify(next));else localStorage.removeItem(key(user?.id));setValue(next);setError("");window.dispatchEvent(new Event("workspace-background"));}catch{setError("Browser storage is full. Remove the upload or choose a smaller file.");}}return <section><p>Personal background · saved for this account in this browser.</p><BackgroundSettings value={value??backgroundSettings(branding.design?.background)} onChange={save}/><button type="button" onClick={()=>save(null)}>Use site background</button>{error&&<p role="alert">{error}</p>}</section>;}
+export function WorkspaceBackground(){const{user}=useAuth();const{branding}=useBranding();const location=useLocation();const [personal,setPersonal]=useState(()=>read(user?.id));const[effects,setEffects]=useState(readEffects);const[paused,setPaused]=useState(true);
+ useEffect(()=>{const media=window.matchMedia?.("(prefers-reduced-motion: reduce)");const update=()=>{setEffects(readEffects());setPaused(document.hidden||!!media?.matches||document.documentElement.dataset.motion==="reduced");};const bg=()=>setPersonal(read(user?.id));bg();update();window.addEventListener("workspace-background",bg);window.addEventListener("storage",bg);window.addEventListener("workspace-effects",update);document.addEventListener("visibilitychange",update);media?.addEventListener?.("change",update);const observer=new MutationObserver(update);observer.observe(document.documentElement,{attributes:true,attributeFilter:["data-motion"]});return()=>{window.removeEventListener("workspace-background",bg);window.removeEventListener("storage",bg);window.removeEventListener("workspace-effects",update);document.removeEventListener("visibilitychange",update);media?.removeEventListener?.("change",update);observer.disconnect();};},[user?.id]);
+ const v=personal??backgroundSettings(branding.design?.background);const preset=BACKGROUNDS.find(b=>b.id===v.preset)?.image;const animated=v.upload.startsWith("data:image/gif");const src=animated&&(paused||effects.lowPower||!effects.motion||location.pathname.startsWith("/scan"))?v.still:v.upload;
+ if(location.pathname.startsWith("/overlay")||(!preset&&!src))return null;
+ const style={objectFit:v.size as "cover"|"contain",objectPosition:v.position};return <div className="workspace-background" aria-hidden="true" style={{opacity:v.opacity}}>{preset&&<img src={preset} alt="" style={style}/ >}{src&&<img src={src} alt="" style={style}/>}</div>;
+}

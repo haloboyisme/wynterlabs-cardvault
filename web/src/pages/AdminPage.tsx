@@ -296,8 +296,10 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [administratorsLoaded, setAdministratorsLoaded] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [failedGames, setFailedGames] = useState<string[]>([]);
+  const [retrying, setRetrying] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshGame, setRefreshGame] = useState("mtg");
+  const [refreshGame, setRefreshGame] = useState("all");
   const [refreshMessage, setRefreshMessage] = useState("");
   const [refreshFailed, setRefreshFailed] = useState(false);
   const refreshOpen = useRef(false);
@@ -376,15 +378,38 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
 
   const advanced = readAppearance().complexity === "advanced";
 
-  async function refreshCatalog() {
+  useEffect(() => {
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      if (!document.hidden) await loadCatalog();
+      if (!stopped) timer = setTimeout(poll, refreshing ? 4000 : 15000);
+    };
+    timer = setTimeout(poll, refreshing ? 1000 : 15000);
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [refreshing, loadCatalog]);
+
+  const failedTargets = [...new Set([...failedGames, ...Object.entries(catalog?.games ?? {}).filter(([,v]) => v?.latest_attempt?.status === "failed").map(([game]) => game)])];
+  async function retryFailed() {
+    if (refreshOpen.current || retrying) return;
+    setRetrying(true);
+    for (const game of failedTargets) await refreshCatalog(game);
+    setRetrying(false);
+  }
+
+  async function refreshCatalog(selected = refreshGame) {
     if (refreshOpen.current) return;
     refreshOpen.current = true;
     setRefreshing(true);
     setRefreshFailed(false);
     setRefreshMessage("Refreshing card database. This can take several minutes.");
     try {
-      const result = await refreshAdminCatalog(refreshGame === "mtg" ? undefined : refreshGame);
-      if (result.status === "unchanged" || result.skipped) {
+      const result = await refreshAdminCatalog(selected === "mtg" ? undefined : selected);
+      setFailedGames(current => [...new Set([...(selected === "all" ? [] : current.filter(game => game !== selected)), ...(result.failed_games ?? [])])]);
+      if (result.status === "partial") {
+        setRefreshFailed(true);
+        setRefreshMessage(`Refresh finished with some failures: ${(result.failed_games ?? []).map(catalogGameName).join(", ")}. Other games were updated. Retry only the failed games below.`);
+      } else if (result.status === "unchanged" || result.skipped) {
         setRefreshMessage("Catalog already up to date. No changes were needed.");
       } else {
         setRefreshMessage("Catalog refresh complete. The latest card data is now active.");
@@ -394,6 +419,7 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
         setRefreshMessage("A catalog refresh is already running. Status has been reloaded.");
       } else {
         setRefreshFailed(true);
+        if(selected !== "all")setFailedGames(current=>[...new Set([...current,selected])]);
         setRefreshMessage("Catalog refresh failed. The previous working catalog remains active.");
       }
     } finally {
@@ -485,11 +511,11 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
               <p className="eyebrow">Card data</p>
               <h2 id="catalog-admin-heading">Catalog database</h2>
             </div>
-            <label>Catalog game<select value={refreshGame} onChange={(event) => setRefreshGame(event.target.value)} disabled={refreshing}>
+            <label>Catalog game<select value={refreshGame} onChange={(event) => setRefreshGame(event.target.value)} disabled={refreshing||retrying}>
               <option value="all">All supported games</option>
               {CATALOG_GAMES.map((game) => <option value={game.id} key={game.id}>{game.name}</option>)}
             </select></label>
-            <button type="button" onClick={() => void refreshCatalog()} disabled={refreshing}>
+            <button type="button" onClick={() => void refreshCatalog()} disabled={refreshing||retrying}>
               {refreshing ? "Refreshing card database" : "Refresh card database"}
             </button>
           </div>
@@ -573,16 +599,20 @@ function AdminContents({ role }: { role: "owner" | "super_admin" | "admin" }) {
           )}
           {catalog && <section className="admin-game-status" aria-label="Catalog status by game">
             <h3>Catalog status by game</h3>
+            <p>Each game refreshes independently. Live status updates while this page is visible.</p>
+            {failedTargets.length > 0 && <button type="button" disabled={refreshing||retrying} onClick={()=>void retryFailed()}>{retrying ? "Retrying failed games…" : `Retry failed games (${failedTargets.length})`}</button>}
             <ul>
               {CATALOG_GAMES.map((game) => {
                 const status = catalog.games?.[game.id] ?? (game.id === "mtg" ? {
                   active_catalog: catalog.active_catalog,
                   latest_attempt: catalog.latest_attempt,
                 } : undefined);
-                const attempt = status?.active_catalog ?? status?.latest_attempt;
+                const attempt = status?.latest_attempt ?? status?.active_catalog;
                 return <li key={game.id}>
                   <strong>{catalogGameName(game.id)}</strong>
-                  <span>{attempt ? `${formatStatus(attempt.status)} · ${formatDate(attempt.source_updated_at)}` : "Not imported yet"}</span>
+                  <span role="status">{attempt ? `${formatStatus(attempt.status)} · ${formatDate(attempt.completed_at ?? attempt.source_updated_at)}` : "Not imported yet"}</span>
+                  {attempt?.status === "failed" && <small>Refresh failed for this provider. Previous catalog retained.</small>}
+                  {status?.active_catalog && <small>{status.active_catalog.printing_count.toLocaleString()} active printings</small>}
                 </li>;
               })}
             </ul>

@@ -142,7 +142,7 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
         <button className="admin-destructive" type="button" onClick={() => setConfirmReset(true)} disabled={busy}>Restore defaults</button>
       </div>
       {confirmReset && <div className="admin-confirmation admin-warning">
-        <p>Restore the default name, product, tagline, logo, and site design?</p>
+        <p>Restore the default name, product, tagline, logo, backgrounds and site design? Cards, collections and accounts will not be changed.</p>
         <button className="admin-destructive" type="button" onClick={() => void restoreDefaults()} disabled={busy}>Confirm restore defaults</button>
         <button type="button" onClick={() => setConfirmReset(false)} disabled={busy}>Cancel</button>
       </div>}

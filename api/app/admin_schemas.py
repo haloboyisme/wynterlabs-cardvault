@@ -92,6 +92,7 @@ class CatalogStatusOut(BaseModel):
 
 
 class CatalogRefreshOut(BaseModel):
+    failed_games: list[str] = Field(default_factory=list)
     status: str
     import_id: uuid.UUID | None
     imported_records: int = Field(ge=0)

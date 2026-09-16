@@ -57,7 +57,7 @@ describe("shared branding", () => {
   });
 
   it("updates shared labels, home copy, footer, and title from branding data", async () => {
-    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(String(input).endsWith("/api/v1/community/activity") ? { items: [] } : {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
       site_name: "Winter Lab",
       product_name: "Card Archive",
       tagline: "Keep every card close.",
@@ -70,7 +70,7 @@ describe("shared branding", () => {
     expect(await screen.findByRole("link", { name: "Winter Lab Card Archive home" })).toBeVisible();
     expect(screen.getByText("Winter Lab", { selector: "strong" })).toBeVisible();
     expect(screen.getByText("CARD ARCHIVE")).toBeVisible();
-    expect(document.querySelector(".site-footer")).toHaveTextContent("Winter Lab Card Archive");
+    expect(screen.getByText("Designed for collectors. Built by WynterLabs.")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Keep every card close." })).toBeVisible();
     await waitFor(() => expect(document.title).toBe("Winter Lab Card Archive"));
   });

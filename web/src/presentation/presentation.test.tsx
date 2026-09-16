@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Studio } from "./Studio";
 import { Stage } from "./Stage";
@@ -48,4 +48,21 @@ it("replays the persisted last session after remount without changing saved card
  expect(button).not.toBeDisabled();fireEvent.click(button);
  expect(second.container.querySelector(".presentation-stage")).toHaveTextContent("Previous pull");
  expect(apiRequest).toHaveBeenCalledTimes(2);
+});
+
+it("replays beyond 100 pulls through the final card and full summary", () => {
+  vi.useFakeTimers();
+  try {
+    const cards = Array.from({length: 405}, (_, index) => ({...card, id: `pull-${index}`, name: `Pull ${index}`, quantity: 1}));
+    const session = {...state, cards, settings: {...defaults, pack: false, highlights: false, hold: 1}};
+    expect(recapCards(session)).toHaveLength(405);
+    const {unmount} = render(<Stage state={session} replay/>);
+    act(() => { vi.advanceTimersByTime(404000); });
+    expect(screen.getByRole("heading", {name: "Pull 404"})).toBeVisible();
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(screen.getByText("405 cards · Pack complete")).toBeVisible();
+    expect(screen.getByText("1× Pull 0")).toBeInTheDocument();
+    expect(screen.getByText("1× Pull 404")).toBeInTheDocument();
+    unmount();
+  } finally { vi.useRealTimers(); }
 });

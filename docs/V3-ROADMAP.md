@@ -1,6 +1,6 @@
 # CardVault roadmap — remaining work
 
-Updated September 12, 2026. This is the outstanding product backlog, reconciled
+Updated September 16, 2026. This is the outstanding product backlog, reconciled
 with the original Card Scanner Project and verified implementation records. Version
 labels describe targets, not promised dates. V2.6 remembered scan preferences are
 included in the public V2.6.0 release; physical V2.8 acceptance remains pending.
@@ -14,14 +14,18 @@ recovery. Their release records remain historical evidence.
 
 | Target | Status | Remaining outcome |
 |---|---|---|
-| V2.7.5 | Real-card acceptance pending | Validate difficult cards and long sessions after the matching/recovery improvements |
-| V2.7.5 follow-up | Device checks pending | Verify OBS desktop audio routing and longer camera sessions |
+| Follow-up | Real-card acceptance pending | Validate difficult cards and long sessions after the matching/recovery improvements |
+| Follow-up | Device checks pending | Real 100+ card camera/video session, phone/tablet switching/rotation/sleep; live account OBS overlay routing. Controlled four-cue OBS recording passed. |
 | V2.8 | Physical testing pending | Connect and validate the real feeder using the existing Hardware Lab |
 | V3 | Planned | Magic/Pokémon solo tabletop practice and saved-deck support |
 | V3.5 | Deferred | Account-owned wireless feeders and Bluetooth compatibility |
 | Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
 
-## V2.7.5 — real-card scanner acceptance
+## Completed in V2.7.7
+
+The planned V2.7.6 backgrounds, uploads, admin restore controls, interface cues and motion-speed work shipped in V2.7.7. Per-game refresh feedback/retry, isolated provider failures, scanner framing/zoom/OCR improvements and uncapped recap lists are implemented. They are removed from the backlog. Performance work uses bounded export images, lazy retries and paused effects rather than promising a particular CPU/RAM reduction on every device.
+
+## Follow-up — real-card scanner acceptance
 
 Basic sideways OCR retry and manual correction already exist. Version 2.6 updates
 add either-half split-card matching, explicit selection for ambiguous printings,
@@ -41,7 +45,7 @@ celebrations, revocable OBS links, pack recap and local video export are deliver
 Refreshed Account/Admin/Home/Dashboard layouts, 42 Base Modes, low-power dynamic
 themes and shared Brand Studio controls are also included. These are no longer
 backlog items. See the [release notes](v2.7.5-release.md) and
-[streamer guide](STREAMER-PREVIEW.md). Real OBS audio routing remains a device check.
+[streamer guide](STREAMER-PREVIEW.md). Controlled OBS browser-source audio was recorded successfully in V2.7.7; live account overlay and device acceptance remain.
 
 ## V2.8 — complete real feeder testing
 

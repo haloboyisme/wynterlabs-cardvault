@@ -1,4 +1,6 @@
+import {backgroundDefaults} from "./backgrounds";
 export const DEFAULT_DESIGN = {
+  background: {...backgroundDefaults},
   accent: "#5BE7E7", secondary: "#8BA9FF", surface: "navy", typography: "modern",
   corners: "soft", finish: "glow", width: "comfortable", navigation: "side",
   hero_art: true, home_explore: true, home_updates: true, home_community: true, home_roadmap: true,

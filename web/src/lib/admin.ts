@@ -24,6 +24,7 @@ export interface AdminCatalogStatus {
 }
 
 export interface AdminCatalogRefresh {
+  failed_games?: string[];
   status: string;
   import_id: string | null;
   imported_records: number;

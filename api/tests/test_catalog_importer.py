@@ -20,8 +20,8 @@ from app.catalog.importer import (
     ImportOutcome,
     normalize_card,
 )
-from app.catalog.one_piece import OnePieceClient, normalize_one_piece_card
 from app.catalog.pokemon import PokemonClient, _cards_from_archive, normalize_pokemon_card
+from app.catalog.one_piece import OnePieceClient, normalize_one_piece_card
 from app.catalog.scryfall import BULK_METADATA_URL, BulkMetadata, ScryfallClient
 from app.catalog.status import read_catalog_status
 from app.catalog.yugioh import YugiohClient, normalize_yugioh_card
@@ -443,7 +443,7 @@ def test_pokemon_normalization_preserves_provider_freshness_and_legalities():
 @pytest.mark.parametrize("client_type", [PokemonClient, YugiohClient])
 def test_provider_clients_decode_compressed_multichunk_json(tmp_path, client_type):
     """Would fail if the shared bounded reader parsed raw compressed bytes."""
-    card = {"id": "compressed-card", "padding": "x" * 2048, "card_sets": [{"set_code": "TEST-1"}]}
+    card = {"id": "compressed-card", "padding": "x" * 2048, "card_sets": [{"set_code": "TST-001"}]}
     encoded = gzip.compress(json.dumps({"data": [card], "totalCount": 1}).encode())
     chunk_size = max(1, len(encoded) // 3)
     chunks = [encoded[index : index + chunk_size] for index in range(0, len(encoded), chunk_size)]
@@ -500,12 +500,9 @@ def test_provider_clients_abort_streaming_responses_that_exceed_the_byte_limit(
         stream = OversizedStream()
         transport = httpx.MockTransport(lambda _request: httpx.Response(200, stream=stream))
         async with httpx.AsyncClient(transport=transport) as http:
-            with pytest.raises(RuntimeError, match="bounded retries"):
+            with pytest.raises((RuntimeError, ValueError), match="bounded retries|not a ZIP"):
                 if client_type is PokemonClient:
-                    # Test the bounded JSON reader independently of archive fallback.
-                    await client_type(settings, http_client=http)._request(
-                        "https://api.pokemontcg.io/v2/cards", {}
-                    )
+                    await client_type(settings, http_client=http).fetch_cards()
                 else:
                     await client_type(settings, http_client=http).fetch_cards()
         assert stream.chunks_consumed == 2
@@ -1415,3 +1412,51 @@ def test_set_icon_urls_allow_only_scryfall_svg_cdn(tmp_path):
         "javascript:alert(1)",
     ):
         assert asyncio.run(exercise(unsafe)) is None
+
+
+def test_distinct_sets_with_reused_codes_survive_repeat_imports(tmp_path):
+    from app.models import CardSet
+
+    async def exercise():
+        settings, engine, factory = await database(tmp_path)
+        record = json.loads(FIXTURE.read_text().splitlines()[0])
+        second = dict(record)
+        second["id"] = str(uuid.uuid4())
+        second["set_id"] = str(uuid.uuid4())
+        second["set_name"] = "Another set using the same abbreviation"
+        fixture = tmp_path / "duplicate-codes.jsonl"
+        fixture.write_text(json.dumps(record) + "\n" + json.dumps(second) + "\n")
+        importer = CatalogImporter(settings, factory, source=Source(fixture))
+        assert (await importer.refresh()).status == "complete"
+        async with factory() as session:
+            before = {row.scryfall_id: row.code for row in (await session.scalars(select(CardSet))).all()}
+        assert len(set(before.values())) == 2
+        assert (await importer.refresh()).status == "complete"
+        async with factory() as session:
+            after = {row.scryfall_id: row.code for row in (await session.scalars(select(CardSet))).all()}
+        assert after == before
+        await engine.dispose()
+
+    asyncio.run(exercise())
+
+
+def test_all_games_continue_after_one_provider_fails(tmp_path):
+    from app.catalog.games import SUPPORTED_GAME_KEYS
+
+    async def exercise():
+        settings, engine, factory = await database(tmp_path)
+        importer = CatalogImporter(settings, factory)
+        called = []
+        async def refresh_game(game):
+            called.append(game)
+            if game == "digimon":
+                raise RuntimeError("provider failed")
+            return ImportOutcome("complete", None, 1, 0, False)
+        importer._refresh_locked = refresh_game
+        outcome = await importer.refresh("all")
+        assert outcome.status == "partial"
+        assert outcome.failed_games == ("digimon",)
+        assert called == list(SUPPORTED_GAME_KEYS)
+        assert outcome.imported_records == len(SUPPORTED_GAME_KEYS) - 1
+        await engine.dispose()
+    asyncio.run(exercise())

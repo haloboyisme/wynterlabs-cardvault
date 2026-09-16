@@ -274,3 +274,37 @@ def test_saved_audio_settings_update_connected_overlay_without_replaying_pull(ap
             assert changed["settings"]["audio"] == "overlay"
             assert changed["event"] is None
             assert changed["cards"] == before["cards"]
+
+
+def test_large_session_preserves_all_pulls_and_replay_after_refresh(app):
+    base = "/api/v1/presentation"
+    with member(app, "large-recap") as owner:
+        for index in range(405):
+            result = owner.post(
+                base + "/events",
+                json={
+                    "id": f"large-{index}",
+                    "kind": "confirm",
+                    "card": {"name": f"Card {index}"},
+                },
+            )
+            assert result.status_code == 200
+        # An old confirm remains idempotent after the recent-event window rolls over.
+        owner.post(
+            base + "/events",
+            json={
+                "id": "large-0",
+                "kind": "confirm",
+                "card": {"name": "Card 0"},
+            },
+        )
+        cards = owner.get(base).json()["cards"]
+        assert len(cards) == 405
+        assert cards[-1]["name"] == "Card 404"
+        owner.post(base + "/events", json={"id": "large-finish", "kind": "finish"})
+        assert owner.get(base).json()["last_session"] == cards
+        replay = owner.post(base + "/events", json={"id": "large-replay", "kind": "replay"})
+        assert replay.json()["cards"] == cards
+        owner.post(base + "/events", json={"id": "large-new", "kind": "new"})
+        assert owner.get(base).json()["last_session"] == cards
+        assert owner.get(base).json()["cards"] == []

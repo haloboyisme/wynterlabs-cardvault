@@ -32,3 +32,8 @@ information is not part of the public branding response.
 
 Account/Admin/Home/Dashboard use clearer headings and matching section layouts.
 More collection stats starts closed and opens when selected.
+
+
+## V2.7.7 update
+
+See [V2.7.7 release notes](v2.7.7-release.md) for background uploads and static fallbacks, account/browser scope, motion speed and interface cues, larger recap export behavior and the exact OBS/device verification limits.

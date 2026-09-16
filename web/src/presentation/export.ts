@@ -10,19 +10,23 @@ export async function exportRecap(state: Presentation, signal: AbortSignal, prog
   const canvas = document.createElement("canvas"); canvas.width = s.layout === "portrait" || s.layout === "square" ? 720 : 1280; canvas.height = s.layout === "portrait" ? 1280 : 720;
   const ctx = canvas.getContext("2d")!;
   const audio = new AudioContext(); await audio.resume(); const mix = audio.createMediaStreamDestination();
-  const stream = canvas.captureStream(30); if (!s.muted) for (const track of mix.stream.getAudioTracks()) stream.addTrack(track);
-  const images = new Map<string, HTMLImageElement>(); let missing = 0;
+  const fps = document.documentElement.dataset.effectsPower === "low" ? 15 : 30;
+  const stream = canvas.captureStream(fps); if (!s.muted) for (const track of mix.stream.getAudioTracks()) stream.addTrack(track);
+  const images = new Map<string, HTMLCanvasElement | HTMLImageElement>(); let missing = 0;
   const chunks: Blob[] = []; const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 3500000 });
   let stopped = false; let timer = 0;
   try {
     progress("Preparing card images…");
-    await Promise.all(cards.map(c => new Promise<void>(resolve => {
+    for (let offset = 0; offset < cards.length; offset += 8) {
+    if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
+    await Promise.all(cards.slice(offset, offset + 8).map(c => new Promise<void>(resolve => {
       if (!c.image) { missing++; resolve(); return; }
       const img = new Image(); img.crossOrigin = "anonymous";
-      const timeout = setTimeout(() => { missing++; resolve(); }, 5000);
-      img.onload = () => { clearTimeout(timeout); images.set(c.id, img); resolve(); };
+      const timeout = setTimeout(() => { img.onload=null;img.onerror=null;img.src="";missing++; resolve(); }, 5000);
+      img.onload = () => { clearTimeout(timeout); const thumb=document.createElement("canvas");const scale=Math.min(1,480/img.naturalWidth,680/img.naturalHeight);thumb.width=Math.max(1,Math.round(img.naturalWidth*scale));thumb.height=Math.max(1,Math.round(img.naturalHeight*scale));thumb.getContext("2d")?.drawImage(img,0,0,thumb.width,thumb.height);images.set(c.id,thumb);img.onload=null;img.onerror=null;img.src="";resolve(); };
       img.onerror = () => { clearTimeout(timeout); missing++; resolve(); }; img.src = c.image;
     })));
+    }
     if (s.card_back) await new Promise<void>(resolve => { const img=new Image(); const timeout=setTimeout(resolve,3000); img.onload=()=>{clearTimeout(timeout);images.set("custom-back",img);resolve();};img.onerror=()=>{clearTimeout(timeout);resolve();};img.src=s.card_back!; });
     if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
     const done = new Promise<Blob>((resolve, reject) => {
@@ -35,7 +39,7 @@ export async function exportRecap(state: Presentation, signal: AbortSignal, prog
     recorder.start(250);
     const packTime = s.pack ? 1.5 : 0;
     const duration = packTime + cards.length * s.hold + 3;
-    const start = performance.now(); let last = -10;
+    const start = performance.now(); let last = -10; let lastProgress = -1;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "reduced";
     await new Promise<void>(resolve => {
       const draw = () => {
@@ -96,8 +100,8 @@ export async function exportRecap(state: Presentation, signal: AbortSignal, prog
           if(prize&&prize.effect!=="none"&&age<2.4){ctx.save();ctx.fillStyle="#fff0a5";ctx.fillRect(canvas.width*.2,20,canvas.width*.6,58);ctx.fillStyle="#191428";ctx.font="900 28px system-ui";ctx.fillText(`${prize.label} · $${prize.threshold}+`,canvas.width*.22,58,canvas.width*.56);if(!reduced&&s.particles!==false){for(let i=0;i<(document.documentElement.dataset.effectsPower === "low" ? 6 : 12);i++){const a=i*Math.PI/6;ctx.fillStyle=i%2?"#8af0e2":"#f5a4e0";ctx.fillRect(canvas.width/2+Math.cos(a)*age*100,canvas.height/2+Math.sin(a)*age*90,prize.effect==="burst"?20:7,prize.effect==="sparks"?3:10);}}ctx.restore();}
 
         }
-        last = step; progress(`Recording ${Math.min(100,Math.round(elapsed/duration*100))}%${missing ? ` · ${missing} images use a text fallback` : ""}`);
-        timer = window.setTimeout(draw, 33);
+        last = step; const percent=Math.min(100,Math.round(elapsed/duration*100));if(percent!==lastProgress){lastProgress=percent;progress(`Recording ${percent}%${missing ? ` · ${missing} images use a text fallback` : ""}`);}
+        timer = window.setTimeout(draw, Math.round(1000/fps));
       }; draw();
     });
     if(recorder.state !== "inactive")recorder.stop();
@@ -105,6 +109,6 @@ export async function exportRecap(state: Presentation, signal: AbortSignal, prog
     if(signal.aborted)throw new DOMException("Cancelled", "AbortError");
     return { blob, extension: mime.startsWith("video/mp4") ? "mp4" : "webm", missing };
   } finally {
-    clearTimeout(timer); if(recorder.state !== "inactive")recorder.stop(); stream.getTracks().forEach(t => t.stop()); await audio.close();
+    clearTimeout(timer); images.clear(); if(recorder.state !== "inactive")recorder.stop(); stream.getTracks().forEach(t => t.stop()); await audio.close();
   }
 }
