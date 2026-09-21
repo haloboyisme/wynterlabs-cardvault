@@ -1,3 +1,4 @@
+import { ScanPhotoWindow } from "./ScanPhotoWindow";
 import { ScanReveal } from "../presentation/ScanReveal";
 import { savedPull, rejectedPull, previewPull } from "../presentation/model";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -70,6 +71,7 @@ export function MultiScanSession({
   stableFrameAutoCapture?: boolean;
   onCaptureAccepted?: () => void;
 }) {
+  const [enlargedId, setEnlargedId] = useState("");
   const [session, setSessionState] = useState(() => createMultiScanSession());
   const [retakeId, setRetakeId] = useState("");
   const [sessionStatus, setSessionStatus] = useState("");
@@ -123,7 +125,7 @@ export function MultiScanSession({
       confirmed: false,
     }));
     let timedOut = false;
-    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
+    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 90000);
     try {
       let privateTitles: string[] = [];
       let privateSet = "";
@@ -138,13 +140,22 @@ export function MultiScanSession({
           if ((reason as Error).name === "AbortError") throw reason;
         }
       }
-      const titles = [...new Set([
+      let titles = [...new Set([
         ...(manualTitle ? [manualTitle] : privateTitles),
         scan.hints.name,
         ...scan.hints.titleCandidates,
-      ].map((value) => value.trim()).filter(Boolean))].slice(0, 5);
+      ].map((value) => value.trim()).filter(Boolean))].slice(0, 8);
       let candidates: ScanCandidate[] = [];
       let detectedTitle = manualTitle?.trim() ?? privateTitles[0]?.trim() ?? scan.hints.name.trim();
+      for (let attempt = 0; attempt < 2 && !candidates.length; attempt++) {
+        if (attempt === 1) {
+          if (manualTitle || !scan.imageBlob) break;
+          setSessionStatus("Taking a closer look: checking sideways text and full-art layouts. Your photo is kept.");
+          const deeper = await recognizeCardPhoto(scan.imageBlob, controller.signal, true);
+          privateSet = deeper.set ?? "";
+          privateCollector = deeper.collector ?? "";
+          titles = [...new Set([deeper.name, ...deeper.titleCandidates].map(value=>value.trim()).filter(Boolean))].slice(0,8);
+        }
       for (const title of titles) {
         const result = await getScanCandidates({
           name: title,
@@ -168,6 +179,7 @@ export function MultiScanSession({
           detectedTitle = title;
           break;
         }
+      }
       }
       if (generations.current.get(id) !== generation) return;
       const detectedPrintingId = uniqueDetectedPrintingId(candidates, {
@@ -428,7 +440,7 @@ export function MultiScanSession({
             type="button"
             className={item.id === session.selectedId ? "is-selected" : ""}
             aria-label={`Card ${index + 1}, ${item.detectedTitle || "reading"}, ${item.status}`}
-            onClick={() => setSession((current) => selectSessionItem(current, item.id))}
+            onClick={() => { setSession((current) => selectSessionItem(current, item.id)); setEnlargedId(item.id); }}
           >
             <img src={item.previewUrl} alt={`Captured card ${index + 1}`} />
             <span>{item.detectedTitle || `Card ${index + 1}`}</span>
@@ -442,7 +454,8 @@ export function MultiScanSession({
         aria-label="Multi-card review workspace"
       >
         <h3 id="multi-scan-editor-title">Fix or confirm selected card</h3>
-        {selected.status === "recognizing" && <p role="status">Reading this card&hellip;</p>}
+        {enlargedId === selected.id && <ScanPhotoWindow key={selected.id + selected.previewUrl} src={selected.previewUrl} onClose={() => setEnlargedId("")} />}
+        {selected.status === "recognizing" && <p role="status">Reading this card carefully, including alternate layouts&hellip;</p>}
         {selected.error && <p role="alert">{selected.error}</p>}
         {selected.candidates.length > 0 && <p
           className="scanner-match-feedback"

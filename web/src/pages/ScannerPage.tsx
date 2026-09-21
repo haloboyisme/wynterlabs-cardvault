@@ -1,3 +1,4 @@
+import { ScanPhotoWindow } from "../components/ScanPhotoWindow";
 import { ScanReveal } from "../presentation/ScanReveal";
 import { savedPull, rejectedPull, previewPull } from "../presentation/model";
 import { useAuth } from "../app/auth";
@@ -81,6 +82,8 @@ export function ScannerPage() {
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const [capturedPhoto, setCapturedPhoto] = useState("");
+  const [enlargedPhoto, setEnlargedPhoto] = useState(false);
+  useEffect(() => {setEnlargedPhoto(false);}, [capturedPhoto]);
   const [candidates, setCandidates] = useState<ScanCandidate[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [finish, setFinish] = useState("");
@@ -168,14 +171,16 @@ export function ScannerPage() {
     setError("");
     setSuccess("");
     let timedOut = false;
-    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
+    const searchTimeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 90000);
     try {
       let privateTitles: string[] = [];
+      let privateAvailable = false;
       let privateSet = "";
       let privateCollector = "";
       if (imageBlob) {
         try {
           const privateHints = await recognizeCardPhoto(imageBlob, controller.signal);
+          privateAvailable = true;
           privateTitles = [privateHints.name, ...privateHints.titleCandidates];
           privateSet = privateHints.set ?? hints.set ?? "";
           privateCollector = privateHints.collector ?? hints.collector ?? "";
@@ -183,51 +188,62 @@ export function ScannerPage() {
           if ((reason as Error).name === "AbortError") throw reason;
         }
       }
-      const privateTitleKeys = new Set(
+      let privateTitleKeys = new Set(
         privateTitles.map((value) => value.trim().toLocaleLowerCase()).filter(Boolean),
       );
-      const titles = [...new Set([...privateTitles, ...requestedTitles]
+      let titles = [...new Set([...privateTitles, ...requestedTitles]
         .map((value) => value.trim())
         .filter(Boolean))]
-        .slice(0, 5);
-      for (const name of titles) {
-        const privateTitle = privateTitleKeys.has(name.toLocaleLowerCase());
-        const matchHints = {
-          name,
-          set: privateTitle ? privateSet || undefined : hints.set,
-          collector: privateTitle ? privateCollector || undefined : hints.collector,
-        };
-        const result = await getScanCandidates({
-          name,
-          set: matchHints.set,
-          collector: matchHints.collector,
-          preferredSet: preferredSetCode || undefined,
-          preferredGame: preferredSetGame || undefined,
-          game: preferredGame || undefined,
-        }, controller.signal);
-        if (current !== generation.current) return;
-        const confident = filterConfidentScanCandidates(name, result);
-        if (confident.length) {
-          const expanded = rankScanCandidates(
-            await expandScanCandidates(confident, controller.signal, preferredGame || undefined),
-            matchHints,
-            preferredSetCode,
-            preferredSetGame,
-          );
+        .slice(0, 8);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt === 1) {
+          if (!imageBlob || !privateAvailable) break;
+          const deeper = await recognizeCardPhoto(imageBlob, controller.signal, true);
           if (current !== generation.current) return;
-          setDetectedTitle(name);
-          setCandidates(expanded);
-          const detectedId = uniqueDetectedPrintingId(
-            expanded,
-            matchHints,
-            preferredSetCode,
-            preferredSetGame,
-          );
-          const detected = expanded.find((candidate) => candidate.printing_id === detectedId);
-          if (detected) selectCandidate(detected);
-          setSetFilter("");
-          setCollectorFilter("");
-          return;
+          titles = [...new Set([deeper.name, ...deeper.titleCandidates].map((value) => value.trim()).filter(Boolean))].slice(0, 8);
+          privateTitleKeys = new Set(titles.map((value) => value.toLocaleLowerCase()));
+          privateSet = deeper.set ?? "";
+          privateCollector = deeper.collector ?? "";
+        }
+        for (const name of titles) {
+          const privateTitle = privateTitleKeys.has(name.toLocaleLowerCase());
+          const matchHints = {
+            name,
+            set: privateTitle ? privateSet || undefined : hints.set,
+            collector: privateTitle ? privateCollector || undefined : hints.collector,
+          };
+          const result = await getScanCandidates({
+            name,
+            set: matchHints.set,
+            collector: matchHints.collector,
+            preferredSet: preferredSetCode || undefined,
+            preferredGame: preferredSetGame || undefined,
+            game: preferredGame || undefined,
+          }, controller.signal);
+          if (current !== generation.current) return;
+          const confident = filterConfidentScanCandidates(name, result);
+          if (confident.length) {
+            const expanded = rankScanCandidates(
+              await expandScanCandidates(confident, controller.signal, preferredGame || undefined),
+              matchHints,
+              preferredSetCode,
+              preferredSetGame,
+            );
+            if (current !== generation.current) return;
+            setDetectedTitle(name);
+            setCandidates(expanded);
+            const detectedId = uniqueDetectedPrintingId(
+              expanded,
+              matchHints,
+              preferredSetCode,
+              preferredSetGame,
+            );
+            const detected = expanded.find((candidate) => candidate.printing_id === detectedId);
+            if (detected) selectCandidate(detected);
+            setSetFilter("");
+            setCollectorFilter("");
+            return;
+          }
         }
       }
     } catch (reason) {
@@ -285,6 +301,7 @@ export function ScannerPage() {
           if (current === generation.current) setCollectionTotal(null);
         }
         savedPull(selected, finish, quantity);
+        setEnlargedPhoto(false);
         setSuccess(selected.name + " was added to your collection.");
         setSessionAdded((value) => value + 1);
         setConfirmed(false);
@@ -389,7 +406,8 @@ export function ScannerPage() {
           />
           {capturedPhoto && <article className="single-scan-captured-photo">
             <h2>Your photo</h2>
-            <img src={capturedPhoto} alt="Your captured card" />
+            <button type="button" className="scan-photo-enlarge" aria-label="Enlarge captured card" onClick={() => setEnlargedPhoto(true)}><img src={capturedPhoto} alt="Your captured card" /></button>
+            {enlargedPhoto && <ScanPhotoWindow src={capturedPhoto} onClose={() => setEnlargedPhoto(false)} />}
             <p>This preview stays in this browser. Private server recognition discards the image immediately after reading it.</p>
           </article>}
         </div>

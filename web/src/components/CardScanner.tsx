@@ -174,6 +174,7 @@ export function CardScanner({
   const [cameraStatus, setCameraStatus] = useState("");
   const [captureStatus, setCaptureStatus] = useState("");
   const [qualityMessage, setQualityMessage] = useState("");
+  const focusRetries = useRef(0);
   const [controls, setControls] = useState<CameraControlState>(emptyControls);
   const [controlBusy, setControlBusy] = useState(false);
   const [alignment, setAlignment] = useState<CameraAlignment>(readAlignment);
@@ -484,7 +485,7 @@ export function CardScanner({
     });
   }, [alignment, captureFrame]);
 
-  const capture = () => {
+  const capture = async () => {
     if (busyRef.current) {
       setCaptureStatus("A card is already being read. Please wait.");
       return;
@@ -492,9 +493,19 @@ export function CardScanner({
     busyRef.current = true;
     setBusy(true);
     setCaptureStatus("Preparing photo…");
+    const captureRequest = ++generation.current;
     try {
       setAutoCountdown(null);
-      const canvas = captureCameraCanvas();
+      let canvas = captureCameraCanvas();
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const warning = captureQualityMessage(canvas);
+        if (!warning) break;
+        setQualityMessage(warning);
+        setCaptureStatus("Waiting a little longer for focus and lighting. Keep the card steady.");
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 2000));
+        if (captureRequest !== generation.current) return;
+        canvas = captureCameraCanvas();
+      }
       if (continuous) {
         const fingerprint = sampleFingerprint(canvas);
         detectorRef.current = {
@@ -510,6 +521,7 @@ export function CardScanner({
       if (!continuous) setCamera(false);
       void recognize(canvas, true);
     } catch (reason) {
+      if (captureRequest !== generation.current) return;
       busyRef.current = false;
       setBusy(false);
       setCaptureStatus("");
@@ -539,6 +551,7 @@ export function CardScanner({
           sampleFingerprint(canvas),
         );
         if (detectorRef.current.shouldCapture) {
+          focusRetries.current = 0;
           setAutoCountdown(automaticCountdownSeconds);
           setAutoStatus(`Capturing in ${automaticCountdownSeconds}… Keep the card steady.`);
         } else if (detectorRef.current.phase === "awaiting_change") {
@@ -586,6 +599,14 @@ export function CardScanner({
           const next = autoCountdown - 1;
           setAutoCountdown(next);
           setAutoStatus(`Capturing in ${next}… Keep the card steady.`);
+          return;
+        }
+        const warning = captureQualityMessage(canvas);
+        if (warning && focusRetries.current < 2) {
+          focusRetries.current++;
+          setQualityMessage(warning);
+          setAutoStatus("Waiting a little longer for focus and lighting. Keep the card steady.");
+          setAutoCountdown(2);
           return;
         }
         setAutoCountdown(null);

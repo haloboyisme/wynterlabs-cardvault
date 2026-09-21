@@ -3,6 +3,10 @@
 Available in V2.7.5. Open **Scan → Streamer preview** or **Account → Scan & stream**.
 Changes to presentation settings must be saved; the preview lets you try a draft first.
 
+## Find your controls
+
+Use **Look**, **Sounds**, and **Replay & OBS** to switch views without losing draft settings. Choose a visual preset, then save. Custom card backs and timing live under **More look options**. Individual sounds and prize thresholds expand separately. OBS setup and recap editing are in **Replay & OBS**. The sample preview is display-only and is never added to a pack.
+
 ## Look & feel
 
 Choose Plain, Subtle or Streamer as a starting point. Seven reveals include instant,
@@ -23,7 +27,7 @@ There are 15 original synthesized cues: Chime, Arcade, Fanfare, Bell, Bubbles, R
 Sparkle, Coin, Powerup, Victory, Error, Warning, Sonar, Twinkle and Drumroll, plus Off.
 These choices also apply to prize tiers and exported recaps; no downloads are required.
 Select scanner or overlay audio output to avoid doubled sound. Browser autoplay rules
-apply: enable audio with a click; use OBS Interact where necessary.
+apply in ordinary browsers. OBS attempts audio automatically and never shows an audio-enable button over your cards. Creating a link selects overlay audio while preserving saved mute.
 
 Prize pulls selects the highest enabled threshold reached by the displayed USD
 **per-card** estimate: $5, $10, $20, $50 or $100. Quantity is not multiplied.
@@ -36,7 +40,7 @@ static badge. No custom sound upload or full 3D engine is included.
 
 ## Saved packs and private OBS links
 
-Enable **Capture saved pulls** and save to collect confirmed cards and send previews
+Enable **Add saved cards to my replay** and save to collect confirmed cards and send previews
 to OBS. Local found/accepted feedback also works with capture disabled.
 Create/rotate the OBS link, then paste it into an OBS Browser Source. The link is a
 private read-only bearer credential: anyone with it can see that presentation.

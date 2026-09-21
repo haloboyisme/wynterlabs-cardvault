@@ -460,3 +460,12 @@ it("prevents a rapid second save pass while confirmed cards are being added", as
   await act(async () => finishSave());
   await waitFor(() => expect(addCollectionItem).toHaveBeenCalledTimes(2));
 });
+
+it("tries deeper orientation/full-art recognition after an unmatched quick read", async()=>{
+ vi.mocked(recognizeCardPhoto).mockResolvedValueOnce({name:"Unrelated text",titleCandidates:[],rawText:""}).mockResolvedValueOnce({name:"Black Lotus",titleCandidates:["Black Lotus"],rawText:"Black Lotus"});
+ vi.mocked(getScanCandidates).mockImplementation(async hints=>vi.mocked(recognizeCardPhoto).mock.calls.length>1 && hints.name==="Black Lotus"?[candidate]:[]);
+ const user=userEvent.setup();render(<MultiScanSession/>);
+ await user.click(screen.getByRole("button",{name:"Capture test card"}));
+ await waitFor(()=>expect(recognizeCardPhoto).toHaveBeenCalledWith(expect.any(Blob),expect.any(AbortSignal),true));
+ await waitFor(()=>expect(screen.getAllByText("review").length).toBeGreaterThan(0));
+});

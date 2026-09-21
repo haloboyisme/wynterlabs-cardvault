@@ -1,6 +1,6 @@
 vi.mock("../app/auth", () => ({useAuth: () => ({status:"authenticated",user:{id:"public-test"}})}));
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode, type ReactNode } from "react";
 
@@ -457,12 +457,15 @@ it("requires explicit exact-printing confirmation before one collection mutation
   await user.clear(screen.getByLabelText(/quantity/i));
   await user.type(screen.getByLabelText(/quantity/i), "2");
   await user.click(screen.getByRole("checkbox", { name: /confirm this exact printing/i }));
+  await user.click(screen.getByRole("button", {name:"Enlarge captured card"}));
+  expect(screen.getByRole("dialog", {name:"Enlarged scanned card"})).toBeVisible();
   await user.click(save);
 
   await waitFor(() => expect(addCollectionItem).toHaveBeenCalledWith({
     printing_id: "p1", finish: "foil", condition: "lightly_played", quantity: 2,
   }));
   expect(await screen.findByText(/added to your collection/i)).toBeInTheDocument();
+  expect(screen.queryByRole("dialog", {name:"Enlarged scanned card"})).not.toBeInTheDocument();
 });
 
 it("keeps the photo while matching and clears old results on retake", async () => {
@@ -719,4 +722,30 @@ it("announces when one confident printing is preselected", async () => {
   expect(await screen.findByRole("status", { name: "Printing match result" }))
     .toHaveTextContent(/1 confident printing found and preselected/i);
   expect(screen.getByRole("radio", { name: /black lotus.*lea.*233/i })).toBeChecked();
+});
+
+it("recovers a stalled matching request without discarding the photo", async () => {
+  vi.useFakeTimers();
+  try {
+    vi.mocked(getScanCandidates).mockImplementation((_hints, signal) => new Promise((_resolve, reject) => {
+      signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {once:true});
+    }));
+    render(<ScannerPage />);
+    fireEvent.click(screen.getByRole("button", {name:"Return OCR hints"}));
+    await act(async () => { await vi.advanceTimersByTimeAsync(90000); });
+    expect(screen.getByText(/matching took too long/i)).toBeVisible();
+    expect(screen.getByRole("button", {name:/search.*title/i})).toBeEnabled();
+  } finally { vi.useRealTimers(); }
+});
+
+
+it("retries single-card photos with deeper recognition after no confident match", async () => {
+  vi.mocked(recognizeCardPhoto).mockResolvedValueOnce({name:"Unknown text", titleCandidates:[], rawText:"Unknown text"})
+    .mockResolvedValueOnce({name:"Black Lotus", titleCandidates:["Black Lotus"], set:"lea", collector:"233", rawText:"Black Lotus"});
+  vi.mocked(getScanCandidates).mockImplementation(async (hints) => hints.name === "Black Lotus" ? [candidate] : []);
+  render(<ScannerPage />);
+  fireEvent.click(screen.getByRole("button", {name:"Return private AI photo"}));
+  expect(await screen.findByRole("radio", {name:/black lotus.*lea.*233/i})).toBeChecked();
+  expect(recognizeCardPhoto).toHaveBeenLastCalledWith(expect.any(Blob), expect.any(AbortSignal), true);
+  expect(screen.getByRole("button", {name:/confirm and add card/i})).toBeDisabled();
 });

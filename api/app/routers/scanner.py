@@ -18,6 +18,7 @@ def get_scanner_ocr(request: Request) -> RapidCardOcr:
 async def recognize_card(
     request: Request,
     response: Response,
+    thorough: bool = False,
     _auth: CurrentAuth = Depends(require_ready_auth),
     service: RapidCardOcr = Depends(get_scanner_ocr),
 ) -> ScannerOcrHints:
@@ -32,7 +33,7 @@ async def recognize_card(
     if not payload:
         raise AppError(422, "empty_image", "Upload one card image.")
     try:
-        hints = await run_in_threadpool(service.recognize, payload)
+        hints = await run_in_threadpool(service.recognize, payload, thorough=True) if thorough else await run_in_threadpool(service.recognize, payload)
     except ScannerOcrError as error:
         raise AppError(422, "invalid_image", str(error)) from error
     finally:

@@ -1,0 +1,8 @@
+.scan-photo-window { position: fixed; z-index: 1500; width: min(420px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); border: 1px solid #64748b; border-radius: 14px; background: #111827; color: #f8fafc; box-shadow: 0 12px 48px #0008; overflow: hidden; }
+.scan-photo-window header { display: flex; align-items: center; gap: 4px; padding: 6px; }
+.scan-photo-window header button { color: inherit; background: transparent; border: 0; min-height: 40px; }
+.scan-photo-window .scan-photo-drag { flex: 1; text-align: left; cursor: grab; touch-action: none; }
+.scan-photo-window .scan-photo-drag:active { cursor: grabbing; }
+.scan-photo-window img { display: block; width: 100%; height: min(65dvh, 580px); object-fit: contain; background: #080d16; }
+.scan-photo-enlarge { display: block; cursor: zoom-in; padding: 0; border: 0; background: transparent; }
+.scan-photo-enlarge img { display: block; }

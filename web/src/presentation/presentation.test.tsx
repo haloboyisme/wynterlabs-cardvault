@@ -12,16 +12,16 @@ beforeEach(()=>{vi.mocked(apiRequest).mockReset();vi.mocked(apiRequest).mockReso
 describe("streamer presentation",()=>{
  it("preserves printing details in plain mode and can hide them",()=>{const {rerender}=render(<Stage state={state}/>);expect(screen.getByText("Test set")).toBeVisible();expect(screen.getByText("$2")).toBeVisible();rerender(<Stage state={{...state,settings:{...defaults,details:false,prices:false}}}/>);expect(screen.queryByText("Test set")).toBeNull();expect(screen.queryByText("$2")).toBeNull();});
  it("keeps duplicates and falls back to all cards when no highlights exist",()=>{const s={...state,settings:{...defaults,highlights:true},cards:[card,{...card,id:"two"}]};expect(recapCards(s)).toHaveLength(2);expect(recapCards({...s,cards:[card,{...card,id:"two",highlight:true}]})).toHaveLength(1);});
- it("saves mute preferences to the account and does not issue collection writes",async()=>{render(<Studio account/>);await screen.findByText("Save presentation settings");fireEvent.click(screen.getByLabelText("Account master mute"));fireEvent.click(screen.getByText("Save presentation settings"));await waitFor(()=>expect(apiRequest).toHaveBeenCalledWith("/api/v1/presentation/settings",expect.objectContaining({method:"PUT",body:expect.stringContaining('"muted":true')})));});
+ it("saves mute preferences to the account and does not issue collection writes",async()=>{render(<Studio account/>);await screen.findByText("Save presentation settings");fireEvent.click(screen.getByLabelText("Mute all account sounds"));fireEvent.click(screen.getByText("Save presentation settings"));await waitFor(()=>expect(apiRequest).toHaveBeenCalledWith("/api/v1/presentation/settings",expect.objectContaining({method:"PUT",body:expect.stringContaining('"muted":true')})));});
  it("ignores pull events while capture is disabled",async()=>{render(<Studio/>);await screen.findByText("Save presentation settings");window.dispatchEvent(new CustomEvent("cardvault-presentation",{detail:{id:"x",kind:"confirm",card}}));expect(apiRequest).toHaveBeenCalledTimes(1);});
  it("publishes a saved pull only to presentation listeners",()=>{const listener=vi.fn();window.addEventListener("cardvault-presentation",listener);savedPull({name:"Example",printing_id:"p",image_uris:{},set:{name:"Test set"},collector_number:"42",language:"en",prices:{usd:"2.00"},rarity:"rare"} as any,"nonfoil",2);expect(listener.mock.calls[0][0].detail.card.quantity).toBe(2);expect(apiRequest).not.toHaveBeenCalled();window.removeEventListener("cardvault-presentation",listener);});
 });
 
 it("saves extended looks and renders a custom flip back with printing details", async()=>{
  render(<Studio account/>);await screen.findByText("Save presentation settings");
- fireEvent.change(screen.getByLabelText("Reveal"),{target:{value:"pop"}});
+ fireEvent.change(screen.getByLabelText("Card animation"),{target:{value:"pop"}});
  fireEvent.change(screen.getByLabelText("Background"),{target:{value:"spotlight"}});
- fireEvent.change(screen.getByLabelText("Layout"),{target:{value:"square"}});
+ fireEvent.change(screen.getByLabelText("Screen shape"),{target:{value:"square"}});
  fireEvent.click(screen.getByText("Save presentation settings"));
  await waitFor(()=>expect(apiRequest).toHaveBeenCalledWith("/api/v1/presentation/settings",expect.objectContaining({body:expect.stringContaining('"reveal":"pop"')})));
 });
@@ -65,4 +65,45 @@ it("replays beyond 100 pulls through the final card and full summary", () => {
     expect(screen.getByText("1× Pull 404")).toBeInTheDocument();
     unmount();
   } finally { vi.useRealTimers(); }
+});
+
+it("defaults a new OBS link to overlay audio without clearing account mute",async()=>{
+ const muted={...state,settings:{...defaults,muted:true}};
+ vi.mocked(apiRequest).mockImplementation(async(path,options)=>path.endsWith('/link')?{token:'test-view-only'}:options?.method==='PUT'?{...muted,settings:JSON.parse(String(options.body))}:muted);
+ render(<Studio/>);await screen.findByText('Create / rotate OBS link');
+ fireEvent.click(screen.getByText('Create / rotate OBS link'));
+ await waitFor(()=>expect(apiRequest).toHaveBeenCalledWith('/api/v1/presentation/settings',expect.objectContaining({method:'PUT',body:expect.stringContaining('"audio":"overlay"')})));
+ const request=vi.mocked(apiRequest).mock.calls.find(([path,options])=>path.endsWith('/settings')&&options?.method==='PUT');
+ expect(JSON.parse(String(request?.[1]?.body)).muted).toBe(true);
+});
+
+
+it("keeps detailed controls collapsed but available without losing settings", async()=>{
+ render(<Studio account/>);
+ await screen.findByText("Save presentation settings");
+ const sounds=screen.getByText("2 · Sounds").closest("details")!;
+ fireEvent.click(screen.getByRole("button", {name:/2 Sounds/}));
+ expect(sounds).toHaveAttribute("open");
+ expect(screen.getByLabelText("Mute all account sounds")).toBeVisible();
+ const alerts=screen.getByText("Choose each alert sound").closest("details")!;
+ expect(alerts).not.toHaveAttribute("open");
+ fireEvent.click(screen.getByText("Choose each alert sound"));
+ expect(screen.getByLabelText("Card found sound")).toBeVisible();
+ expect(screen.getByLabelText("Card found sound").querySelectorAll("option")).toHaveLength(16);
+ fireEvent.change(screen.getByLabelText("Card found sound"),{target:{value:"coin"}});
+ fireEvent.click(screen.getByRole("button", {name:/1 Look/}));
+ fireEvent.click(screen.getByText("Save presentation settings"));
+ await waitFor(()=>expect(apiRequest).toHaveBeenCalledWith("/api/v1/presentation/settings",expect.objectContaining({body:expect.stringContaining('"found":"coin"')})));
+});
+
+
+it("switches focused workspaces without discarding a draft",async()=>{
+ const {container}=render(<Studio/>);await screen.findByText("Save presentation settings");
+ container.querySelector("details")!.open=true;
+ fireEvent.change(screen.getByLabelText("Card animation"),{target:{value:"flip"}});
+ fireEvent.click(screen.getByRole("button",{name:/3 Replay & OBS/}));
+ expect(screen.getByRole("region",{name:"Pack recap controls"})).toBeVisible();
+ expect(screen.queryByRole("region",{name:"Preview settings"})).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:/1 Look/}));
+ expect(screen.getByLabelText("Card animation")).toHaveValue("flip");
 });

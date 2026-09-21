@@ -19,8 +19,9 @@ interface PrivateOcrResponse {
 export async function recognizeCardPhoto(
   photo: Blob,
   signal?: AbortSignal,
+  thorough = false,
 ): Promise<PrivateOcrHints> {
-  const result = await apiRequest<PrivateOcrResponse>("/api/v1/scanner/recognize", {
+  const result = await apiRequest<PrivateOcrResponse>("/api/v1/scanner/recognize" + (thorough ? "?thorough=true" : ""), {
     method: "POST",
     body: photo,
     signal,

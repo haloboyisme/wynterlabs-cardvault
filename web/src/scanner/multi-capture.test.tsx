@@ -1,3 +1,5 @@
+import {captureQualityMessage} from "./capture-quality";
+vi.mock("./capture-quality",()=>({captureQualityMessage:vi.fn(()=>"")}));
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -56,6 +58,52 @@ describe("continuous multi-card capture", () => {
     await waitFor(() => expect(countdown).toHaveTextContent("3"));
     await waitFor(() => expect(countdown).toHaveTextContent("2"));
     await waitFor(() => expect(countdown).toHaveTextContent("1"));
+    await waitFor(() => expect(onResult).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("Card captured. Remove it or show the next card.")).toBeVisible();
+  });
+
+  it("waits for a clearer frame before automatic capture", async () => {
+    vi.mocked(captureQualityMessage).mockReturnValueOnce("Check focus").mockReturnValue("");
+    const user = userEvent.setup();
+    const track = { stop: vi.fn(), getSettings: () => ({}) };
+    const stream = {
+      getTracks: () => [track],
+      getVideoTracks: () => [track],
+    } as unknown as MediaStream;
+    const onResult = vi.fn();
+    const canvas = document.createElement("canvas");
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    render(<CardScanner
+      continuous
+      sampleIntervalMs={10}
+      countdownStepMs={80}
+      sampleFingerprint={vi.fn(() => [10, 20, 30])}
+      onResult={onResult}
+      consentStore={consentStore}
+      startCamera={vi.fn(async () => stream)}
+      listCameras={vi.fn(async () => [])}
+      captureFrame={vi.fn(() => canvas)}
+      createPreview={vi.fn(async () => "blob:auto-card")}
+      createUpload={vi.fn(async () => new Blob(["card"]))}
+      createWorker={vi.fn(async () => ({
+        recognize: vi.fn(async () => ({
+          name: "Black Lotus",
+          titleCandidates: ["Black Lotus"],
+          rawText: "Black Lotus",
+        })),
+        terminate: vi.fn(async () => undefined),
+      }))}
+    />);
+    await user.click(screen.getByRole("button", { name: "Start camera" }));
+    const countdown = await screen.findByRole("status", { name: "Automatic capture countdown" });
+    expect(countdown).toHaveTextContent("5");
+    expect(onResult).not.toHaveBeenCalled();
+    await waitFor(() => expect(countdown).toHaveTextContent("4"));
+    await waitFor(() => expect(countdown).toHaveTextContent("3"));
+    await waitFor(() => expect(countdown).toHaveTextContent("2"));
+    await waitFor(() => expect(countdown).toHaveTextContent("1"));
+    await screen.findByText("Waiting a little longer for focus and lighting. Keep the card steady.");
+    expect(onResult).not.toHaveBeenCalled();
     await waitFor(() => expect(onResult).toHaveBeenCalledTimes(1));
     expect(screen.getByText("Card captured. Remove it or show the next card.")).toBeVisible();
   });
@@ -176,4 +224,32 @@ describe("continuous multi-card capture", () => {
     expect(screen.getByText("Session limit reached (250 cards)."))
       .toHaveAttribute("role", "status");
   });
+});
+
+it.each([[false, false], [true, false], [false, true], [true, true]])("waits for focus on manual capture (DIY=%s, cancel=%s)", async (continuous, cancel) => {
+  const {act, fireEvent} = await import("@testing-library/react");
+  vi.useFakeTimers();
+  try {
+    vi.mocked(captureQualityMessage).mockReturnValueOnce("Check focus").mockReturnValue("");
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    const canvas = document.createElement("canvas");
+    const captureFrame = vi.fn(() => canvas);
+    const onResult = vi.fn();
+    render(<CardScanner continuous={continuous} stableFrameAutoCapture={false}
+      onResult={onResult} consentStore={consentStore}
+      startCamera={vi.fn(async () => ({getTracks:()=>[],getVideoTracks:()=>[]} as unknown as MediaStream))}
+      listCameras={vi.fn(async () => [])} captureFrame={captureFrame}
+      createPreview={vi.fn(async () => "blob:focused")}
+      createUpload={vi.fn(async () => new Blob(["card"]))}
+      createWorker={vi.fn(async () => ({recognize:vi.fn(async () => ({name:"Black Lotus",titleCandidates:[],rawText:"Black Lotus"})),terminate:vi.fn(async()=>undefined)}))}
+    />);
+    await act(async () => {fireEvent.click(screen.getByRole("button", {name:"Start camera"}));});
+    fireEvent.click(screen.getByRole("button", {name:continuous ? "Capture now" : "Capture card"}));
+    expect(screen.getByText(/Waiting a little longer for focus/)).toBeVisible();
+    expect(onResult).not.toHaveBeenCalled();
+    if (cancel) fireEvent.click(screen.getByRole("button", {name:continuous ? "Stop scanning" : "Cancel scan"}));
+    await act(async () => {await vi.advanceTimersByTimeAsync(2000);});
+    expect(captureFrame).toHaveBeenCalledTimes(cancel ? 1 : 2);
+    expect(onResult).toHaveBeenCalledTimes(cancel ? 0 : 1);
+  } finally {vi.useRealTimers();}
 });

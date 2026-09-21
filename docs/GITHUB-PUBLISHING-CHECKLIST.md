@@ -38,3 +38,13 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
   for models.py rather than changing unrelated enum behavior in this release.
 - Migration graph has one head, 0023_brand_design; installer shell syntax passed.
 - Changed files were scanned for private host paths, addresses and credential markers.
+
+
+### Post-v2.7.7 public candidate — September 21, 2026
+
+- 647 frontend tests passed across 80 files; TypeScript and production build passed.
+- Four focused pure OCR recovery tests passed. Full API suite was not rerun for this follow-up.
+- Changed files screened for private addresses, host paths, credentials and private hardware imports.
+- Private hardware implementation remains excluded; public simulation is preserved.
+- No fresh clean-host installation, backup/restore drill, physical missed-card or prolonged device acceptance is claimed.
+- Existing v2.7.7 tag remains unchanged; these updates are on v2.

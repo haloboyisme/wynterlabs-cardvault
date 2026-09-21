@@ -56,6 +56,10 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
+## Latest updates on the v2 branch
+
+Deeper scan recovery, draggable captured-photo inspection, automatic OBS audio and a redesigned streamer studio are available on `v2` after the v2.7.7 tag. See [follow-up notes](docs/post-v2.7.7-updates.md). The v2.7.7 release tag remains unchanged.
+
 ## ✨ New in Version 2.7.7
 
 - **Custom backgrounds:** three original trainer, mana and anime-inspired stills; layer your own PNG, JPEG or GIF over a preset. Personal choices stay per account/browser; admins can save site-wide defaults and restore branding.
@@ -81,7 +85,7 @@ and reprints can produce an incorrect match.
 Start in **Account → Look & comfort** for themes, **Scan → Streamer preview**
 for presentation, or **Admin → Site & branding** for shared design.
 Interface sounds default off; streamer master mute defaults off for new settings.
-Saved choices are preserved. Browser audio still requires a user gesture.
+Saved choices are preserved. OBS overlay audio starts automatically where allowed; ordinary browsers may still require a user gesture.
 
 [Release notes](docs/v2.7.7-release.md) ·
 [Streamer guide](docs/STREAMER-PREVIEW.md) ·

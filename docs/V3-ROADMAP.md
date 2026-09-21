@@ -1,6 +1,6 @@
 # CardVault roadmap — remaining work
 
-Updated September 16, 2026. This is the outstanding product backlog, reconciled
+Updated September 21, 2026. This is the outstanding product backlog, reconciled
 with the original Card Scanner Project and verified implementation records. Version
 labels describe targets, not promised dates. V2.6 remembered scan preferences are
 included in the public V2.6.0 release; physical V2.8 acceptance remains pending.
@@ -21,6 +21,10 @@ recovery. Their release records remain historical evidence.
 | V3.5 | Deferred | Account-owned wireless feeders and Bluetooth compatibility |
 | Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
 
+## Completed after V2.7.7 on v2
+
+Deeper sideways/full-art recognition, bounded focus waits, draggable scan photographs, automatic OBS audio and the streamer studio redesign are implemented. Physical missed-card and prolonged device acceptance remain outstanding. See [follow-up notes](post-v2.7.7-updates.md).
+
 ## Completed in V2.7.7
 
 The planned V2.7.6 backgrounds, uploads, admin restore controls, interface cues and motion-speed work shipped in V2.7.7. Per-game refresh feedback/retry, isolated provider failures, scanner framing/zoom/OCR improvements and uncapped recap lists are implemented. They are removed from the backlog. Performance work uses bounded export images, lazy retries and paused effects rather than promising a particular CPU/RAM reduction on every device.
@@ -29,7 +33,7 @@ The planned V2.7.6 backgrounds, uploads, admin restore controls, interface cues 
 
 Basic sideways OCR retry and manual correction already exist. Version 2.6 updates
 add either-half split-card matching, explicit selection for ambiguous printings,
-45-second search recovery with retained photos, and foil/promo/long-session guidance.
+90-second matching recovery with retained photos, and foil/promo/long-session guidance.
 Automated checks pass; physical card/camera acceptance remains outstanding.
 
 - Test difficult sideways/split-room, double-faced, foil and promo cards.

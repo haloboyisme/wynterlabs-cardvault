@@ -64,7 +64,9 @@ def _plausible_title(value: str) -> bool:
     words = value.split()
     if letters < 3 or len(value) < 3 or len(value) > 200 or len(words) > 14:
         return False
-    if _RULES_TEXT.search(value) or _CARD_TYPE.search(value):
+    if (len(words) >= 6 and len(_RULES_TEXT.findall(value)) >= 2) or (
+        _CARD_TYPE.search(value) and ("—" in value or "–" in value or re.match(r"^(basic|legendary|snow|world)\b", value, re.I))
+    ):
         return False
     return re.search(r"[+=]|\d+\s*/\s*\d+", value) is None
 
@@ -159,11 +161,12 @@ def hints_from_lines(
     *,
     image_height: int,
     image_width: int | None = None,
+    thorough: bool = False,
 ) -> ScannerOcrHints:
     candidates: list[str] = []
     seen: set[str] = set()
-    top_limit = image_height * 0.4
-    for line in sorted(lines, key=lambda item: (item.y, -item.score)):
+    top_limit = image_height * (0.90 if thorough else 0.4)
+    for line in sorted(lines, key=lambda item: (item.y > image_height * .4, -item.score, item.y) if thorough else (item.y, -item.score)):
         cleaned = _clean_line(line.text)
         if line.score < 0.45 or line.y > top_limit or not _plausible_title(cleaned):
             continue
@@ -210,7 +213,7 @@ class RapidCardOcr:
             )
         return self._engine
 
-    def recognize(self, payload: bytes | bytearray) -> ScannerOcrHints:
+    def recognize(self, payload: bytes | bytearray, *, thorough: bool = False) -> ScannerOcrHints:
         import cv2
         import numpy as np
 
@@ -233,9 +236,15 @@ class RapidCardOcr:
             light = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(light)
             balanced = cv2.cvtColor(cv2.merge((light, a, b)), cv2.COLOR_LAB2BGR)
             soft = cv2.GaussianBlur(balanced, (0, 0), 1.0)
-            yield cv2.addWeighted(balanced, 1.4, soft, -0.4, 0)
+            enhanced = cv2.addWeighted(balanced, 1.4, soft, -0.4, 0)
+            yield enhanced
+            if thorough:
+                yield cv2.rotate(enhanced, cv2.ROTATE_90_CLOCKWISE)
+                yield cv2.rotate(enhanced, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                yield np.ascontiguousarray(np.rot90(enhanced, 2))
 
         best: ScannerOcrHints | None = None
+        recovered: dict[str, tuple[str, float, ScannerOcrHints]] = {}
         with self._lock:
             engine = self._load_engine()
             for candidate in candidates():
@@ -257,13 +266,24 @@ class RapidCardOcr:
                     lines,
                     image_height=candidate_height,
                     image_width=candidate_width,
+                    thorough=thorough,
                 )
+                if thorough:
+                    for title in hints.title_candidates:
+                        confidence = max((line.score for line in lines if title in _title_variants(_clean_line(line.text))), default=0)
+                        key = title.casefold()
+                        if key not in recovered or confidence > recovered[key][1]:
+                            recovered[key] = (title, confidence, hints)
                 if best is None or len(hints.title_candidates) > len(best.title_candidates):
                     best = hints
                 # Upright cards remain a single pass. Sideways retries happen
                 # only when the current orientation has no usable title.
-                if hints.name:
+                if hints.name and not thorough:
                     return hints
+        if thorough and recovered:
+            ranked = sorted(recovered.values(), key=lambda entry: entry[1], reverse=True)[:8]
+            winner = ranked[0][2]
+            return winner.model_copy(update={"name": ranked[0][0], "title_candidates": [entry[0] for entry in ranked]})
         return best or hints_from_lines([], image_height=height, image_width=width)
 
 
