@@ -1,5 +1,7 @@
 # Version 2.0.1 release readiness
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](README.md) for maintained behavior and remaining work.
+
 Historical V2.0.1 evidence is preserved below. For the completed V2.5 release
 line, see [final V2.5 readiness](v2.5-release-readiness.md).
 

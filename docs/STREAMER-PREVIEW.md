@@ -56,10 +56,11 @@ a fresh pack automatically; Start new pack also starts one explicitly.
 
 **Replay last session** on Scan replays the previous saved session without changing
 the current pack or collection. It survives page refreshes and browser restarts
-because the cards are stored with the account. One previous session is kept, up
-to 100 pulls; the next outgoing session replaces it. Repeated new-pack actions on
+because the cards are stored with the account. One previous session is kept, with
+no fixed pull-count cap; the next outgoing session replaces it. Practical browser
+memory, storage, transfer size and export duration still limit very large sessions. Repeated new-pack actions on
 an empty pack preserve the last recap. Unsaved photos and undelivered browser-queue
-events cannot be recovered. Capture saved pulls must be enabled.
+events cannot be recovered. Add saved cards to my replay must be enabled.
 
 Starting a fresh pack revokes the old OBS link; create a new link for the new pack.
 Archived history is excluded from OBS responses. Last-session replay is local to

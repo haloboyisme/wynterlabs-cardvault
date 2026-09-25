@@ -1,5 +1,7 @@
 # V2 Linked Sign-In and Scanner Controls Design
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 **Status:** Approved in chat on 2026-08-31. The current $6 increment implements only the scanner-control slice; linked sign-in remains the next independent V2 track.
 
 ## Goals

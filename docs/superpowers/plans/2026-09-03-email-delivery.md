@@ -1,5 +1,7 @@
 # Account email delivery implementation plan
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 **Goal:** Deliver signup verification and password recovery on the private installation, without changing existing members' access.
 
 **Approved scope:** Gmail for the owner's installation; configurable authenticated SMTP for other installations. Google sign-in is a separate stage; Apple and hardware remain excluded. Reuse the current account forms, roles, encryption library, session revocation, database, and styles. Do not publish until private acceptance.

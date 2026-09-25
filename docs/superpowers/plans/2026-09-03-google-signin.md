@@ -1,5 +1,7 @@
 # Optional Google sign-in implementation plan
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 Goal: private-first, optional Google login and explicit account linking, configured in Admin after Docker owner setup.
 
 Architecture: authorization-code flow with PKCE, browser-bound single-use state and nonce, verified Google RS256 ID tokens. Reuse local sessions, MFA, password recovery and owner permissions. Encrypt configuration using the existing escrow key with a separate purpose label. Never auto-link by email. New visitors use existing signup then explicitly link Google; this keeps a working password fallback.

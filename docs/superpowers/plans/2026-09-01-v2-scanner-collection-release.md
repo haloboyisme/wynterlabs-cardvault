@@ -1,5 +1,7 @@
 # V2 Scanner, Collection, and Release Closure Implementation Plan
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Finish V2 scanner preselection and feedback, collection statistics and marketplace handoff, then close release verification on the live private installation.

@@ -1,5 +1,7 @@
 # Owner Setup Closure and Five-Hour Trusted MFA Implementation Plan
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close the owner bootstrap UI after first setup, make MFA optional for members and mandatory for privileged roles, and trust a browser for exactly five hours after a successful MFA challenge.

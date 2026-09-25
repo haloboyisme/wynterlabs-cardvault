@@ -1,11 +1,11 @@
 # Security policy
 
-Updated September 12, 2026 for V2.7.5.
+Reviewed September 25, 2026 for V2.7.7 and the current `v2` follow-ups.
 
 ## Reporting a vulnerability
 
-This repository is public. GitHub private vulnerability reporting is currently
-disabled, and no dedicated private reporting address is documented here.
+This repository is public. Use GitHub private vulnerability reporting if the
+repository offers it. No dedicated private reporting address is documented here.
 Do not post exploit details, credentials or suspected vulnerabilities in public
 issues, discussions or pull requests. Ask the maintainer to arrange a private
 reporting channel without including sensitive details. Once a private channel
@@ -17,7 +17,8 @@ codes, session tokens or unredacted production logs to GitHub.
 
 ## Maintained release line
 
-`v2` is the maintained release line; the current release is **V2.7.5**. Security
+`v2` is the maintained release line; the latest documented release tag is **V2.7.7**, with additional
+changes on `v2` described in the [follow-up notes](docs/post-v2.7.7-updates.md). Security
 fixes target that line. Older releases, including `1.0.x`, do not have a separate
 backport commitment. Review [releases](https://github.com/haloboyisme/wynterlabs-cardvault/releases)
 and the [upgrade guide](docs/UPGRADING.md), preserving secrets and taking a verified
@@ -60,3 +61,14 @@ from this public release.
 ## Background uploads (V2.7.7)
 
 Shared background uploads require existing branding-administration permission. Only bounded embedded PNG/JPEG/GIF data is accepted; SVG and remote tracking URLs are rejected. GIFs require a static fallback. Personal backgrounds stay in browser storage scoped by account. Do not upload secrets or private artwork to shared branding: shared design is served to site visitors.
+
+## Failed-scan diagnostics
+
+The authenticated scan log stores account ownership, a random scan identifier,
+mode, attempt count, timestamps, reason tags and outcome. It does not store scan
+photos or recognized text. Members see their own records; authorized admins can
+request a combined view. Reads exclude records older than 90 days; hourly cleanup
+removes expired records, and writes cap each account at 1,000 records. The UI shows
+the latest 100. Quality tags indicate possible causes, not verified diagnoses.
+Do not include account logs in public issue reports without reviewing them.
+See [scan history](docs/SCANNING.md) for behavior and limits.

@@ -1,5 +1,7 @@
 # V2 Account and Community Completion Design
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 **Status:** Approved in chat on 2026-09-02
 
 ## Goal

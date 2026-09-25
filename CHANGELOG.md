@@ -1,5 +1,11 @@
 # Changelog
 
+## Documentation refresh — September 25, 2026
+
+- Reconcile installation, upgrade, security, contribution and streamer guides with V2.7.7 and current v2 follow-ups. Correct the old 100-pull recap limit.
+- Add a documentation index and scan-history guide; distinguish dated release evidence from current instructions. Explain migration 0024 and the standalone helper's same-version restriction.
+- No application behavior, license terms, release version or existing tags changed.
+
 ## September 25, 2026 — failed-scan history and face matching
 
 - Log first failed attempts across scanner modes, including retry recovery, manual corrections and skipped cards. Keep stable scan IDs and reject stale updates to avoid duplicate or overwritten outcomes.

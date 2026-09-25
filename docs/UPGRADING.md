@@ -1,11 +1,11 @@
 # Standalone upgrades
 
 The repaired upgrade helper shipped in Version 2.5.0 and is included in the
-stable **V2.7.5** release. The older `v2.0.1` download still contains the broken
+stable **V2.7.7** release. The older `v2.0.1` download still contains the broken
 helper; do not use that older helper. See [installation](INSTALL.md) and the
 [final V2.5 verification record](v2.5-release-readiness.md).
 
-To upgrade an older standalone installation using V2.7.5:
+To upgrade an older standalone installation using V2.7.7:
 
 1. Keep your original source checkout and escrowed secrets. Obtain the newer
    trusted release separately; never overwrite installation secrets.
@@ -29,6 +29,24 @@ Application rollback is not a database downgrade. After a migration failure,
 preserve the backup and use the documented isolated recovery procedure; do not
 assume older code can safely run against every newer schema. This patch does
 not change migration rollback behavior.
+
+## Current v2 branch follow-ups
+
+The current branch adds `0024_scan_failures` after `0023_brand_design`. Back up
+source, configuration and database, and verify the backup in an isolated database.
+Build the updated API/web, apply `alembic upgrade head` in the configured API
+migration environment, then restart the updated services and verify readiness,
+sign-in, collection, scanning and Scan history. Do not run an unconfigured local
+Alembic command against an assumed database. The new table is additive; rollback
+of application images is distinct from database recovery.
+
+`VERSION` remains `2.7.7` because these are branch follow-ups, not a newly tagged
+release. The standalone upgrade helper requires a **strictly newer VERSION** and
+will reject a 2.7.7-to-2.7.7 branch update. Do not edit VERSION or use disposable-test
+flags to bypass that check. Existing 2.7.7 standalone installations need a reviewed
+manual rollout for their deployment or a later numbered release. The private live
+rollout is not evidence of a tested same-version standalone upgrade. Fresh branch
+installs apply the current migration head through the installer.
 
 ## Maintainer check
 

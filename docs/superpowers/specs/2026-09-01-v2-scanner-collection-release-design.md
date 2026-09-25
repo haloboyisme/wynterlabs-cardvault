@@ -1,5 +1,7 @@
 # V2 Scanner, Collection, and Release Closure Design
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 **Status:** Approved through the owner's combined-bundle approval and $32 hard cap.
 
 ## Goal

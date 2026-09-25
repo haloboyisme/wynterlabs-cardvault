@@ -1,5 +1,7 @@
 # Owner Setup Closure and Five-Hour Trusted MFA Design
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 ## Status
 
 Approved for private V2 implementation. Public GitHub V2

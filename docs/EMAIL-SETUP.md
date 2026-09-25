@@ -1,6 +1,6 @@
 # Verification and password recovery email
 
-V2.5 development feature. Email is optional and off on new installations until an
+Available since V2.5. Email is optional and off on new installations until an
 owner or superadmin configures it in **Admin → Verification & recovery**.
 
 ## Configure

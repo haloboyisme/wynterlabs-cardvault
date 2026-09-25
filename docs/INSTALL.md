@@ -4,6 +4,15 @@ Use the standalone Docker workflow included with this release. Supply your own
 domain or LAN host, storage location, secrets, and backup destination; do not
 reuse values from another installation.
 
+## Choose your source
+
+The command below installs the immutable `v2.7.7` tag. The maintained `v2` branch
+contains newer scanner and presentation fixes, including failed-scan history and
+migration `0024_scan_failures`. For a fresh installation of those updates, change
+`--branch v2.7.7` to `--branch v2` and record the commit with `git rev-parse HEAD`.
+The branch changes over time; a tag is a fixed release. Existing installations
+should read [upgrade guidance](UPGRADING.md) before changing source.
+
 ## Before you begin
 
 Google sign-in is optional and disabled by default. After Docker installation
@@ -24,11 +33,11 @@ LAN hostname requirements, and account-linking instructions.
 
 ## Install
 
-Clone the immutable V2.7.5 release and install WynterLabs CardVault with one command.
+Clone the immutable V2.7.7 release and install WynterLabs CardVault with one command.
 Replace `YOUR_HOST_OR_IP` with the LAN address or DNS name used by members:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.7.5 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.7.7 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 If the release is already downloaded, run the included bootstrap directly:

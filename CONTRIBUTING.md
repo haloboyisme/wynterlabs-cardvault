@@ -1,13 +1,13 @@
 # Contributing to WynterLabs CardVault
 
-Updated September 12, 2026 for V2.7.5.
+Reviewed September 25, 2026 for V2.7.7 and the current `v2` follow-ups.
 
 ## Before starting
 
 Contributions require prior owner approval. Use the current `v2` branch as the
 starting point and check the [remaining roadmap](docs/V3-ROADMAP.md) first.
 Streamer presentation, dynamic themes, prize feedback and shared Brand Studio
-are already included; see the [release notes](docs/v2.7.5-release.md).
+are already included, along with background uploads, catalog recovery and failed-scan history; see the [current documentation](docs/README.md).
 Keep approved changes focused and explain the user-visible problem and result.
 
 ## Development and verification

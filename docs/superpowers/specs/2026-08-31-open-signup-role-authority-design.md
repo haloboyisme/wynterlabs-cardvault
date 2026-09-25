@@ -1,5 +1,7 @@
 # Open Signup and Role Authority Design
 
+> Historical record. Version numbers, plans and test results below describe their original date. See the [current documentation](../../README.md) for maintained behavior and remaining work.
+
 ## Goal
 
 Allow anyone who can reach the CardVault server to create a normal member account while ensuring that self-registration can never grant administrative authority. Add a separate super-admin role so the owner can delegate ordinary administrator management without delegating ownership.
