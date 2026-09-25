@@ -1,3 +1,4 @@
+import {useScanExitWarning} from "../scanner/exit-warning";
 import {createScanTrace, qualityTags, type ScanTrace} from "../scanner/failure-log";
 import { captureQualityMessage } from "../scanner/capture-quality";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -173,6 +174,7 @@ export function CardScanner({
   const [previewDelivered, setPreviewDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+  useScanExitWarning(camera || busy);
   const [error, setError] = useState("");
   const [consent, setConsent] = useState<CameraConsent>(() => consentStore.read());
   const [choosingConsent, setChoosingConsent] = useState(false);

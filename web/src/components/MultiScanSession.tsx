@@ -1,3 +1,5 @@
+import {refinePrinting} from "../scanner/refine-printing";
+import {useScanExitWarning} from "../scanner/exit-warning";
 import {createScanTrace} from "../scanner/failure-log";
 import { ScanPhotoWindow } from "./ScanPhotoWindow";
 import { ScanReveal } from "../presentation/ScanReveal";
@@ -75,6 +77,7 @@ export function MultiScanSession({
   const [enlargedId, setEnlargedId] = useState("");
   const [session, setSessionState] = useState(() => createMultiScanSession());
   const [retakeId, setRetakeId] = useState("");
+  useScanExitWarning(session.items.some(item => item.status !== "saved"));
   const [sessionStatus, setSessionStatus] = useState("");
   const [stopped, setStopped] = useState(false);
   const [filters, setFilters] = useState<Record<string, { set: string; collector: string }>>({});
@@ -149,6 +152,7 @@ export function MultiScanSession({
         ...scan.hints.titleCandidates,
       ].map((value) => value.trim()).filter(Boolean))].slice(0, 8);
       let candidates: ScanCandidate[] = [];
+      let usedDeepRead = false;
       let detectedTitle = manualTitle?.trim() ?? privateTitles[0]?.trim() ?? scan.hints.name.trim();
       for (let attempt = 0; attempt < 2 && !candidates.length; attempt++) {
         if (attempt === 1) {
@@ -157,6 +161,7 @@ export function MultiScanSession({
           if (manualTitle || !scan.imageBlob) break;
           trace?.retry();
           setSessionStatus("Taking a closer look: checking sideways text and full-art layouts. Your photo is kept.");
+          usedDeepRead = true;
           const deeper = await recognizeCardPhoto(scan.imageBlob, controller.signal, true);
           privateSet = deeper.set ?? "";
           privateCollector = deeper.collector ?? "";
@@ -188,11 +193,23 @@ export function MultiScanSession({
       }
       }
       if (generations.current.get(id) !== generation) return;
-      const detectedPrintingId = uniqueDetectedPrintingId(candidates, {
+      let detectedPrintingId = uniqueDetectedPrintingId(candidates, {
         name: detectedTitle,
         set: privateSet || scan.hints.set,
         collector: privateCollector || scan.hints.collector,
       }, preferredSet, preferredSetGame);
+      if (candidates[0] && !manualTitle) trace?.suggest(candidates.find(c=>c.printing_id===detectedPrintingId) ?? candidates[0], Boolean(detectedPrintingId));
+      if (candidates.length && !detectedPrintingId && !manualTitle && scan.imageBlob && !usedDeepRead) {
+        trace?.fail("ambiguous_printing");trace?.retry();
+        setSessionStatus("Checking the set and card number more closely before asking you to choose.");
+        try {
+          const refined=await refinePrinting(scan.imageBlob,controller.signal,preferredSet,preferredSetGame,preferredGame);
+          if (generations.current.get(id) !== generation) return;
+          if(refined){candidates=refined.candidates;detectedTitle=refined.hints.name;detectedPrintingId=uniqueDetectedPrintingId(candidates,refined.hints,preferredSet,preferredSetGame);}
+        } catch(reason){if((reason as Error).name === "AbortError")throw reason;trace?.fail("service_error");}
+      }
+      if (generations.current.get(id) !== generation) return;
+      if (candidates[0] && !manualTitle) trace?.suggest(candidates.find(c=>c.printing_id===detectedPrintingId) ?? candidates[0], Boolean(detectedPrintingId));
       if (!candidates.length) trace?.fail(titles.length ? "no_catalog_match" : "no_text");
       else if (!detectedPrintingId) trace?.fail("ambiguous_printing");
       else if (!manualTitle) trace?.resolve("recovered_by_retry");
@@ -342,7 +359,7 @@ export function MultiScanSession({
           const savedCard = item.candidates.find(c => c.printing_id === item.selectedPrintingId);
           if (savedCard) savedPull(savedCard, item.finish, item.quantity);
           saved += 1;
-          captures.current.get(item.id)?.trace?.saved();
+          if (savedCard) captures.current.get(item.id)?.trace?.saved(savedCard, item.finish);
           captures.current.delete(item.id);
           generations.current.delete(item.id);
           setFilters((current) => {

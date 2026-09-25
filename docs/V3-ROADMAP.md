@@ -23,7 +23,7 @@ recovery. Their release records remain historical evidence.
 
 ## Completed after V2.7.7 on v2
 
-Failed-scan logging is implemented across scanner modes, with reason tags, retry outcomes, account history, admin diagnostics and bounded retention. No photos or recognized text are stored. Server matching now checks either face of split, Room and double-faced names before limiting candidates.
+Failed-scan logging is implemented across scanner modes, with reason tags, retry outcomes, account history, admin diagnostics and bounded retention. Suggested/accepted catalog card and finish details plus error codes are included; no photos or raw OCR text are stored. Ambiguous camera matches get a deeper retry, and active scans warn before page-link navigation. Server matching now checks either face of split, Room and double-faced names before limiting candidates.
 
 Deeper sideways/full-art recognition, bounded focus waits, draggable scan photographs, automatic OBS audio and the streamer studio redesign are implemented. Physical missed-card and prolonged device acceptance remain outstanding. See [follow-up notes](post-v2.7.7-updates.md).
 

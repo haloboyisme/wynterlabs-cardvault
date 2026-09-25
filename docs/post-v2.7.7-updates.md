@@ -1,5 +1,13 @@
 # Updates after v2.7.7
 
+## Scanner diagnostics and navigation protection — September 25, 2026
+
+- Confirm with OK/Cancel before a normal page-link click leaves an active camera or unfinished scan. Cancel preserves the workspace; native browser warnings cover refresh/close where supported. This does not add session recovery or an in-app browser Back interceptor.
+- Give ambiguous camera matches one deeper printing read, preserving review choices if it cannot identify a unique printing. Exact-printing confirmation remains required.
+- Add stable SCAN error codes plus original/latest catalog suggestions and successfully saved card/finish snapshots. Distinguish an interface-default finish from user-confirmed foil/nonfoil; the camera does not detect foil automatically.
+- Add migration `0025_scan_diagnostics`. Previous records retain their tags but cannot reconstruct missing card identities. No photos or raw OCR text are retained. Existing account/admin access and retention remain.
+- Public automatic scanning remains simulation-only. Existing release tags are unchanged; real-card success-rate and endurance acceptance remain separate.
+
 ## September 25, 2026 — failed-scan history and face matching
 
 - Log first failed attempts across scanner modes, including retry recovery, manual corrections and skipped cards. Keep stable scan IDs and reject stale updates to avoid duplicate or overwritten outcomes.

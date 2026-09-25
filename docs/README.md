@@ -25,8 +25,8 @@ continues to identify the release line. Use the commit SHA to identify a branch 
 - [Changes since the v2.7.7 tag](post-v2.7.7-updates.md)
 - [Changelog](../CHANGELOG.md)
 - [Remaining roadmap](V3-ROADMAP.md)
-- Current migration head: `0024_scan_failures`.
-- Latest code verification: 653 frontend tests, 10 focused backend tests,
+- Current migration head: `0025_scan_diagnostics`.
+- Latest code verification: 663 frontend tests, 12 focused backend tests,
   TypeScript and production build passed. This is not a full API test run or a
   physical camera/feeder endurance test.
 - Public automatic scanning remains simulation-only. Private feeder firmware,

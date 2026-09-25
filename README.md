@@ -60,7 +60,7 @@ and reprints can produce an incorrect match.
 
 Account-scoped failed-scan history, either-face catalog matching, deeper scan recovery, draggable captured-photo inspection, automatic OBS audio and a redesigned streamer studio are available on `v2` after the v2.7.7 tag. See [follow-up notes](docs/post-v2.7.7-updates.md). The v2.7.7 release tag remains unchanged.
 
-Open **Scan → Scan history · failed attempts** for failures and retry outcomes. Upgrade branch `v2` deployments through migration `0024_scan_failures` before restarting the updated application; see the follow-up notes for retention and privacy details.
+Open **Scan → Scan history · failed attempts** for failures and retry outcomes. Upgrade branch `v2` deployments through migration `0025_scan_diagnostics` before restarting the updated application; see the follow-up notes for retention and privacy details.
 
 ## ✨ New in Version 2.7.7
 

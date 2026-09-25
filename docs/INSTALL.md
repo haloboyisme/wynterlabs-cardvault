@@ -8,7 +8,7 @@ reuse values from another installation.
 
 The command below installs the immutable `v2.7.7` tag. The maintained `v2` branch
 contains newer scanner and presentation fixes, including failed-scan history and
-migration `0024_scan_failures`. For a fresh installation of those updates, change
+migration `0025_scan_diagnostics`. For a fresh installation of those updates, change
 `--branch v2.7.7` to `--branch v2` and record the commit with `git rev-parse HEAD`.
 The branch changes over time; a tag is a fixed release. Existing installations
 should read [upgrade guidance](UPGRADING.md) before changing source.

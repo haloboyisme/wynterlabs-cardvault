@@ -32,7 +32,7 @@ not change migration rollback behavior.
 
 ## Current v2 branch follow-ups
 
-The current branch adds `0024_scan_failures` after `0023_brand_design`. Back up
+The current branch adds `0025_scan_diagnostics` after `0024_scan_failures`. Back up
 source, configuration and database, and verify the backup in an isolated database.
 Build the updated API/web, apply `alembic upgrade head` in the configured API
 migration environment, then restart the updated services and verify readiness,

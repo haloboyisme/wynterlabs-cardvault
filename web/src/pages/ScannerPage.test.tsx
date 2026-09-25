@@ -763,3 +763,13 @@ it("persists the final failed attempt count after deeper single-card recognition
     expect(JSON.parse(String(calls.at(-1)?.[1]?.body))).toMatchObject({mode:"single",attempts:2,outcome:"unresolved",reasons:["no_catalog_match"]});
   });
 });
+
+it("checks ambiguous camera printings more deeply before asking for a choice",async()=>{
+ vi.mocked(recognizeCardPhoto).mockResolvedValueOnce({name:"Black Lotus",titleCandidates:[],rawText:""}).mockResolvedValueOnce({name:"Black Lotus",titleCandidates:[],rawText:"",set:"cmm",collector:"500"});
+ vi.mocked(getScanCandidates).mockResolvedValue([candidate,newerPrinting]);
+ vi.mocked(expandScanCandidates).mockResolvedValue([candidate,newerPrinting]);
+ render(<ScannerPage/>);fireEvent.click(screen.getByRole("button",{name:"Return private AI photo"}));
+ await waitFor(()=>expect(recognizeCardPhoto).toHaveBeenCalledWith(expect.any(Blob),expect.any(AbortSignal),true));
+ await waitFor(()=>expect(screen.getByRole("radio",{name:/black lotus.*cmm.*500/i})).toBeChecked());
+ expect(addCollectionItem).not.toHaveBeenCalled();
+});

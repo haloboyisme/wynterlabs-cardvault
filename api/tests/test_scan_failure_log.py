@@ -69,3 +69,21 @@ def test_retention_removes_old_rows(client):
     async def count():
         async with factory() as db:return len((await db.execute(select(ScanFailure))).scalars().all())
     assert asyncio.run(count())==1
+
+def test_codes_and_suggestion_acceptance_snapshots(client):
+    http,user,_=client
+    card=dict(printing_id=str(uuid.uuid4()),name='Original card',set_code='dsk',set_name='Duskmourn',game='mtg',collector_number='12',language='en',finish='nonfoil',finish_source='default')
+    accepted={**card,'printing_id':str(uuid.uuid4()),'name':'Correct card','finish':'foil','finish_source':'user_confirmed'}
+    body={**payload(),'reported':['wrong_match'],'outcome':'corrected_manually','diagnostics':{'suggested':card,'accepted':accepted}}
+    assert http.put(f'/api/v1/scanner/failures/{uuid.uuid4()}',json=body).status_code==200
+    row=http.get('/api/v1/scanner/failures').json()['items'][0]
+    assert row['codes']==['SCAN-002','SCAN-004']
+    assert row['diagnostics']['suggested']['name']=='Original card'
+    assert row['diagnostics']['accepted']['finish']=='foil'
+    user.id=uuid.uuid4()
+    assert http.get('/api/v1/scanner/failures').json()['items']==[]
+
+def test_diagnostics_reject_unbounded_or_image_data(client):
+    http,_,_=client
+    for diagnostics in [{'photo':'private'},{'suggested':{'name':'x'*301}},{'accepted':{'printing_id':'not-a-uuid'}}]:
+        assert http.put(f'/api/v1/scanner/failures/{uuid.uuid4()}',json={**payload(),'diagnostics':diagnostics}).status_code==422

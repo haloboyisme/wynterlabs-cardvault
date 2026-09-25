@@ -469,3 +469,13 @@ it("tries deeper orientation/full-art recognition after an unmatched quick read"
  await waitFor(()=>expect(recognizeCardPhoto).toHaveBeenCalledWith(expect.any(Blob),expect.any(AbortSignal),true));
  await waitFor(()=>expect(screen.getAllByText("review").length).toBeGreaterThan(0));
 });
+
+it("checks ambiguous camera printings more deeply before asking for a choice",async()=>{
+ vi.mocked(recognizeCardPhoto).mockResolvedValueOnce({name:"Black Lotus",titleCandidates:[],rawText:""}).mockResolvedValueOnce({name:"Black Lotus",titleCandidates:[],rawText:"",set:"cmm",collector:"500"});
+ vi.mocked(getScanCandidates).mockResolvedValue([candidate,newerPrinting]);
+ vi.mocked(expandScanCandidates).mockResolvedValue([candidate,newerPrinting]);
+ render(<MultiScanSession/>);fireEvent.click(screen.getByRole("button",{name:"Capture test card"}));
+ await waitFor(()=>expect(recognizeCardPhoto).toHaveBeenCalledWith(expect.any(Blob),expect.any(AbortSignal),true));
+ await waitFor(()=>expect(screen.getByRole("radio",{name:/black lotus.*cmm.*500/i})).toBeChecked());
+ expect(addCollectionItem).not.toHaveBeenCalled();
+});

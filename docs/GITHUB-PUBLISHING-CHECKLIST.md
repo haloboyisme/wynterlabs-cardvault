@@ -58,3 +58,12 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
 - Changed files screened for private addresses, host paths, credentials and private hardware imports. Public simulation remains unchanged.
 - Live database write/recovery and stale-event checks passed in a rolled-back transaction. Real-card and long-device acceptance remain pending.
 - Published on `v2`; the existing `v2.7.7` tag is unchanged.
+
+
+### Card/finish diagnostics and exit warning — September 25, 2026
+
+- Public frontend: 663 tests across 83 files passed; TypeScript and production build passed.
+- Public backend: 12 focused diagnostic, face-matching and OCR tests passed in a disposable container; the full API suite was not rerun.
+- Migration head: `0025_scan_diagnostics`; upgrade before starting the updated API.
+- Checked changed files for private information and checked relative documentation links. Public simulation and existing tags are preserved.
+- Live card/finish snapshot and code checks passed in a rolled-back transaction. No new physical-card acceptance claim is made.

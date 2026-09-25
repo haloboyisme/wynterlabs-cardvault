@@ -1018,6 +1018,7 @@ class ScanFailure(Base):
     __table_args__ = (Index("ix_scan_failures_owner_created", "user_id", "created_at"),)
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     scan_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    diagnostics: Mapped[dict] = mapped_column(json_document(), default=dict)
     mode: Mapped[str] = mapped_column(String(16))
     revision: Mapped[int] = mapped_column(Integer)
     attempts: Mapped[int] = mapped_column(Integer)

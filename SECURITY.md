@@ -65,8 +65,9 @@ Shared background uploads require existing branding-administration permission. O
 ## Failed-scan diagnostics
 
 The authenticated scan log stores account ownership, a random scan identifier,
-mode, attempt count, timestamps, reason tags and outcome. It does not store scan
-photos or recognized text. Members see their own records; authorized admins can
+mode, attempt count, timestamps, reason tags, outcome and catalog snapshots of
+the original/latest suggestion and accepted card, including set, collector number,
+language and finish. It does not store scan photos or raw OCR text. Members see their own records; authorized admins can
 request a combined view. Reads exclude records older than 90 days; hourly cleanup
 removes expired records, and writes cap each account at 1,000 records. The UI shows
 the latest 100. Quality tags indicate possible causes, not verified diagnoses.

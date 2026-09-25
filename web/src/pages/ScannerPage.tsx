@@ -1,3 +1,5 @@
+import {refinePrinting} from "../scanner/refine-printing";
+import {useScanExitWarning} from "../scanner/exit-warning";
 import {createScanTrace,setScanLogAccount,type ScanTrace} from "../scanner/failure-log";
 import {ScanFailureHistory} from "../components/ScanFailureHistory";
 import { ScanPhotoWindow } from "../components/ScanPhotoWindow";
@@ -106,6 +108,7 @@ export function ScannerPage() {
   const [setFilter, setSetFilter] = useState("");
   const [collectorFilter, setCollectorFilter] = useState("");
   const [collectionTotal, setCollectionTotal] = useState<number | null>(null);
+  useScanExitWarning(searching || saving || Boolean(capturedPhoto && !success));
   const preferredSetRecord = selectedSetFromValue(catalogSets, preferredSet);
   const preferredSetCode = preferredSetRecord?.code ?? "";
   const preferredSetGame = preferredSetRecord?.game ?? "";
@@ -239,14 +242,24 @@ export function ScannerPage() {
           if (current !== generation.current) return;
           const confident = filterConfidentScanCandidates(name, result);
           if (confident.length) {
-            const expanded = rankScanCandidates(
+            let expanded = rankScanCandidates(
               await expandScanCandidates(confident, controller.signal, preferredGame || undefined),
               matchHints,
               preferredSetCode,
               preferredSetGame,
             );
             if (current !== generation.current) return;
-            setDetectedTitle(name);
+            const initiallyDetected = uniqueDetectedPrintingId(expanded, matchHints, preferredSetCode, preferredSetGame);
+            if (expanded[0]) trace?.suggest(expanded.find(c=>c.printing_id===initiallyDetected) ?? expanded[0], Boolean(initiallyDetected));
+            if (!initiallyDetected && attempt === 0 && imageBlob) {
+              trace?.fail("ambiguous_printing"); trace?.retry();
+              try {
+                const refined = await refinePrinting(imageBlob, controller.signal, preferredSetCode, preferredSetGame, preferredGame || undefined);
+                if (current !== generation.current) return;
+                if (refined) {expanded=refined.candidates; Object.assign(matchHints,refined.hints);trace?.resolve("recovered_by_retry");}
+              } catch (reason) {if ((reason as Error).name === "AbortError") throw reason;trace?.fail("service_error");}
+            }
+            setDetectedTitle(matchHints.name);
             setCandidates(expanded);
             const detectedId = uniqueDetectedPrintingId(
               expanded,
@@ -255,6 +268,7 @@ export function ScannerPage() {
               preferredSetGame,
             );
             const detected = expanded.find((candidate) => candidate.printing_id === detectedId);
+            if (expanded[0]) trace?.suggest(detected ?? expanded[0], Boolean(detected));
             if (detected) {
               selectCandidate(detected, false);
               if (attempt > 0) trace?.resolve("recovered_by_retry");
@@ -324,7 +338,7 @@ export function ScannerPage() {
         } catch {
           if (current === generation.current) setCollectionTotal(null);
         }
-        scanTrace.current?.saved();
+        scanTrace.current?.saved(selected, finish);
         savedPull(selected, finish, quantity);
         setEnlargedPhoto(false);
         setSuccess(selected.name + " was added to your collection.");
