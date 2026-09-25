@@ -1,3 +1,4 @@
+import {createScanTrace, qualityTags, type ScanTrace} from "../scanner/failure-log";
 import { captureQualityMessage } from "../scanner/capture-quality";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
@@ -47,6 +48,7 @@ import {
 } from "../scanner/capture-shortcut";
 
 export interface CapturedScan {
+  trace?: ScanTrace;
   hints: OcrHints;
   previewUrl: string;
   imageBlob?: Blob;
@@ -54,7 +56,8 @@ export interface CapturedScan {
 
 interface Props {
   onResult: (result: CapturedScan) => void;
-  onReset?: () => void;
+  onReset?: (reason?: "retake" | "cancel") => void;
+  failureTrace?: ScanTrace;
   nextCardSignal?: number;
   prepareImage?: typeof prepareCardImage;
   createWorker?: typeof createCardOcrWorker;
@@ -126,6 +129,7 @@ const writeAlignment = (value: CameraAlignment) => {
 
 export function CardScanner({
   onResult,
+  failureTrace,
   prepareImage = prepareCardImage,
   createWorker = createCardOcrWorker,
   consentStore = browserCameraConsentStore,
@@ -154,6 +158,7 @@ export function CardScanner({
   const streamRef = useRef<MediaStream | null>(null);
   const workerRef = useRef<CardOcrWorker | null>(null);
   const previewRef = useRef("");
+  const pendingTrace = useRef<ScanTrace|null>(null);
   const generation = useRef(0);
   const activeOcrRequest = useRef(0);
   const previousNextCardSignal = useRef(nextCardSignal);
@@ -261,7 +266,12 @@ export function CardScanner({
     activeOcrRequest.current = request;
     setBusy(true);
     setCaptureStatus("Reading card and finding the exact printing…");
-    setQualityMessage(captureQualityMessage(canvas));
+    const warning = captureQualityMessage(canvas);
+    const trace = failureTrace ?? pendingTrace.current ?? createScanTrace(continuous ? (stableFrameAutoCapture ? "multiple" : "diy") : "single");
+    if (failureTrace || pendingTrace.current) trace.retry();
+    pendingTrace.current = trace;
+    trace.hint(qualityTags(warning));
+    setQualityMessage(warning);
     setError("");
     setProgress(0);
     let resultPreview = "";
@@ -290,12 +300,14 @@ export function CardScanner({
       const hints = await worker.recognize(canvas);
       const imageBlob = await upload;
       if (request === generation.current) {
-        onResult({ hints, previewUrl: imageUrl, ...(imageBlob ? { imageBlob } : {}) });
+        onResult({ trace, hints, previewUrl: imageUrl, ...(imageBlob ? { imageBlob } : {}) });
+        pendingTrace.current = null;
         transferred = continuous;
         if (!continuous) setPreviewDelivered(true);
       }
     } catch (reason) {
       if (request === generation.current) {
+        trace.fail("service_error");
         setError(reason instanceof Error ? reason.message : "The card could not be read.");
       }
     } finally {
@@ -649,7 +661,7 @@ export function CardScanner({
     busyRef.current = false;
     setBusy(false);
     setCaptureStatus("");
-    onReset?.();
+    onReset?.("retake");
     if (streamRef.current) {
       setCameraStream(streamRef.current);
       setCamera(true);
@@ -910,7 +922,7 @@ export function CardScanner({
         />
       </label>
       {error && <p role="alert">{error}</p>}
-      <button type="button" onClick={() => { onReset?.(); void dispose(); }}>
+      <button type="button" onClick={() => { pendingTrace.current?.resolve("skipped"); pendingTrace.current=null; onReset?.("cancel"); void dispose(); }}>
         {continuous ? "Stop scanning" : "Cancel scan"}
       </button>
     </section>

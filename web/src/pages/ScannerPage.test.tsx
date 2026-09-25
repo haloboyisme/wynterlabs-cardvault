@@ -8,6 +8,8 @@ import { addCollectionItem, getCollectionSummary } from "../lib/collection";
 import { expandScanCandidates, getAllCatalogSets, getScanCandidates } from "../lib/catalog";
 import { recognizeCardPhoto } from "../lib/scanner";
 import type { ScanCandidate } from "../lib/types";
+import { apiRequest } from "../lib/api";
+vi.mock("../lib/api",()=>({apiRequest:vi.fn(async()=>({saved:true,items:[]}))}));
 import { ScannerPage } from "./ScannerPage";
 
 vi.mock("../components/CardScanner", () => ({
@@ -748,4 +750,16 @@ it("retries single-card photos with deeper recognition after no confident match"
   expect(await screen.findByRole("radio", {name:/black lotus.*lea.*233/i})).toBeChecked();
   expect(recognizeCardPhoto).toHaveBeenLastCalledWith(expect.any(Blob), expect.any(AbortSignal), true);
   expect(screen.getByRole("button", {name:/confirm and add card/i})).toBeDisabled();
+});
+
+it("persists the final failed attempt count after deeper single-card recognition", async () => {
+  vi.mocked(recognizeCardPhoto).mockResolvedValue({name:"Unknown text",titleCandidates:[],rawText:"Unknown text"});
+  vi.mocked(getScanCandidates).mockResolvedValue([]);
+  render(<ScannerPage />);
+  fireEvent.click(screen.getByRole("button", {name:"Return private AI photo"}));
+  await screen.findByRole("heading", {name:"No confident match found"});
+  await waitFor(()=> {
+    const calls=vi.mocked(apiRequest).mock.calls.filter(call=>call[1]?.method==="PUT");
+    expect(JSON.parse(String(calls.at(-1)?.[1]?.body))).toMatchObject({mode:"single",attempts:2,outcome:"unresolved",reasons:["no_catalog_match"]});
+  });
 });

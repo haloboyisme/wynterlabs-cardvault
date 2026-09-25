@@ -462,6 +462,7 @@ describe("private one-card capture", () => {
     const file = new File(["pixels"], "card.jpg", { type: "image/jpeg" });
     fireEvent.change(screen.getByLabelText(/choose photo/i), { target: { files: [file] } });
     await waitFor(() => expect(onResult).toHaveBeenCalledWith({
+      trace: expect.objectContaining({id: expect.any(String)}),
       hints: expect.objectContaining({ name: "Black Lotus" }),
       previewUrl: "blob:card-photo",
     }));
@@ -1051,6 +1052,7 @@ describe("guided live viewfinder", () => {
       viewZoom: 1,
     });
     await waitFor(() => expect(onResult).toHaveBeenCalledWith({
+      trace: expect.objectContaining({id: expect.any(String)}),
       hints: expect.objectContaining({ name: "Voja, Jaws of the Conclave" }),
       previewUrl: "blob:guided-card",
     }));

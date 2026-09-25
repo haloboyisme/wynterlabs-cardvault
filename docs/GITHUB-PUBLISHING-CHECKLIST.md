@@ -48,3 +48,13 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
 - Private hardware implementation remains excluded; public simulation is preserved.
 - No fresh clean-host installation, backup/restore drill, physical missed-card or prolonged device acceptance is claimed.
 - Existing v2.7.7 tag remains unchanged; these updates are on v2.
+
+
+### Failed-scan history follow-up — September 25, 2026
+
+- Public frontend: 653 tests across 81 files passed; TypeScript and production build passed.
+- Public backend: 10 focused failure-log, face-matching and OCR recovery tests passed in a disposable container. The full API suite was not rerun.
+- Migration graph has one head, `0024_scan_failures`. Apply the migration before running the updated API.
+- Changed files screened for private addresses, host paths, credentials and private hardware imports. Public simulation remains unchanged.
+- Live database write/recovery and stale-event checks passed in a rolled-back transaction. Real-card and long-device acceptance remain pending.
+- Published on `v2`; the existing `v2.7.7` tag is unchanged.

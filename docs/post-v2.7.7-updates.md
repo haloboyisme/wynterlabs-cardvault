@@ -1,5 +1,14 @@
 # Updates after v2.7.7
 
+## September 25, 2026 — failed-scan history and face matching
+
+- Log first failed attempts across scanner modes, including retry recovery, manual corrections and skipped cards. Keep stable scan IDs and reject stale updates to avoid duplicate or overwritten outcomes.
+- Add **Scan history · failed attempts** to Scan, with account isolation and an admin-only combined view. Show the latest 100 records; retain 90 days, capped at 1,000 per account. No photos or recognized text are stored.
+- Record short reason tags for unreadable text, missing catalog matches, ambiguous printing, corrected wrong matches, timeouts and service errors. Blur, glare and darkness are suspected quality causes, not confirmed diagnoses.
+- Match either face of split, Room and double-faced catalog names before candidate limits, preserving exact-printing ranking.
+- Add migration `0024_scan_failures`. Back up first, upgrade the database with `alembic upgrade head` using the deployment's migration procedure, then restart the updated API and web. Older v2.7.7 release instructions describe the original tag, not this follow-up.
+- Physical card and prolonged phone/tablet acceptance remain pending. The public automatic scanner remains simulation-only; private feeder code is excluded.
+
 ## Post-v2.7.7 updates — September 21, 2026
 
 - Retry difficult scans with deeper sideways/full-art OCR, up to eight title candidates and a 90-second matching window. Poor-focus camera captures can wait up to four extra seconds. Clear captures proceed immediately; exact-printing confirmation remains required.

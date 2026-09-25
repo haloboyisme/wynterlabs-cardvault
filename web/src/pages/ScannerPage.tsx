@@ -1,3 +1,5 @@
+import {createScanTrace,setScanLogAccount,type ScanTrace} from "../scanner/failure-log";
+import {ScanFailureHistory} from "../components/ScanFailureHistory";
 import { ScanPhotoWindow } from "../components/ScanPhotoWindow";
 import { ScanReveal } from "../presentation/ScanReveal";
 import { savedPull, rejectedPull, previewPull } from "../presentation/model";
@@ -73,6 +75,8 @@ function ScanModeToggle({ mode, onChange, children }: {
 
 export function ScannerPage() {
   const {status, user} = useAuth();
+  useEffect(() => {setScanLogAccount(user?.id ?? ""); return () => setScanLogAccount("");}, [user?.id]);
+  const scanTrace = useRef<ScanTrace|null>(null);
   const [mode, setMode] = useState<ScannerMode>("single");
   const [catalogSets, setCatalogSets] = useState<CardSet[]>([]);
   const [setsLoading, setSetsLoading] = useState(true);
@@ -122,7 +126,11 @@ export function ScannerPage() {
     return () => controller.abort();
   }, [preferredGame, setsRetry]);
 
-  const selectCandidate = (candidate: ScanCandidate) => {
+  const selectCandidate = (candidate: ScanCandidate, manual = true) => {
+    if (manual) {
+      scanTrace.current?.manual();
+      if (selectedId && selectedId !== candidate.printing_id) scanTrace.current?.fail("wrong_match", true);
+    }
     setSelectedId(candidate.printing_id);
     setFinish(candidate.finishes[0] ?? "");
     setCondition("near_mint");
@@ -132,7 +140,11 @@ export function ScannerPage() {
     setSuccess("");
   };
 
-  const resetScan = () => {
+  const resetScan = (preserveTrace = false) => {
+    if (!preserveTrace) {
+      if (!success) scanTrace.current?.resolve("skipped");
+      scanTrace.current = null;
+    }
     request.current?.abort();
     request.current = null;
     generation.current += 1;
@@ -163,6 +175,7 @@ export function ScannerPage() {
     const controller = new AbortController();
     request.current = controller;
     const current = ++generation.current;
+    const trace = scanTrace.current;
     setSearching(true);
     setSearched(true);
     setCandidates([]);
@@ -197,7 +210,10 @@ export function ScannerPage() {
         .slice(0, 8);
       for (let attempt = 0; attempt < 2; attempt++) {
         if (attempt === 1) {
+          if (current !== generation.current) return;
+          trace?.fail(titles.length ? "no_catalog_match" : "no_text");
           if (!imageBlob || !privateAvailable) break;
+          trace?.retry();
           const deeper = await recognizeCardPhoto(imageBlob, controller.signal, true);
           if (current !== generation.current) return;
           titles = [...new Set([deeper.name, ...deeper.titleCandidates].map((value) => value.trim()).filter(Boolean))].slice(0, 8);
@@ -239,15 +255,20 @@ export function ScannerPage() {
               preferredSetGame,
             );
             const detected = expanded.find((candidate) => candidate.printing_id === detectedId);
-            if (detected) selectCandidate(detected);
+            if (detected) {
+              selectCandidate(detected, false);
+              if (attempt > 0) trace?.resolve("recovered_by_retry");
+            } else trace?.fail("ambiguous_printing");
             setSetFilter("");
             setCollectorFilter("");
             return;
           }
         }
       }
+      if (current === generation.current) trace?.fail(titles.length ? "no_catalog_match" : "no_text");
     } catch (reason) {
       if (current === generation.current && (timedOut || (reason as Error).name !== "AbortError")) {
+        trace?.fail(timedOut ? "timeout" : "service_error");
         setError(timedOut ? "Matching took too long. Your photo is kept; retry the title search or retake with less glare." : reason instanceof Error ? reason.message : "Card candidates could not be loaded.");
       }
     } finally {
@@ -256,7 +277,8 @@ export function ScannerPage() {
     }
   };
 
-  const receiveScan = async ({ hints, previewUrl, imageBlob }: CapturedScan) => {
+  const receiveScan = async ({ hints, previewUrl, imageBlob, trace }: CapturedScan) => {
+    scanTrace.current = trace ?? scanTrace.current ?? createScanTrace("single");
     setCapturedPhoto(previewUrl);
     setScanHints(hints);
     setDetectedTitle(hints.name);
@@ -270,13 +292,15 @@ export function ScannerPage() {
       return;
     }
     if (!scanHints) return;
+    scanTrace.current?.retry();
+    scanTrace.current?.manual();
+    if (candidates.length) scanTrace.current?.fail("wrong_match", true);
     setDetectedTitle(name);
     await findCandidates({ ...scanHints, name, titleCandidates: [name] }, [name]);
   };
 
   const selected = candidates.find((item) => item.printing_id === selectedId);
   const selectedPrice = selected ? previewPrice(selected, finish) : null;
-
   const previewScanKey = useMemo(() => crypto.randomUUID(), [capturedPhoto]);
   useEffect(() => { previewPull(selected, finish, quantity, previewScanKey); }, [selected, finish, quantity, previewScanKey]);
 
@@ -300,6 +324,7 @@ export function ScannerPage() {
         } catch {
           if (current === generation.current) setCollectionTotal(null);
         }
+        scanTrace.current?.saved();
         savedPull(selected, finish, quantity);
         setEnlargedPhoto(false);
         setSuccess(selected.name + " was added to your collection.");
@@ -352,6 +377,7 @@ export function ScannerPage() {
           />
         </ScanModeToggle>}
       />
+      <ScanFailureHistory />
     </article>;
   }
 
@@ -371,6 +397,7 @@ export function ScannerPage() {
           />
         </ScanModeToggle>}
       />
+      <ScanFailureHistory />
     </article>;
   }
 
@@ -384,6 +411,7 @@ export function ScannerPage() {
       <section className="single-scan-primary-workspace scanner-primary-grid" aria-label="Single-card scanner workspace">
         <div className="single-scan-capture-column">
           <CardScanner
+            failureTrace={scanTrace.current ?? undefined}
             topControls={<>
               <ScanModeToggle mode={mode} onChange={setMode}>
                 <ScanPreferenceSelector loading={setsLoading} error={setsError} onRetry={() => setSetsRetry(n => n + 1)} restoreSetOnGameChange
@@ -401,7 +429,7 @@ export function ScannerPage() {
               </section>
             </>}
             onResult={(result) => void receiveScan(result)}
-            onReset={() => { if (capturedPhoto) rejectedPull(); resetScan(); }}
+            onReset={(reason) => { if (capturedPhoto) rejectedPull(); resetScan(reason === "retake"); }}
             nextCardSignal={nextCardSignal}
           />
           {capturedPhoto && <article className="single-scan-captured-photo">
@@ -528,6 +556,7 @@ export function ScannerPage() {
           <a className="button ghost" href="/collection">View collection</a>
         </div>
       </section>}
+      <ScanFailureHistory />
     </article>
   );
 }

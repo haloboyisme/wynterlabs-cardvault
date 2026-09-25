@@ -1011,3 +1011,19 @@ class Presentation(Base):
     document: Mapped[dict] = mapped_column(json_document(), default=dict)
     token_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
     token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ScanFailure(Base):
+    __tablename__ = "scan_failures"
+    __table_args__ = (Index("ix_scan_failures_owner_created", "user_id", "created_at"),)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    scan_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    mode: Mapped[str] = mapped_column(String(16))
+    revision: Mapped[int] = mapped_column(Integer)
+    attempts: Mapped[int] = mapped_column(Integer)
+    outcome: Mapped[str] = mapped_column(String(24))
+    reasons: Mapped[list] = mapped_column(json_document(), default=list)
+    suspected: Mapped[list] = mapped_column(json_document(), default=list)
+    reported: Mapped[list] = mapped_column(json_document(), default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

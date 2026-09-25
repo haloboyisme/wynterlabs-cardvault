@@ -1,6 +1,6 @@
 # CardVault roadmap — remaining work
 
-Updated September 21, 2026. This is the outstanding product backlog, reconciled
+Updated September 25, 2026. This is the outstanding product backlog, reconciled
 with the original Card Scanner Project and verified implementation records. Version
 labels describe targets, not promised dates. V2.6 remembered scan preferences are
 included in the public V2.6.0 release; physical V2.8 acceptance remains pending.
@@ -22,6 +22,8 @@ recovery. Their release records remain historical evidence.
 | Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
 
 ## Completed after V2.7.7 on v2
+
+Failed-scan logging is implemented across scanner modes, with reason tags, retry outcomes, account history, admin diagnostics and bounded retention. No photos or recognized text are stored. Server matching now checks either face of split, Room and double-faced names before limiting candidates.
 
 Deeper sideways/full-art recognition, bounded focus waits, draggable scan photographs, automatic OBS audio and the streamer studio redesign are implemented. Physical missed-card and prolonged device acceptance remain outstanding. See [follow-up notes](post-v2.7.7-updates.md).
 

@@ -36,6 +36,7 @@ const quickActions = [
 ];
 
 const updates = [
+  ["Available", "Failed-scan history", "Scan modes now keep first failures with reason tags and retry outcomes. Open Scan history on the Scan page. Photos and recognized text are not stored in the log."],
   ["V2.7.7", "Your background, better refreshes", "Layer PNG, JPEG or GIF uploads over three original backgrounds. Choose interface cues and motion speed, restore shared branding, retry failed catalogs and export larger recaps using less memory per card."],
   ["V2.7.5", "Streamer preview and pack video", "Choose instant, fade or flip reveals, account sound/mute settings, a private OBS pop-out, and a replayable recap with local video export. Open Streamer preview on Scan to begin."],
   ["Available", "Difficult-card matching refinements", "Either half of a split card can match. Ambiguous printings require a choice, stalled searches can be retried, and Scan includes foil/promo guidance."],
@@ -173,7 +174,7 @@ export function HomePage() {
         <div className="home-roadmap-heading">
           <p className="eyebrow">Roadmap</p>
           <h2>What’s next for CardVault.</h2>
-          <p>Remaining work only · updated September 16, 2026. Version targets are plans, not release dates. See the GitHub release notes for completed features and device-testing limits.</p>
+          <p>Remaining work only · updated September 25, 2026. Version targets are plans, not release dates. See the GitHub release notes for completed features and device-testing limits.</p>
         </div>
         <ol className="home-roadmap-list">
           {roadmap.map(([status, title, copy]) => (

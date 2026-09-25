@@ -1,3 +1,4 @@
+import {createScanTrace} from "../scanner/failure-log";
 import { ScanPhotoWindow } from "./ScanPhotoWindow";
 import { ScanReveal } from "../presentation/ScanReveal";
 import { savedPull, rejectedPull, previewPull } from "../presentation/model";
@@ -112,6 +113,8 @@ export function MultiScanSession({
   };
 
   const recognizeItem = async (id: string, scan: CapturedScan, manualTitle?: string) => {
+    const trace = captures.current.get(id)?.trace;
+    if (manualTitle) {trace?.retry(); trace?.manual(); if (sessionRef.current.items.find(item=>item.id===id)?.candidates.length) trace?.fail("wrong_match", true);}
     requests.current.get(id)?.abort();
     const controller = new AbortController();
     requests.current.set(id, controller);
@@ -149,7 +152,10 @@ export function MultiScanSession({
       let detectedTitle = manualTitle?.trim() ?? privateTitles[0]?.trim() ?? scan.hints.name.trim();
       for (let attempt = 0; attempt < 2 && !candidates.length; attempt++) {
         if (attempt === 1) {
+          if (generations.current.get(id) !== generation) return;
+          trace?.fail(titles.length ? "no_catalog_match" : "no_text");
           if (manualTitle || !scan.imageBlob) break;
+          trace?.retry();
           setSessionStatus("Taking a closer look: checking sideways text and full-art layouts. Your photo is kept.");
           const deeper = await recognizeCardPhoto(scan.imageBlob, controller.signal, true);
           privateSet = deeper.set ?? "";
@@ -187,6 +193,9 @@ export function MultiScanSession({
         set: privateSet || scan.hints.set,
         collector: privateCollector || scan.hints.collector,
       }, preferredSet, preferredSetGame);
+      if (!candidates.length) trace?.fail(titles.length ? "no_catalog_match" : "no_text");
+      else if (!detectedPrintingId) trace?.fail("ambiguous_printing");
+      else if (!manualTitle) trace?.resolve("recovered_by_retry");
       const detectedPrinting = candidates.find(
         (candidate) => candidate.printing_id === detectedPrintingId,
       );
@@ -201,6 +210,7 @@ export function MultiScanSession({
       }));
     } catch (reason) {
       if (generations.current.get(id) === generation && (timedOut || (reason as Error).name !== "AbortError")) {
+        trace?.fail(timedOut ? "timeout" : "service_error");
         setSession((current) => setSessionItemError(
           current,
           id,
@@ -215,6 +225,8 @@ export function MultiScanSession({
 
   const receiveScan = (scan: CapturedScan) => {
     const replacing = retakeId;
+    scan.trace ??= replacing ? captures.current.get(replacing)?.trace : undefined;
+    scan.trace ??= createScanTrace(stableFrameAutoCapture ? "multiple" : "diy");
     if (replacing) {
       const previous = sessionRef.current.items.find((item) => item.id === replacing);
       if (!previous) {
@@ -296,6 +308,9 @@ export function MultiScanSession({
 
   const chooseCandidate = (candidate: ScanCandidate) => {
     if (!selected) return;
+    const trace = captures.current.get(selected.id)?.trace;
+    trace?.manual();
+    if (selected.selectedPrintingId && selected.selectedPrintingId !== candidate.printing_id) trace?.fail("wrong_match", true);
     setSession((current) => updateSessionItem(current, selected.id, {
       selectedPrintingId: candidate.printing_id,
       finish: candidate.finishes[0] ?? "",
@@ -327,6 +342,7 @@ export function MultiScanSession({
           const savedCard = item.candidates.find(c => c.printing_id === item.selectedPrintingId);
           if (savedCard) savedPull(savedCard, item.finish, item.quantity);
           saved += 1;
+          captures.current.get(item.id)?.trace?.saved();
           captures.current.delete(item.id);
           generations.current.delete(item.id);
           setFilters((current) => {
@@ -366,6 +382,7 @@ export function MultiScanSession({
     <p>Start the camera, hold one card steady, then replace it with the next card. Every result still needs your confirmation.</p>
     {!stopped && <section className="multi-scan-camera-workspace scanner-primary-grid" aria-label="Scanner workspace">
       <CardScanner
+        failureTrace={retakeId ? captures.current.get(retakeId)?.trace : undefined}
         topControls={<>
           {topControls}
           <label className="multi-scan-countdown-setting">Capture countdown
@@ -480,6 +497,7 @@ export function MultiScanSession({
           }}>Retry recognition</button>
           <button type="button" onClick={() => {
             requests.current.get(selected.id)?.abort();
+            captures.current.get(selected.id)?.trace?.resolve("skipped");
             captures.current.delete(selected.id);
             rejectedPull();
             URL.revokeObjectURL?.(selected.previewUrl);

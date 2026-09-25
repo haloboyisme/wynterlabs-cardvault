@@ -1232,3 +1232,5 @@ html[data-motion="reduced"] *::after {
 .collection-price-table-wrap table { border-collapse:collapse; width:100%; font-size:.85rem; }
 .collection-price-table-wrap th, .collection-price-table-wrap td { text-align:left; padding:.65rem; border-bottom:1px solid var(--line); white-space:nowrap; }
 .collection-price-table-wrap caption { text-align:left; padding:.6rem 0; font-weight:650; }
+
+.scan-failure-history{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:12px}.scan-failure-history summary{font-weight:700;cursor:pointer}.scan-failure-history ol{max-height:360px;overflow:auto;padding-left:1.5rem}.scan-failure-history li{padding:.7rem 0;border-bottom:1px solid var(--line)}.scan-failure-history p{font-size:.85rem;line-height:1.5}.scan-failure-history button{margin:.5rem}

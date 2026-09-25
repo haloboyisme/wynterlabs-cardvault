@@ -216,16 +216,17 @@ async def scan_candidates(
             CardSet.game == normalized_game,
         )
     if database.bind.dialect.name == "postgresql":
+        exact_title, prefix_title, title_similarity = _scan_postgres_title_expressions(name)
         statement = statement.where(
             or_(
-                OracleCard.name_normalized == name,
-                OracleCard.name_normalized.startswith(name),
-                func.similarity(OracleCard.name_normalized, name) >= SCAN_POSTGRES_MIN_SIMILARITY,
+                exact_title,
+                prefix_title,
+                title_similarity >= SCAN_POSTGRES_MIN_SIMILARITY,
             )
         )
         exact_printing = (
             and_(
-                OracleCard.name_normalized == name,
+                exact_title,
                 CardSet.code_normalized == set_code,
                 _postgres_collector_normalized(CardPrinting.collector_number) == collector,
             )
@@ -235,12 +236,12 @@ async def scan_candidates(
         statement = statement.order_by(
             case(
                 (exact_printing, 0),
-                (OracleCard.name_normalized == name, 1),
-                (OracleCard.name_normalized.startswith(name), 2),
+                (exact_title, 1),
+                (prefix_title, 2),
                 else_=3,
             ),
             _preferred_set_order(preferred_set, preferred_game),
-            func.similarity(OracleCard.name_normalized, name).desc(),
+            title_similarity.desc(),
             CardSet.code_normalized,
             CardPrinting.collector_number,
             CardPrinting.id,
@@ -608,19 +609,34 @@ def _reverse_date(value):
     return -(value.toordinal()) if value else 0
 
 
+def _scan_faces(candidate):
+    return [candidate, *[face.strip() for face in candidate.split("//") if face.strip()]]
+
+
+def _scan_postgres_title_expressions(name):
+    # Catalog names preserve the two face titles separated by //.
+    # Match a photographed face before limiting results, just as the UI does.
+    titles = [OracleCard.name_normalized,
+              func.btrim(func.split_part(OracleCard.name_normalized, "//", 1)),
+              func.btrim(func.split_part(OracleCard.name_normalized, "//", 2))]
+    return (or_(*(title == name for title in titles)),
+            or_(*(title.startswith(name) for title in titles)),
+            func.greatest(*(func.similarity(title, name) for title in titles)))
+
+
 def _scan_reason(row, name, set_code, collector):
     printing, oracle, card_set = row
     if (
         set_code
         and collector
-        and oracle.name_normalized == name
+        and name in _scan_faces(oracle.name_normalized)
         and card_set.code_normalized == set_code
         and _normalized_collector(printing.collector_number) == collector
     ):
         return "exact_printing"
-    if oracle.name_normalized == name:
+    if name in _scan_faces(oracle.name_normalized):
         return "exact_name"
-    if oracle.name_normalized.startswith(name):
+    if any(face.startswith(name) for face in _scan_faces(oracle.name_normalized)):
         return "name_prefix"
     return "fuzzy_name"
 
@@ -635,10 +651,11 @@ def _preferred_set_order(preferred_set, preferred_game=None):
 
 
 def _scan_name_matches(query, candidate):
-    return (
-        candidate == query
-        or candidate.startswith(query)
-        or SequenceMatcher(None, query, candidate).ratio() >= SCAN_MIN_SIMILARITY
+    return any(
+        face == query
+        or face.startswith(query)
+        or SequenceMatcher(None, query, face).ratio() >= SCAN_MIN_SIMILARITY
+        for face in _scan_faces(candidate)
     )
 
 
@@ -670,7 +687,7 @@ def _scan_rank(row, name, set_code, collector, preferred_set=None, preferred_gam
         and card_set.code_normalized == preferred_set
         and (not preferred_game or card_set.game == preferred_game)
         else 1,
-        -SequenceMatcher(None, name, oracle.name_normalized).ratio(),
+        -max(SequenceMatcher(None, name, face).ratio() for face in _scan_faces(oracle.name_normalized)),
         card_set.code_normalized,
         printing.collector_number,
         str(printing.id),

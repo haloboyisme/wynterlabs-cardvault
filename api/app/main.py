@@ -27,6 +27,7 @@ from app.routers import (
     mfa,
     presentation,
     scanner,
+    scan_failures,
     setup,
     trades,
 )
@@ -51,9 +52,13 @@ def create_app(
         market_task = asyncio.create_task(
             market_price_loop(resolved_settings, session_factory), name="daily-market-prices"
         )
+        scan_log_task = asyncio.create_task(scan_failures.cleanup_failure_logs(session_factory), name="scan-log-retention")
         try:
             yield
         finally:
+            scan_log_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await scan_log_task
             market_task.cancel()
             with suppress(asyncio.CancelledError):
                 await market_task
@@ -73,8 +78,9 @@ def create_app(
     app.include_router(health.router)
     app.include_router(branding.router)
     app.include_router(setup.router)
-    app.include_router(presentation.router)
     app.include_router(scanner.router)
+    app.include_router(scan_failures.router)
+    app.include_router(presentation.router)
     app.include_router(catalog.router)
     app.include_router(collection.router)
     app.include_router(custom_cards.router)
