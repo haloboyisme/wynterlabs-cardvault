@@ -74,7 +74,26 @@ class BackgroundDesign(BaseModel):
         return self
 
 
+class WorkspaceLayout(BaseModel):
+    preset: Literal["collector", "gallery", "compact", "paper", "night-studio", "soft-glass"] = "collector"
+    navigation: Literal["side", "top"] = "side"
+    sidebarWidth: Literal[220, 260, 300] = 260
+    density: Literal["compact", "comfortable", "spacious"] = "comfortable"
+    cardSize: Literal["small", "medium", "large"] = "medium"
+    view: Literal["grid", "list"] = "grid"
+    logoSize: Literal[32, 40, 48, 56] = 40
+    dashboardOrder: list[Literal["history", "recent", "decks", "sets", "attention"]] = Field(default_factory=lambda: ["history", "recent", "decks", "sets", "attention"], max_length=5)
+    hiddenModules: list[Literal["history", "recent", "decks", "sets", "attention"]] = Field(default_factory=list, max_length=5)
+
+    @model_validator(mode="after")
+    def complete_order(self):
+        self.dashboardOrder = list(dict.fromkeys(self.dashboardOrder + ["history", "recent", "decks", "sets", "attention"]))
+        self.hiddenModules = list(dict.fromkeys(self.hiddenModules))
+        return self
+
+
 class BrandDesign(BaseModel):
+    workspace: WorkspaceLayout = Field(default_factory=WorkspaceLayout)
     background: BackgroundDesign = Field(default_factory=BackgroundDesign)
     accent: str = Field(default="#5BE7E7", pattern=r"^#[0-9a-fA-F]{6}$")
     secondary: str = Field(default="#8BA9FF", pattern=r"^#[0-9a-fA-F]{6}$")

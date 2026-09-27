@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.7.8 — Collector Workspace — September 27, 2026
+
+- Add grouped sidebar/top navigation, header card search and mobile shortcuts with an accessible More menu. Keep scanner exit warnings and existing account restrictions.
+- Add Collector, Gallery, Compact, Paper, Night Studio and Soft Glass workspace presets alongside existing Base Modes.
+- Expand site/personal layout controls for spacing, card size/view, logo size and dashboard panel order/visibility. Preserve existing collection display preferences.
+- Add account/browser-scoped named looks, appearance-only JSON import/export and restore controls. Validate imported image size/dimensions; preserve personal backgrounds and roll back partial preference writes when storage fails.
+- Fix branding draft background previews and explain personal overrides with an explicit follow-site control.
+- Apply shared page styling while retaining existing collection, scanner, streamer, deck, account and admin functions. No new UI framework dependency.
+- Include the previously published post-2.7.7 scanner diagnostics, recovery and navigation fixes. Migration head remains `0025_scan_diagnostics`; the workspace changes require no new database migration.
+- Physical iPhone endurance/recognition and actual OBS recording acceptance remain separate from automated and fixture-based browser verification. Public automatic scanning remains simulation-only.
+
 ## Scanner diagnostics and navigation protection — September 25, 2026
 
 - Confirm with OK/Cancel before a normal page-link click leaves an active camera or unfinished scan. Cancel preserves the workspace; native browser warnings cover refresh/close where supported. This does not add session recovery or an in-app browser Back interceptor.

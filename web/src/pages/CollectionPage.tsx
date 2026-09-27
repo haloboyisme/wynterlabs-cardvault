@@ -1,3 +1,4 @@
+import {useWorkspaceLayout} from "../lib/use-workspace-layout";
 import { CollectionMarketValue } from "../components/CollectionMarketValue";
 import { CollectionPriceDetails } from "../components/CollectionPriceDetails";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -87,6 +88,8 @@ const date = new Intl.DateTimeFormat("en-US", {
 });
 
 export function CollectionPage() {
+  const {layout:workspaceLayout}=useWorkspaceLayout();
+
   const [collection, setCollection] = useState<CollectionPageData | null>(null);
   const [summary, setSummary] = useState<CollectionSummary | null>(null);
   const [q, setQ] = useState("");
@@ -107,6 +110,7 @@ export function CollectionPage() {
   const [edit, setEdit] = useState<EditState | null>(null);
   const [expandedId, setExpandedId] = useState("");
   const [display, setDisplay] = useState(readCollectionDisplay);
+  useEffect(()=>{try{if(!localStorage.getItem(COLLECTION_DISPLAY_STORAGE_KEY))setDisplay(current=>({...current,view:workspaceLayout.view,size:workspaceLayout.cardSize}));}catch{}},[workspaceLayout.view,workspaceLayout.cardSize]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Map<string, CollectionItem>>(() => new Map());
   const [staleSelectedIds, setStaleSelectedIds] = useState<Set<string>>(() => new Set());

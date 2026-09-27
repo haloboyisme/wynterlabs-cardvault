@@ -1,3 +1,4 @@
+import {effectiveBrandDesign} from "../lib/personal-design";
 import "../styles/brand-design.css";
 import { applyBrandDesign, brandDesign } from "../lib/brand-design";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -14,7 +15,7 @@ interface BrandingContextValue {
 const BrandingContext = createContext<BrandingContextValue | null>(null);
 
 export function BrandProvider({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status,user } = useAuth();
   const [branding, setBranding] = useState<Branding>(DEFAULT_BRANDING);
   const requestGeneration = useRef(0);
   const mounted = useRef(true);
@@ -40,9 +41,11 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    applyBrandDesign(brandDesign(branding.design));
+    const apply=()=>applyBrandDesign(effectiveBrandDesign(brandDesign(branding.design),user?.id));
+    apply();window.addEventListener("workspace-layout",apply);window.addEventListener("storage",apply);
     document.title = `${branding.site_name} ${branding.product_name}`;
-  }, [branding]);
+    return()=>{window.removeEventListener("workspace-layout",apply);window.removeEventListener("storage",apply);};
+  }, [branding,user?.id]);
 
   useEffect(() => {
     const controller = new AbortController();

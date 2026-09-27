@@ -1,6 +1,6 @@
 # Security policy
 
-Reviewed September 25, 2026 for V2.7.7 and the current `v2` follow-ups.
+Reviewed September 27, 2026 for V2.7.8 on `v2`.
 
 ## Reporting a vulnerability
 
@@ -73,3 +73,6 @@ removes expired records, and writes cap each account at 1,000 records. The UI sh
 the latest 100. Quality tags indicate possible causes, not verified diagnoses.
 Do not include account logs in public issue reports without reviewing them.
 See [scan history](docs/SCANNING.md) for behavior and limits.
+
+
+Workspace appearance exports contain visual settings and optional background images, not credentials or collection records. Treat imported files as untrusted; imports are size-limited and allowlisted, with image signature/dimension checks.

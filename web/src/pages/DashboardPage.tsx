@@ -1,3 +1,5 @@
+import {useWorkspaceLayout} from "../lib/use-workspace-layout";
+import {WorkspaceCustomizer} from "../components/workspace/WorkspaceCustomizer";
 import { useBranding } from "../app/branding";
 import { brandDesign } from "../lib/brand-design";
 import "../styles/overview-refresh.css";
@@ -111,6 +113,8 @@ const VALUE_HISTORY_RANGES: Array<{ value: CollectionValueRange; label: string }
 ];
 
 export function DashboardPage() {
+  const {layout,save,personal}=useWorkspaceLayout();
+
   const { user } = useAuth();
   const { branding } = useBranding();
   const design = brandDesign(branding.design);
@@ -192,6 +196,117 @@ export function DashboardPage() {
   const canAdmin = user?.role === "owner" || user?.role === "super_admin" || user?.role === "admin";
   const priceSnapshot = summary ? priceSnapshotView(summary.price_snapshot_at) : null;
 
+  const panels={
+    history: (<section id="dashboard-history" className="dashboard-widget dashboard-value-history" aria-labelledby="collection-value-history-heading">
+        <div className="dashboard-widget-heading">
+          <div><p className="eyebrow">Value over time</p><h2 id="collection-value-history-heading">Collection value history</h2></div>
+        </div>
+        <div className="collection-value-range" role="group" aria-label="Collection value history range">
+          {VALUE_HISTORY_RANGES.map((range) => (
+            <button
+              key={range.value}
+              className="text-button"
+              type="button"
+              aria-pressed={valueHistoryRange === range.value}
+              onClick={() => setValueHistoryRange(range.value)}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+        {valueHistoryState.kind === "loading" && <div className="dashboard-widget-state" role="status">Loading collection value history…</div>}
+        {valueHistoryState.kind === "error" && (
+          <div className="dashboard-widget-state form-error" role="alert" aria-label="Collection value history unavailable">
+            Collection value history could not be loaded.
+            <button className="text-button dashboard-widget-retry" type="button" onClick={() => setValueHistoryRequest((value) => value + 1)}>Retry value history</button>
+          </div>
+        )}
+        {valueHistoryState.kind === "loaded" && valueHistoryPoints.length === 0 && (
+          <div className="dashboard-widget-state" role="status">
+            <strong>No collection value history yet.</strong>
+            <span>Value history will appear after collection activity or a price refresh.</span>
+          </div>
+        )}
+        {valueHistoryState.kind === "loaded" && valueHistoryPoints.length > 0 && <CollectionValueChart history={valueHistoryState.data} />}
+      </section>),
+    recent: (<article className="dashboard-widget dashboard-recent-cards" id="dashboard-recent" aria-labelledby="recent-cards-heading">
+          <div className="dashboard-widget-heading"><div><p className="eyebrow">Latest inventory</p><h2 id="recent-cards-heading">Recent cards</h2></div><Link className="dashboard-inline-action" to="/collection">See all</Link></div>
+          {cardsState.kind === "loading" && <p role="status">Loading recent cards…</p>}
+          {cardsState.kind === "error" && (
+            <div className="dashboard-widget-state form-error" role="alert" aria-label="Recent cards unavailable">
+              Could not load recent cards.
+              <button className="text-button dashboard-widget-retry" type="button" onClick={() => setCardsRequest((value) => value + 1)}>Retry recent cards</button>
+            </div>
+          )}
+          {cardsState.kind === "loaded" && cardsState.data.length === 0 && <p>No cards yet. Scan or import one to begin.</p>}
+          {cardsState.kind === "loaded" && cardsState.data.length > 0 && (
+            <ul className="dashboard-card-list">
+              {cardsState.data.map((item) => (
+                <li key={item.id}>
+                  <Link aria-label={`View ${item.card.name}`} to={`/cards/${item.printing_id}`}><CardImage name={item.card.name} imageUris={item.card.image_uris} /></Link>
+                  <div><h3>{item.card.name}</h3><p>{item.card.set.code.toUpperCase()} · {item.finish} · {formatLabel(item.condition)}</p><span>{item.quantity} {item.quantity === 1 ? "copy" : "copies"}</span></div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>),
+    decks: (<article className="dashboard-widget" id="dashboard-decks" aria-labelledby="recent-decks-heading">
+          <div className="dashboard-widget-heading"><div><p className="eyebrow">Keep building</p><h2 id="recent-decks-heading">Recent decks</h2></div><Link className="dashboard-inline-action" to="/decks">See all</Link></div>
+          {decksState.kind === "loading" && <p role="status">Loading recent decks…</p>}
+          {decksState.kind === "error" && (
+            <div className="dashboard-widget-state form-error" role="alert" aria-label="Recent decks unavailable">
+              Could not load recent decks.
+              <button className="text-button dashboard-widget-retry" type="button" onClick={() => setDecksRequest((value) => value + 1)}>Retry recent decks</button>
+            </div>
+          )}
+          {recentDecks?.length === 0 && <p>No decks yet. Create one when you are ready to build.</p>}
+          {recentDecks && recentDecks.length > 0 && (
+            <ul className="dashboard-deck-list">
+              {recentDecks.map((deck) => <li key={deck.id}><div><h3>{deck.name}</h3><p>{formatLabel(deck.format)}{deck.description ? ` · ${deck.description}` : ""}</p></div><Link aria-label={`Open ${deck.name}`} to={`/decks/${deck.id}`}>Open</Link></li>)}
+            </ul>
+          )}
+        </article>),
+    sets: (<article className="dashboard-widget" id="dashboard-sets" aria-labelledby="top-sets-heading">
+          <div className="dashboard-widget-heading"><div><p className="eyebrow">Collection shape</p><h2 id="top-sets-heading">Top sets</h2></div></div>
+          {summaryState.kind === "loading" && <p role="status">Loading top sets…</p>}
+          {summaryState.kind === "error" && <p>Top sets are unavailable with the collection summary.</p>}
+          {summary && summary.sets.length === 0 && <p>Your most collected sets will appear here.</p>}
+          {summary && summary.sets.length > 0 && <ol className="dashboard-set-list">{summary.sets.slice(0, 5).map((entry) => <li key={entry.code}><div><strong>{entry.name}</strong><span>{entry.distinct_items} unique</span></div><b>{entry.copies}</b></li>)}</ol>}
+        </article>),
+    attention: (<article className="dashboard-widget" id="dashboard-attention" aria-labelledby="attention-heading">
+          <div className="dashboard-widget-heading"><div><p className="eyebrow">Data quality</p><h2 id="attention-heading">Needs attention</h2></div></div>
+          {summaryState.kind === "loading" && <p role="status">Checking collection coverage…</p>}
+          {summaryState.kind === "error" && <p>Coverage is unavailable with the collection summary.</p>}
+          {summary && (
+            <ul className="dashboard-attention-list">
+              {summary.total_copies === 0 ? (
+                <li className="is-clear">
+                  <strong>No collection pricing yet</strong>
+                  <span>Add a card or import a collection to begin pricing checks.</span>
+                </li>
+              ) : (
+                <>
+                  <li className={summary.unpriced_copies ? "has-warning" : "is-clear"}>
+                    {summary.unpriced_copies ? (
+                      <Link to="/collection/pricing">
+                        <strong>{summary.unpriced_copies} copies need pricing</strong>
+                        <span>Value excludes copies without a current price.</span>
+                      </Link>
+                    ) : (
+                      <><strong>Pricing coverage complete</strong><span>Every copy has a current price.</span></>
+                    )}
+                  </li>
+                  {priceSnapshot && <li className={priceSnapshot.stale ? "has-warning" : "is-clear"}><strong>Price freshness</strong><span>{priceSnapshot.copy}</span></li>}
+                </>
+              )}
+              <li className={catalogState.kind === "loaded" && catalogState.catalog.stale ? "has-warning" : "is-clear"}><strong>{view.chip}</strong><span>{view.summary}</span></li>
+              {summary.finishes.slice(0, 2).map((entry) => <li className="is-clear" key={`finish-${entry.value}`}><strong>{formatLabel(entry.value)}</strong><span>{entry.copies} {entry.copies === 1 ? "copy" : "copies"} · finish</span></li>)}
+              {summary.conditions.slice(0, 2).map((entry) => <li className="is-clear" key={`condition-${entry.value}`}><strong>{formatLabel(entry.value)}</strong><span>{entry.copies} {entry.copies === 1 ? "copy" : "copies"} · condition</span></li>)}
+            </ul>
+          )}
+          {catalogState.kind === "unavailable" && <button className="text-button dashboard-widget-retry" type="button" onClick={() => setCatalogRequest((value) => value + 1)}>Retry catalog status</button>}
+        </article>)
+  };
   return (
     <section className="dashboard dashboard-page overview-page">
       <header className="dashboard-header">
@@ -214,6 +329,7 @@ export function DashboardPage() {
         {canAdmin && <Link className="button dashboard-admin-shortcut" aria-label="Administration" to="/admin">Admin</Link>}
       </nav>
 
+      <details className="workspace-dashboard-customize"><summary>Customize dashboard</summary><p>{personal?"Your personal layout":"Site default layout"} · hidden panels keep their data.</p><WorkspaceCustomizer value={layout} onChange={next=>{if(!save(next))window.alert("Could not save the dashboard layout. Browser storage may be full.");}}/><button type="button" onClick={()=>{if(!save(null))window.alert("Could not restore the site layout.");}}>Use site layout</button></details>
       <div className="overview-layout">
         <nav className="overview-nav" aria-label="Dashboard sections"><span>ON THIS PAGE</span><a href="#dashboard-overview">Collection overview</a><a href="#dashboard-history">Value history</a><a href="#dashboard-recent">Recent cards</a><a href="#dashboard-decks">Recent decks</a><a href="#dashboard-sets">Top sets</a><a href="#dashboard-attention">Needs attention</a></nav>
         <div className="overview-content">
@@ -254,121 +370,7 @@ export function DashboardPage() {
         )}
       </section>
 
-      <section id="dashboard-history" className="dashboard-widget dashboard-value-history" aria-labelledby="collection-value-history-heading">
-        <div className="dashboard-widget-heading">
-          <div><p className="eyebrow">Value over time</p><h2 id="collection-value-history-heading">Collection value history</h2></div>
-        </div>
-        <div className="collection-value-range" role="group" aria-label="Collection value history range">
-          {VALUE_HISTORY_RANGES.map((range) => (
-            <button
-              key={range.value}
-              className="text-button"
-              type="button"
-              aria-pressed={valueHistoryRange === range.value}
-              onClick={() => setValueHistoryRange(range.value)}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
-        {valueHistoryState.kind === "loading" && <div className="dashboard-widget-state" role="status">Loading collection value history…</div>}
-        {valueHistoryState.kind === "error" && (
-          <div className="dashboard-widget-state form-error" role="alert" aria-label="Collection value history unavailable">
-            Collection value history could not be loaded.
-            <button className="text-button dashboard-widget-retry" type="button" onClick={() => setValueHistoryRequest((value) => value + 1)}>Retry value history</button>
-          </div>
-        )}
-        {valueHistoryState.kind === "loaded" && valueHistoryPoints.length === 0 && (
-          <div className="dashboard-widget-state" role="status">
-            <strong>No collection value history yet.</strong>
-            <span>Value history will appear after collection activity or a price refresh.</span>
-          </div>
-        )}
-        {valueHistoryState.kind === "loaded" && valueHistoryPoints.length > 0 && <CollectionValueChart history={valueHistoryState.data} />}
-      </section>
-
-      <div className="dashboard-content-grid">
-        <article className="dashboard-widget dashboard-recent-cards" id="dashboard-recent" aria-labelledby="recent-cards-heading">
-          <div className="dashboard-widget-heading"><div><p className="eyebrow">Latest inventory</p><h2 id="recent-cards-heading">Recent cards</h2></div><Link className="dashboard-inline-action" to="/collection">See all</Link></div>
-          {cardsState.kind === "loading" && <p role="status">Loading recent cards…</p>}
-          {cardsState.kind === "error" && (
-            <div className="dashboard-widget-state form-error" role="alert" aria-label="Recent cards unavailable">
-              Could not load recent cards.
-              <button className="text-button dashboard-widget-retry" type="button" onClick={() => setCardsRequest((value) => value + 1)}>Retry recent cards</button>
-            </div>
-          )}
-          {cardsState.kind === "loaded" && cardsState.data.length === 0 && <p>No cards yet. Scan or import one to begin.</p>}
-          {cardsState.kind === "loaded" && cardsState.data.length > 0 && (
-            <ul className="dashboard-card-list">
-              {cardsState.data.map((item) => (
-                <li key={item.id}>
-                  <Link aria-label={`View ${item.card.name}`} to={`/cards/${item.printing_id}`}><CardImage name={item.card.name} imageUris={item.card.image_uris} /></Link>
-                  <div><h3>{item.card.name}</h3><p>{item.card.set.code.toUpperCase()} · {item.finish} · {formatLabel(item.condition)}</p><span>{item.quantity} {item.quantity === 1 ? "copy" : "copies"}</span></div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </article>
-
-        <article className="dashboard-widget" id="dashboard-decks" aria-labelledby="recent-decks-heading">
-          <div className="dashboard-widget-heading"><div><p className="eyebrow">Keep building</p><h2 id="recent-decks-heading">Recent decks</h2></div><Link className="dashboard-inline-action" to="/decks">See all</Link></div>
-          {decksState.kind === "loading" && <p role="status">Loading recent decks…</p>}
-          {decksState.kind === "error" && (
-            <div className="dashboard-widget-state form-error" role="alert" aria-label="Recent decks unavailable">
-              Could not load recent decks.
-              <button className="text-button dashboard-widget-retry" type="button" onClick={() => setDecksRequest((value) => value + 1)}>Retry recent decks</button>
-            </div>
-          )}
-          {recentDecks?.length === 0 && <p>No decks yet. Create one when you are ready to build.</p>}
-          {recentDecks && recentDecks.length > 0 && (
-            <ul className="dashboard-deck-list">
-              {recentDecks.map((deck) => <li key={deck.id}><div><h3>{deck.name}</h3><p>{formatLabel(deck.format)}{deck.description ? ` · ${deck.description}` : ""}</p></div><Link aria-label={`Open ${deck.name}`} to={`/decks/${deck.id}`}>Open</Link></li>)}
-            </ul>
-          )}
-        </article>
-
-        <article className="dashboard-widget" id="dashboard-sets" aria-labelledby="top-sets-heading">
-          <div className="dashboard-widget-heading"><div><p className="eyebrow">Collection shape</p><h2 id="top-sets-heading">Top sets</h2></div></div>
-          {summaryState.kind === "loading" && <p role="status">Loading top sets…</p>}
-          {summaryState.kind === "error" && <p>Top sets are unavailable with the collection summary.</p>}
-          {summary && summary.sets.length === 0 && <p>Your most collected sets will appear here.</p>}
-          {summary && summary.sets.length > 0 && <ol className="dashboard-set-list">{summary.sets.slice(0, 5).map((entry) => <li key={entry.code}><div><strong>{entry.name}</strong><span>{entry.distinct_items} unique</span></div><b>{entry.copies}</b></li>)}</ol>}
-        </article>
-
-        <article className="dashboard-widget" id="dashboard-attention" aria-labelledby="attention-heading">
-          <div className="dashboard-widget-heading"><div><p className="eyebrow">Data quality</p><h2 id="attention-heading">Needs attention</h2></div></div>
-          {summaryState.kind === "loading" && <p role="status">Checking collection coverage…</p>}
-          {summaryState.kind === "error" && <p>Coverage is unavailable with the collection summary.</p>}
-          {summary && (
-            <ul className="dashboard-attention-list">
-              {summary.total_copies === 0 ? (
-                <li className="is-clear">
-                  <strong>No collection pricing yet</strong>
-                  <span>Add a card or import a collection to begin pricing checks.</span>
-                </li>
-              ) : (
-                <>
-                  <li className={summary.unpriced_copies ? "has-warning" : "is-clear"}>
-                    {summary.unpriced_copies ? (
-                      <Link to="/collection/pricing">
-                        <strong>{summary.unpriced_copies} copies need pricing</strong>
-                        <span>Value excludes copies without a current price.</span>
-                      </Link>
-                    ) : (
-                      <><strong>Pricing coverage complete</strong><span>Every copy has a current price.</span></>
-                    )}
-                  </li>
-                  {priceSnapshot && <li className={priceSnapshot.stale ? "has-warning" : "is-clear"}><strong>Price freshness</strong><span>{priceSnapshot.copy}</span></li>}
-                </>
-              )}
-              <li className={catalogState.kind === "loaded" && catalogState.catalog.stale ? "has-warning" : "is-clear"}><strong>{view.chip}</strong><span>{view.summary}</span></li>
-              {summary.finishes.slice(0, 2).map((entry) => <li className="is-clear" key={`finish-${entry.value}`}><strong>{formatLabel(entry.value)}</strong><span>{entry.copies} {entry.copies === 1 ? "copy" : "copies"} · finish</span></li>)}
-              {summary.conditions.slice(0, 2).map((entry) => <li className="is-clear" key={`condition-${entry.value}`}><strong>{formatLabel(entry.value)}</strong><span>{entry.copies} {entry.copies === 1 ? "copy" : "copies"} · condition</span></li>)}
-            </ul>
-          )}
-          {catalogState.kind === "unavailable" && <button className="text-button dashboard-widget-retry" type="button" onClick={() => setCatalogRequest((value) => value + 1)}>Retry catalog status</button>}
-        </article>
-      </div>
+      <div className="dashboard-content-grid workspace-dashboard-grid">{layout.dashboardOrder.filter(id=>!layout.hiddenModules.includes(id)).map(id=><div className={`workspace-dashboard-module module-${id}`} key={id}>{panels[id]}</div>)}</div>
         </div>
       </div>
     </section>

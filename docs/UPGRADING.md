@@ -30,7 +30,7 @@ preserve the backup and use the documented isolated recovery procedure; do not
 assume older code can safely run against every newer schema. This patch does
 not change migration rollback behavior.
 
-## Current v2 branch follow-ups
+## Upgrading to 2.7.8 on the v2 branch
 
 The current branch adds `0025_scan_diagnostics` after `0024_scan_failures`. Back up
 source, configuration and database, and verify the backup in an isolated database.
@@ -40,13 +40,8 @@ sign-in, collection, scanning and Scan history. Do not run an unconfigured local
 Alembic command against an assumed database. The new table is additive; rollback
 of application images is distinct from database recovery.
 
-`VERSION` remains `2.7.7` because these are branch follow-ups, not a newly tagged
-release. The standalone upgrade helper requires a **strictly newer VERSION** and
-will reject a 2.7.7-to-2.7.7 branch update. Do not edit VERSION or use disposable-test
-flags to bypass that check. Existing 2.7.7 standalone installations need a reviewed
-manual rollout for their deployment or a later numbered release. The private live
-rollout is not evidence of a tested same-version standalone upgrade. Fresh branch
-installs apply the current migration head through the installer.
+`VERSION` is now `2.7.8`. Obtain the `v2` checkout containing this version and record its commit SHA. A 2.7.7 installation meets the helper's strictly-newer-version check; do not bypass its backup, isolated restore, migration or health checks. This release has automated API/UI verification, but a real standalone 2.7.7-to-2.7.8 upgrade has not been performed as part of this release. Existing immutable tags are unchanged.
+
 
 ## Maintainer check
 

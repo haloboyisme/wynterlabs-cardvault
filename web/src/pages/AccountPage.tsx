@@ -1,3 +1,4 @@
+import {PersonalWorkspace} from "../components/workspace/PersonalWorkspace";
 import {PersonalBackground} from "../components/WorkspaceBackground";
 import { WorkspaceEffectsSettings } from "../components/WorkspaceEffects";
 import { EXTRA_BASE_MODES } from "../lib/base-modes";
@@ -213,7 +214,7 @@ export function AccountPage() {
       <div className="account-layout">
         <nav className="account-jump-nav" aria-label="Account sections"><span>ON THIS PAGE</span><a href="#account-look">Look & comfort</a><a href="#account-scan">Scan & stream</a><a href="#account-security">Sign-in & security</a><a href="#account-privacy">Account & privacy</a></nav>
         <div className="account-content">
-          <section id="account-look" className="account-section" aria-labelledby="account-look-title"><header className="account-section-heading"><span aria-hidden="true">01</span><div><h2 id="account-look-title">Look & comfort</h2><p>Make CardVault feel like yours. These appearance choices save automatically in this browser.</p></div></header><div className="account-grid">
+          <section id="account-look" className="account-section" aria-labelledby="account-look-title"><header className="account-section-heading"><span aria-hidden="true">01</span><div><h2 id="account-look-title">Look & comfort</h2><p>Make CardVault feel like yours. These appearance choices save automatically in this browser.</p></div></header><PersonalWorkspace/><div className="account-grid">
         <section className="account-appearance-card" aria-labelledby="account-appearance-heading">
           <div className="account-card-heading">
             <div>

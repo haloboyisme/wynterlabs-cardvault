@@ -1,5 +1,9 @@
+import {DASHBOARD_MODULES} from "../lib/workspace-layout";
+import {WorkspaceCustomizer} from "./workspace/WorkspaceCustomizer";
+import {WorkspacePresetTools} from "./workspace/WorkspacePresetTools";
+import {presetDesign} from "../lib/workspace-presets";
 import {BackgroundSettings} from "./BackgroundSettings";
-import {backgroundSettings} from "../lib/backgrounds";
+import {BACKGROUNDS,backgroundSettings} from "../lib/backgrounds";
 import type { CSSProperties } from "react";
 import type { BrandDesign } from "../lib/brand-design";
 
@@ -22,6 +26,9 @@ export function BrandDesignControls({ design, onChange, disabled, siteName, prod
   siteName: string; productName: string; tagline: string; logo: string;
 }) {
   function update<K extends keyof BrandDesign>(key: K, value: BrandDesign[K]) { onChange({ ...design, [key]: value }); }
+  const background=backgroundSettings(design.background);
+  const scene=BACKGROUNDS.find(item=>item.id===background.preset)?.image;
+  const uploaded=background.upload.startsWith("data:image/gif")?background.still:background.upload;
   const style = { "--preview-accent": design.accent, "--preview-secondary": design.secondary,
     "--preview-bg": design.surface === "light" ? "#edf2f8" : design.surface === "charcoal" ? "#14171b" : "#0b1423",
     "--preview-ink": design.surface === "light" ? "#142137" : "#f5f8ff",
@@ -30,12 +37,18 @@ export function BrandDesignControls({ design, onChange, disabled, siteName, prod
   } as CSSProperties;
   return <div className="brand-design-controls">
     <div className={`brand-design-preview preview-${design.finish}`} style={style} aria-label="Site design draft preview">
+      <div className="brand-preview-background" style={{opacity:background.opacity}} aria-hidden="true">
+        {scene&&<img src={scene} alt="Draft background scene" style={{objectFit:background.size as "cover"|"contain",objectPosition:background.position}}/>}
+        {uploaded&&<img src={uploaded} alt="Draft uploaded background" style={{objectFit:background.size as "cover"|"contain",objectPosition:background.position}}/>}
+      </div>
       <div className="brand-preview-wordmark"><img src={logo} alt="Draft logo" /><span>{siteName}<small>{productName}</small></span><span className="brand-preview-badge">Draft preview</span></div>
       {design.announcement && <p>{design.announcement}</p>}
       <small>{design.home_eyebrow}</small><h3>{tagline || productName}</h3><p>{design.home_description}</p>
       <div className="brand-preview-panels"><span>Scan your next card <b>→</b></span><span>Your collection <b>▤</b></span></div>
       <small>{design.footer_text}</small>
     </div>
+    <WorkspaceCustomizer value={design.workspace} onChange={workspace=>onChange({...design,workspace,...Object.fromEntries(DASHBOARD_MODULES.map(id=>[`dashboard_${id}`,!workspace.hiddenModules.includes(id)]))})} onPreset={id=>onChange(presetDesign(id,design))} disabled={disabled}/>
+    <WorkspacePresetTools design={design} onChange={onChange} disabled={disabled}/>
     <BackgroundSettings value={backgroundSettings(design.background)} onChange={background=>onChange({...design,background})} disabled={disabled}/>
     <fieldset disabled={disabled}><legend>Colors & character</legend><p>Site background is the default for System mode. Personal themes, text size, contrast, and reduced motion remain available in Account.</p>
       <div className="brand-design-grid">

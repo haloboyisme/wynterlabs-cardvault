@@ -1,9 +1,13 @@
+import {WorkspaceNavigation} from "./workspace/WorkspaceNavigation";
+import {WorkspaceSearch} from "./workspace/WorkspaceSearch";
+import {useWorkspaceLayout} from "../lib/use-workspace-layout";
+import {applyWorkspaceLayout} from "../lib/workspace-layout";
 import {WorkspaceBackground} from "./WorkspaceBackground";
 import { ScanPrizeFeedback } from "../presentation/rewards";
 import { WorkspaceEffects } from "./WorkspaceEffects";
 import { brandDesign } from "../lib/brand-design";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../app/auth";
 import { useBranding } from "../app/branding";
@@ -69,6 +73,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const {layout}=useWorkspaceLayout();
+  const location=useLocation();
+  const [collapsed,setCollapsed]=useState(false);
+  const [menuOpen,setMenuOpen]=useState(false);
+  const menuButton=useRef<HTMLButtonElement>(null);
+  const drawer=useRef<HTMLDivElement>(null);
+  useEffect(()=>applyWorkspaceLayout(layout),[layout]);
+  useEffect(()=>setMenuOpen(false),[location.pathname]);
+  useEffect(()=>{
+    if(!menuOpen)return;
+    const first=drawer.current?.querySelector<HTMLElement>('a,button');first?.focus();
+    function key(e:KeyboardEvent){if(e.key==='Escape'){setMenuOpen(false);menuButton.current?.focus();}if(e.key==='Tab'){
+      const items=Array.from(drawer.current?.querySelectorAll<HTMLElement>('a,button')??[]);const first=items[0],last=items[items.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }}
+    document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key);
+  },[menuOpen]);
+
   const forcedPasswordChange =
     auth.status === "authenticated" && Boolean(auth.user?.must_change_password);
   const forcedMfaSetup =
@@ -90,15 +112,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="site-frame">
+    <div className={`site-frame collector-shell ${auth.status === "authenticated" ? "is-member" : "is-guest"}${collapsed ? " sidebar-collapsed" : ""}`}>
       <WorkspaceBackground/><WorkspaceEffects /><ScanPrizeFeedback />
       <a className="skip-link" href="#main">Skip to content</a>
-      <header ref={headerRef} className={`site-header${headerHidden ? " is-idle-hidden" : ""}`}>
+      <header ref={headerRef} className={`site-header workspace-header${headerHidden?" is-idle-hidden":""}`}>
         <div className="header-topline">
+          {auth.status === "authenticated"&&<button type="button" className="workspace-collapse" aria-label={collapsed?"Expand sidebar":"Collapse sidebar"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>☰</button>}
           <Link className="brand" to="/" aria-label={`${siteName} ${productName} home`}>
             <LogoMark branding={branding} />
             <span><strong>{siteName}</strong><small>{productName.toUpperCase()}</small></span>
           </Link>
+          {auth.status === "authenticated"&&!forcedPasswordChange&&!forcedMfaSetup&&<WorkspaceSearch/>}
+          {auth.status === "authenticated"&&!forcedPasswordChange&&!forcedMfaSetup&&<Link className="workspace-scan-link" to="/scan">＋ Scan a card</Link>}
           <div className="header-account" aria-label="Current workspace">
             <span className="header-signal" aria-hidden="true" />
             <span>
@@ -109,31 +134,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </div>
         </div>
-        <nav className="primary-nav" aria-label="Primary navigation">
-          <NavLink to="/">Home</NavLink>
-          {auth.status === "authenticated" ? (
-            <>
-              {!forcedPasswordChange && !forcedMfaSetup && (
-                <>
-                  <NavLink to="/dashboard">Dashboard</NavLink>
-                  <NavLink to="/cards">Cards</NavLink>
-                  <NavLink to="/collection">Collection</NavLink>
-                  <NavLink to="/custom-card-import">Custom Card Import</NavLink>
-                  <NavLink to="/scan">Scan</NavLink>
-                  <NavLink to="/decks">Decks</NavLink>
-                  {MEMBER_TRADING_ENABLED && <NavLink to="/trades">Trades</NavLink>}
-                  <NavLink to="/account">Account</NavLink>
-                  {canAdminister && <NavLink to="/admin">Admin</NavLink>}
-                </>
-              )}
-              {forcedMfaSetup && <NavLink to="/account">Account</NavLink>}
-              <button className="nav-button" onClick={() => void signOut()}>Sign out</button>
-            </>
-          ) : (
-            <NavLink className="nav-cta" to="/login">Sign in</NavLink>
-          )}
-        </nav>
+        {auth.status !== "authenticated"&&<nav aria-label="Primary navigation"><NavLink to="/">Home</NavLink><NavLink to="/login">Sign in</NavLink></nav>}
       </header>
+      {auth.status === "authenticated"&&<>
+        <aside className="workspace-sidebar"><WorkspaceNavigation admin={canAdminister} restricted={forcedPasswordChange||forcedMfaSetup} accountAllowed={!forcedPasswordChange} onSignOut={()=>void signOut()}/>{!forcedPasswordChange&&!forcedMfaSetup&&<Link className="workspace-customize-link" to="/account#account-look">✦ Make it yours</Link>}</aside>
+        <nav className="workspace-mobile-nav" aria-label="Mobile shortcuts"><NavLink to="/" end>⌂<span>Home</span></NavLink>{!forcedPasswordChange&&!forcedMfaSetup&&<><NavLink to="/collection">▤<span>Collection</span></NavLink><NavLink to="/scan">◎<span>Scan</span></NavLink></>}<button ref={menuButton} type="button" onClick={()=>setMenuOpen(true)} aria-expanded={menuOpen} aria-controls="workspace-mobile-menu">☰<span>More</span></button></nav>
+        {menuOpen&&<div className="workspace-drawer-backdrop" onClick={e=>{if(e.target===e.currentTarget){setMenuOpen(false);menuButton.current?.focus();}}}><div ref={drawer} id="workspace-mobile-menu" className="workspace-drawer" role="dialog" aria-modal="true" aria-label="All destinations"><button type="button" onClick={()=>{setMenuOpen(false);menuButton.current?.focus();}}>Close menu ×</button><WorkspaceNavigation admin={canAdminister} restricted={forcedPasswordChange||forcedMfaSetup} accountAllowed={!forcedPasswordChange} onSignOut={()=>void signOut()}/></div></div>}
+      </>}
       {brandDesign(branding.design).announcement && <aside className="brand-announcement" aria-label="Site announcement">{brandDesign(branding.design).announcement}</aside>}
       <main id="main">{children}</main>
       <footer className="site-footer">

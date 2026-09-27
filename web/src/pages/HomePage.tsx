@@ -37,6 +37,7 @@ const quickActions = [
 
 const updates = [
   ["Available", "Failed-scan history", "Scan modes now keep first failures with reason tags and retry outcomes. Open Scan history on the Scan page. Photos and recognized text are not stored in the log."],
+  ["V2.7.8", "Your workspace, reimagined", "Search from the header, browse with a sidebar or top navigation, choose six new workspace looks, reorder dashboard panels and save or export your personal design. Existing tools and themes remain available."],
   ["V2.7.7", "Your background, better refreshes", "Layer PNG, JPEG or GIF uploads over three original backgrounds. Choose interface cues and motion speed, restore shared branding, retry failed catalogs and export larger recaps using less memory per card."],
   ["V2.7.5", "Streamer preview and pack video", "Choose instant, fade or flip reveals, account sound/mute settings, a private OBS pop-out, and a replayable recap with local video export. Open Streamer preview on Scan to begin."],
   ["Available", "Difficult-card matching refinements", "Either half of a split card can match. Ambiguous printings require a choice, stalled searches can be retried, and Scan includes foil/promo guidance."],
@@ -140,7 +141,7 @@ export function HomePage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Release notes</p>
-          <h2>V2.7.7 is on this server.</h2>
+          <h2>V2.7.8 is on this server.</h2>
           </div>
           <p>Recent improvements are kept short and useful so members can see what changed at a glance.</p>
         </div>

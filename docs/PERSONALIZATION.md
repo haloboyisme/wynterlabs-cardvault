@@ -1,5 +1,13 @@
 # Personalization and shared branding
 
+## Collector Workspace (2.7.8)
+
+Account → Look & comfort → Workspace designer adds six layout presets: Collector, Gallery, Compact, Paper, Night Studio and Soft Glass. All older Base Modes remain below. Choose sidebar or top navigation, sidebar width, spacing, card size/view and logo size. Existing explicit collection display preferences take precedence over the new defaults.
+
+Dashboard → Customize dashboard lets you reorder or hide panels and restore them. Hidden panels retain their data. Account settings are personal to that account in this browser; Admin → Site & branding controls shared defaults. An override notice and follow-site buttons explain which design is active.
+
+Saved looks & backup stores up to 20 named looks in your browser, imports/exports appearance JSON (up to 4 MB), and excludes credentials and collection data. Background images are included. Admin imports are drafts until Save; personal looks apply immediately. Existing uploads, contrast, text size and reduced motion are preserved. Restore controls let you return to site defaults.
+
 ## Personal workspace
 
 Open Account → Look & comfort. There are 42 Base Modes including System and seven

@@ -21,7 +21,11 @@ recovery. Their release records remain historical evidence.
 | V3.5 | Deferred | Account-owned wireless feeders and Bluetooth compatibility |
 | Later V3+ | Exploratory | Assisted gameplay tracking, friend/tournament displays and expanded community |
 
-## Completed after V2.7.7 on v2
+## Completed in V2.7.8
+
+Collector Workspace: grouped sidebar/top and mobile navigation, header search, six layout presets, account/site customization, dashboard arrangement, named looks, appearance import/export, restore controls and background-preserving theme switching. Existing features remain available; see [release notes](v2.7.8-release.md).
+
+## Completed after V2.7.7 (included in V2.7.8)
 
 Failed-scan logging is implemented across scanner modes, with reason tags, retry outcomes, account history, admin diagnostics and bounded retention. Suggested/accepted catalog card and finish details plus error codes are included; no photos or raw OCR text are stored. Ambiguous camera matches get a deeper retry, and active scans warn before page-link navigation. Server matching now checks either face of split, Room and double-faced names before limiting candidates.
 

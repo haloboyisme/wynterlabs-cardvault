@@ -5,6 +5,7 @@ import { App } from "./app/App";
 import { applyAppearance, readAppearance, watchSystemTheme } from "./lib/appearance";
 import "./styles/global.css";
 import "./styles/workspace.css";
+import "./styles/collector-workspace.css";
 
 applyAppearance(readAppearance());
 watchSystemTheme();

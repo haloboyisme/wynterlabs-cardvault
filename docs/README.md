@@ -1,8 +1,6 @@
 # CardVault documentation
 
-Reviewed September 25, 2026. The release tag is **v2.7.7**; the maintained **v2**
-branch includes later scanner, presentation and diagnostic updates. `VERSION`
-continues to identify the release line. Use the commit SHA to identify a branch build.
+Reviewed September 27, 2026. The maintained **v2** branch now identifies **2.7.8**. Existing release tags remain unchanged. Use the commit SHA to identify the exact branch build.
 
 ## Start here
 
@@ -22,11 +20,12 @@ continues to identify the release line. Use the commit SHA to identify a branch 
 
 ## Current status
 
+- [Version 2.7.8](v2.7.8-release.md)
 - [Changes since the v2.7.7 tag](post-v2.7.7-updates.md)
 - [Changelog](../CHANGELOG.md)
 - [Remaining roadmap](V3-ROADMAP.md)
 - Current migration head: `0025_scan_diagnostics`.
-- Latest code verification: 663 frontend tests, 12 focused backend tests,
+- Latest code verification: 679 frontend tests, 49 focused backend tests,
   TypeScript and production build passed. This is not a full API test run or a
   physical camera/feeder endurance test.
 - Public automatic scanning remains simulation-only. Private feeder firmware,

@@ -7,7 +7,7 @@
 **A private, self-hosted trading-card scanner and collection vault built for
 collectors—not subscriptions.**
 
-![Version](https://img.shields.io/badge/version-2.7.7-7c3aed?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.7.8-7c3aed?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ed?style=for-the-badge&logo=docker&logoColor=white)
 ![AI assisted](https://img.shields.io/badge/development-AI--assisted-14b8a6?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=for-the-badge)
@@ -56,13 +56,17 @@ Scanner recognition is an assistant, not an authority. Every scan should be
 checked before saving because artwork, glare, angle, collector numbers, promos,
 and reprints can produce an incorrect match.
 
-## Latest updates on the v2 branch
+## Latest updates — Version 2.7.8
 
 Account-scoped failed-scan history, either-face catalog matching, deeper scan recovery, draggable captured-photo inspection, automatic OBS audio and a redesigned streamer studio are available on `v2` after the v2.7.7 tag. See [follow-up notes](docs/post-v2.7.7-updates.md). The v2.7.7 release tag remains unchanged.
 
 Open **Scan → Scan history · failed attempts** for failures and retry outcomes. Upgrade branch `v2` deployments through migration `0025_scan_diagnostics` before restarting the updated application; see the follow-up notes for retention and privacy details.
 
-## ✨ New in Version 2.7.7
+## ✨ New in Version 2.7.8
+
+A redesigned collector workspace adds sidebar/top navigation, header search, phone shortcuts, six new looks, dashboard arrangement and named appearance presets with import/export and restore. Existing tools, themes and settings remain available. [Version 2.7.8 notes](docs/v2.7.8-release.md) · [Customization guide](docs/PERSONALIZATION.md).
+
+### Included from Version 2.7.7
 
 - **Custom backgrounds:** three original trainer, mana and anime-inspired stills; layer your own PNG, JPEG or GIF over a preset. Personal choices stay per account/browser; admins can save site-wide defaults and restore branding.
 - **Comfort and speed:** adjustable motion speed and three interface cue styles. Animated uploads switch to a still while scanning, hidden, reduced-motion or low-power mode is active.
@@ -167,7 +171,7 @@ seller accounts.
 > privileged accounts, and test backups before trusting the system with a large
 > collection.
 
-## 🧭 Version 2.7.7 and the road to Version 3
+## 🧭 Version 2.7.8 and the road to Version 3
 
 The roadmap is intentionally flexible because this is a fun project—not a
 commitment to update the software forever.
@@ -238,7 +242,7 @@ attribution requirements, and acceptable-use rules.
 - [Read contribution expectations](CONTRIBUTING.md)
 - [Review the GitHub publishing checklist](docs/GITHUB-PUBLISHING-CHECKLIST.md)
 - [Review final V2.5 release readiness](docs/v2.5-release-readiness.md)
-- [Read the Version 2.7.7 release notes](docs/v2.7.7-release.md)
+- [Read the Version 2.7.8 release notes](docs/v2.7.8-release.md)
 - [See the staged Version 3 roadmap](docs/V3-ROADMAP.md)
 - [Understand account and private community controls](docs/ACCOUNT-AND-COMMUNITY.md)
 

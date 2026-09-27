@@ -86,7 +86,7 @@ it("renders the WynterLabs product homepage", async () => {
   const quickActions = screen.getByRole("navigation", { name: /explore wynterlabs cardvault/i });
   expect(within(quickActions).getByRole("link", { name: /browse cards/i })).toHaveAttribute("href", "/cards");
   expect(within(quickActions).getByRole("link", { name: /scan cards/i })).toHaveAttribute("href", "/scan");
-  expect(screen.getByRole("heading", { name: /V2.7.7 is on this server/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: /V2.7.8 is on this server/i })).toBeVisible();
   expect(screen.getByRole("heading", { name: /What’s next for CardVault/i })).toBeVisible();
   expect(screen.queryByText("Private trading")).not.toBeInTheDocument();
   expect(screen.queryByText(/Phase 2/i)).not.toBeInTheDocument();

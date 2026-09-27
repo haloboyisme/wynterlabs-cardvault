@@ -1,3 +1,5 @@
+import {readAppearance,writeAppearance,DEFAULT_APPEARANCE} from "../lib/appearance";
+vi.mock("../app/auth",()=>({useAuth:()=>({user:{id:"brand-admin"}})}));
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -28,6 +30,7 @@ vi.mock("../lib/branding", () => ({
 }));
 
 beforeEach(() => {
+  localStorage.clear();writeAppearance({...DEFAULT_APPEARANCE});
   brandingState.applyBranding.mockReset();
   brandingState.refreshBranding.mockReset();
   Object.assign(brandingState.branding, {
@@ -188,4 +191,21 @@ it("saves design choices with branding and keeps changes local until Save", asyn
   expect(updateBranding).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect(updateBranding).toHaveBeenCalledWith(expect.objectContaining({ design: expect.objectContaining({ navigation: "top", home_roadmap: false, announcement: "Welcome collectors" }) }));
+});
+
+it('previews the selected background before saving',()=>{
+ render(<BrandStudio/>);
+ fireEvent.click(screen.getByRole('button',{name:'Anime · neon evening'}));
+ expect(screen.getByAltText('Draft background scene')).toHaveAttribute('src','/backgrounds/neon-evening.png');
+ expect(updateBranding).not.toHaveBeenCalled();
+});
+
+it('explicitly follows site design without resetting accessibility or shared settings',()=>{
+ writeAppearance({...DEFAULT_APPEARANCE,theme:'ember',textScale:'large',motion:'reduced'});
+ localStorage.setItem('wynterlabs.background.v277.brand-admin',JSON.stringify({preset:'pokemon'}));
+ render(<BrandStudio/>);fireEvent.click(screen.getByRole('button',{name:'Use site theme in this browser'}));
+ expect(readAppearance()).toMatchObject({theme:'system',textScale:'large',motion:'reduced'});
+ expect(localStorage.getItem('wynterlabs.background.v277.brand-admin')).toBeNull();
+ expect(updateBranding).not.toHaveBeenCalled();
+ expect(screen.queryByRole('button',{name:'Use site theme in this browser'})).toBeNull();
 });

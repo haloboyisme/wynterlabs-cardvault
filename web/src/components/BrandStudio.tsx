@@ -1,3 +1,8 @@
+import {readPersonalDesign,savePersonalDesign} from "../lib/personal-design";
+import {readWorkspaceLayout,writeWorkspaceLayout} from "../lib/workspace-layout";
+import {useAuth} from "../app/auth";
+import {readPersonalBackground,clearPersonalBackground} from "./WorkspaceBackground";
+import {readAppearance,writeAppearance,applyAppearance} from "../lib/appearance";
 import { brandDesign, DEFAULT_DESIGN, type BrandDesign } from "../lib/brand-design";
 import { BrandDesignControls } from "./BrandDesignControls";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
@@ -15,6 +20,22 @@ interface BrandStudioProps {
 
 export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
   const { branding, applyBranding } = useBranding();
+  const {user}=useAuth();
+  const [overrides,setOverrides]=useState(false);
+  useEffect(()=>{
+    const update=()=>setOverrides(readAppearance().theme!=="system"||Boolean(readPersonalBackground(user?.id))||Boolean(readPersonalDesign(user?.id))||Boolean(readWorkspaceLayout(user?.id)));
+    update();window.addEventListener("workspace-layout",update);window.addEventListener("storage",update);window.addEventListener("workspace-background",update);
+    return()=>{window.removeEventListener("workspace-layout",update);window.removeEventListener("storage",update);window.removeEventListener("workspace-background",update);};
+  },[user?.id]);
+  function followSiteDesign(){
+    const next={...readAppearance(),theme:"system" as const};
+    try{
+      if(!writeAppearance(next))throw new Error("storage");
+      if(!savePersonalDesign(null,user?.id)||!writeWorkspaceLayout(null,user?.id))throw new Error("storage");
+      clearPersonalBackground(user?.id);applyAppearance(next);setOverrides(false);
+      setMessage({tone:"success",text:"This browser now follows the saved site theme. Save any draft changes to publish them."});
+    }catch{setMessage({tone:"error",text:"Could not update this browser's theme preference. Check browser storage and try again."});}
+  }
   const [design, setDesign] = useState(() => brandDesign(branding.design));
   const [siteName, setSiteName] = useState(branding.site_name);
   const [productName, setProductName] = useState(branding.product_name);
@@ -124,6 +145,7 @@ export function BrandStudio({ onBrandingUpdated }: BrandStudioProps) {
       <p className="eyebrow">Shared workspace identity</p>
       <h2 id="brand-studio-heading">Brand Studio</h2>
       <p>Shape your shared CardVault experience. Preview your changes here, then save to apply them across the site.</p>
+      {overrides&&<div className="admin-warning" role="status"><p>Your personal theme or background overrides the shared site design in this browser. The preview below always shows your draft.</p><button type="button" onClick={followSiteDesign} disabled={busy}>Use site theme in this browser</button></div>}
       <div className="brand-studio-preview">
         <img src={previewSource} alt="Current logo preview" onError={(event) => { event.currentTarget.src = FALLBACK_LOGO; }} />
       </div>

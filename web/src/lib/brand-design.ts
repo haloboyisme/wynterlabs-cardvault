@@ -1,5 +1,7 @@
+import {normalizeWorkspaceLayout} from "./workspace-layout";
 import {backgroundDefaults} from "./backgrounds";
 export const DEFAULT_DESIGN = {
+  workspace: normalizeWorkspaceLayout(null),
   background: {...backgroundDefaults},
   accent: "#5BE7E7", secondary: "#8BA9FF", surface: "navy", typography: "modern",
   corners: "soft", finish: "glow", width: "comfortable", navigation: "side",
@@ -10,7 +12,7 @@ export const DEFAULT_DESIGN = {
   dashboard_eyebrow: "Your collection, in focus", footer_text: "Designed for collectors. Built by WynterLabs.", announcement: "",
 };
 export type BrandDesign = typeof DEFAULT_DESIGN;
-export function brandDesign(value?: Partial<BrandDesign>): BrandDesign { return { ...DEFAULT_DESIGN, ...value }; }
+export function brandDesign(value?: Partial<BrandDesign>): BrandDesign { return { ...DEFAULT_DESIGN, ...value, workspace:normalizeWorkspaceLayout(value?.workspace) }; }
 export function applyBrandDesign(design: BrandDesign) {
   const root = document.documentElement;
   for (const key of ["surface", "typography", "corners", "finish", "width", "navigation"] as const) root.setAttribute(`data-brand-${key}`, design[key]);

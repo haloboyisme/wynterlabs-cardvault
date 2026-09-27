@@ -1,0 +1,3 @@
+import {useRef,useState} from 'react';
+import {Link} from 'react-router-dom';
+export function WorkspaceSearch(){const [query,setQuery]=useState('');const link=useRef<HTMLAnchorElement>(null);return <form className="workspace-search" role="search" onSubmit={e=>{e.preventDefault();link.current?.click();}}><span aria-hidden="true">⌕</span><input type="search" aria-label="Search cards" placeholder="Find a card…" value={query} onChange={e=>setQuery(e.target.value)} maxLength={300}/><button type="submit" aria-label="Search catalog">Search</button><Link ref={link} to={`/cards?q=${encodeURIComponent(query.trim())}`} tabIndex={-1} hidden aria-hidden="true">Search results</Link></form>}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { CardImage } from "../components/CardImage";
 import { CatalogGameFilter } from "../components/CatalogGameFilter";
@@ -39,8 +39,11 @@ function LoadingGrid() {
 
 
 export function CardsPage() {
-  const [draft, setDraft] = useState(EMPTY);
-  const [query, setQuery] = useState(EMPTY);
+  const [urlParams]=useSearchParams();
+  const urlQuery=urlParams.get("q")??"";
+  const [draft, setDraft] = useState<CardSearchParams>({...EMPTY,q:urlQuery||undefined});
+  useEffect(()=>setDraft(current=>({...current,q:urlQuery||undefined,page:1})),[urlQuery]);
+  const [query, setQuery] = useState<CardSearchParams>({...EMPTY,q:urlQuery||undefined});
   const [status, setStatus] = useState<CatalogStatus | null>(null);
   const [sets, setSets] = useState<CardSet[]>([]);
   const [results, setResults] = useState<CardPage | null>(null);

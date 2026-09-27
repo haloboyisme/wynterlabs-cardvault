@@ -1,3 +1,4 @@
+vi.mock("../lib/use-workspace-layout",()=>({useWorkspaceLayout:()=>({layout:{view:"grid",cardSize:"medium"}})}));
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
