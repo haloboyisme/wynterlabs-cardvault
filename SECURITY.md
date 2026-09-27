@@ -17,8 +17,9 @@ codes, session tokens or unredacted production logs to GitHub.
 
 ## Maintained release line
 
-`v2` is the maintained release line; the latest documented release tag is **V2.7.7**, with additional
-changes on `v2` described in the [follow-up notes](docs/post-v2.7.7-updates.md). Security
+`v2` is the maintained release line and currently identifies **V2.7.8**; see the
+[current release notes](docs/v2.7.8-release.md). The existing **v2.7.7** tag is
+unchanged and does not contain the newer branch fixes. Security
 fixes target that line. Older releases, including `1.0.x`, do not have a separate
 backport commitment. Review [releases](https://github.com/haloboyisme/wynterlabs-cardvault/releases)
 and the [upgrade guide](docs/UPGRADING.md), preserving secrets and taking a verified
@@ -74,5 +75,6 @@ the latest 100. Quality tags indicate possible causes, not verified diagnoses.
 Do not include account logs in public issue reports without reviewing them.
 See [scan history](docs/SCANNING.md) for behavior and limits.
 
+## Workspace appearance imports and exports
 
 Workspace appearance exports contain visual settings and optional background images, not credentials or collection records. Treat imported files as untrusted; imports are size-limited and allowlisted, with image signature/dimension checks.

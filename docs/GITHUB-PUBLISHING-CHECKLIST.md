@@ -21,13 +21,24 @@ See the [project overview](../README.md) and [security policy](../SECURITY.md).
 
 ## Current release status
 
-- V2.7.5 includes streamer/OBS/video, prize feedback, dynamic personalization and
-  shared branding. See [release notes](v2.7.5-release.md).
-- `v2` remains the landing branch; older version tags remain unchanged.
-- Private infrastructure, hardware experiments and credentials are excluded.
-- Real-card/long-camera-session and OBS desktop audio acceptance remain open.
-- No new clean-host install or backup/restore drill is claimed for this update.
-- Final public-candidate automated results are recorded below after checks finish.
+- Current branch version: **2.7.8** on `v2`; see [release notes](v2.7.8-release.md).
+- Existing release tags remain unchanged; a branch version is not a new tag.
+- Private infrastructure, hardware experiments and credentials remain excluded.
+- Physical-card, long camera session and live account OBS acceptance remain open.
+- No new clean-host install, standalone upgrade or backup/restore drill is claimed.
+
+### V2.7.8 checks — September 27, 2026
+
+- Public frontend: 679 tests across 89 files; TypeScript and production build passed.
+- Private deployment: 49 focused backend branding/layout tests passed; this is not a full public API suite run.
+- Migration head remains `0025_scan_diagnostics`; workspace changes add no migration.
+- Changed files passed private-data screening and relative documentation-link checks.
+- Live web health and the served 2.7.8 version label were verified.
+- The existing production-build large-chunk advisory remains.
+
+## Historical verification records
+
+The records below describe earlier candidates and are not current test counts.
 
 ### V2.7.5 public-candidate checks — September 12, 2026
 

@@ -1,6 +1,6 @@
 # Streamer preview, sounds and pack recap
 
-Available in V2.7.5. Open **Scan → Streamer preview** or **Account → Scan & stream**.
+Current guide for V2.7.8; streamer features first shipped in V2.7.5. Open **Scan → Streamer preview** or **Account → Scan & stream**.
 Changes to presentation settings must be saved; the preview lets you try a draft first.
 
 ## Find your controls

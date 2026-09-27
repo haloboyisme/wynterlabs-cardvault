@@ -7,7 +7,7 @@ Reviewed September 27, 2026. The maintained **v2** branch now identifies **2.7.8
 | Task | Guide |
 | --- | --- |
 | Install a new server | [Installation](INSTALL.md) |
-| Back up and upgrade | [Upgrading and same-version limits](UPGRADING.md) |
+| Back up and upgrade | [Backup and version upgrades](UPGRADING.md) |
 | Scan cards and review failures | [Scanning and scan history](SCANNING.md) |
 | Configure overlays, sound and recaps | [Streamer preview](STREAMER-PREVIEW.md) |
 | Customize themes and backgrounds | [Personalization](PERSONALIZATION.md) |
@@ -25,9 +25,10 @@ Reviewed September 27, 2026. The maintained **v2** branch now identifies **2.7.8
 - [Changelog](../CHANGELOG.md)
 - [Remaining roadmap](V3-ROADMAP.md)
 - Current migration head: `0025_scan_diagnostics`.
-- Latest code verification: 679 frontend tests, 49 focused backend tests,
-  TypeScript and production build passed. This is not a full API test run or a
-  physical camera/feeder endurance test.
+- V2.7.8 public package verification: 679 frontend tests across 89 files,
+  TypeScript and production build passed. The private deployment separately
+  passed 49 focused backend branding/layout tests. This is not a full API test
+  run, a standalone upgrade drill, or a physical camera/feeder endurance test.
 - Public automatic scanning remains simulation-only. Private feeder firmware,
   hardware services, credentials and deployment records are not distributed.
 

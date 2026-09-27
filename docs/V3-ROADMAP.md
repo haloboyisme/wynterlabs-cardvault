@@ -1,6 +1,6 @@
 # CardVault roadmap — remaining work
 
-Updated September 25, 2026. This is the outstanding product backlog, reconciled
+Updated September 27, 2026 for V2.7.8. This is the outstanding product backlog, reconciled
 with the original Card Scanner Project and verified implementation records. Version
 labels describe targets, not promised dates. V2.6 remembered scan preferences are
 included in the public V2.6.0 release; physical V2.8 acceptance remains pending.

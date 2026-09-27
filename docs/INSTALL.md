@@ -6,12 +6,12 @@ reuse values from another installation.
 
 ## Choose your source
 
-The command below installs the immutable `v2.7.7` tag. The maintained `v2` branch
-contains newer scanner and presentation fixes, including failed-scan history and
-migration `0025_scan_diagnostics`. For a fresh installation of those updates, change
-`--branch v2.7.7` to `--branch v2` and record the commit with `git rev-parse HEAD`.
-The branch changes over time; a tag is a fixed release. Existing installations
-should read [upgrade guidance](UPGRADING.md) before changing source.
+The command below installs the maintained `v2` branch, currently **2.7.8**,
+including Collector Workspace and scanner diagnostics. Record the exact checkout
+with `git rev-parse HEAD` because the branch can advance. The immutable `v2.7.7`
+tag remains available as a historical release; no `v2.7.8` tag is assumed here.
+Existing installations should use [upgrade guidance](UPGRADING.md), not rerun
+the new-install bootstrap over an active installation.
 
 ## Before you begin
 
@@ -33,11 +33,11 @@ LAN hostname requirements, and account-linking instructions.
 
 ## Install
 
-Clone the immutable V2.7.7 release and install WynterLabs CardVault with one command.
+Clone the maintained V2 branch and install WynterLabs CardVault with one command.
 Replace `YOUR_HOST_OR_IP` with the LAN address or DNS name used by members:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.7.7 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
 If the release is already downloaded, run the included bootstrap directly:

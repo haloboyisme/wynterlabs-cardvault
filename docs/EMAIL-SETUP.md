@@ -62,4 +62,5 @@ one in Admin. This does not require changing members' CardVault passwords.
 
 Google sign-in requires separate OAuth configuration and a supported HTTPS
 hostname; Gmail SMTP does not enable the Google sign-in button. Physical
-scanner controls are a separate V3 project.
+feeder acceptance is tracked under V2.8; account-owned wireless/Bluetooth work
+is deferred to V3.5. See the [roadmap](V3-ROADMAP.md).

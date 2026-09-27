@@ -1,4 +1,8 @@
-# Updates after v2.7.7
+# Updates after v2.7.7 — included in v2.7.8
+
+These branch follow-ups are included in version **2.7.8**, together with the
+[Collector Workspace redesign](v2.7.8-release.md). The older tag is unchanged.
+Use the [documentation index](README.md) for current guides.
 
 ## Scanner diagnostics and navigation protection — September 25, 2026
 

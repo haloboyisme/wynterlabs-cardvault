@@ -1,6 +1,6 @@
 # Custom Card Import
 
-Available in **V2.5.9**.
+Current guide for **V2.7.8**; Custom Card Import first shipped in V2.5.9.
 
 Signed-in members open **Custom Card Import** from the main navigation. Supply a name and game (or Other / Custom collectibles), then optionally a set name, collector number, HTTPS image link and estimated USD value. Quantity defaults to one. The card enters the existing private collection as near mint/nonfoil; existing collection controls manage quantity, condition and manual valuation afterward.
 
@@ -8,7 +8,7 @@ Custom cards are explicitly labeled user supplied. They can be selected through 
 
 Export custom cards from this page as JSON to preserve their names, set details, image links, values, conditions and quantities. Importing creates new private copies, not updates; repeated import duplicates cards. Each import accepts up to 500 records; the browser file limit is 2 MiB. Standard collection CSV continues to work with existing printing IDs on the same installation/account, but does not recreate missing card definitions: use custom JSON for portability. Backups include the new records through the existing database backup process.
 
-Ownership is enforced for card details, catalog searches, oracle printings, sets, collection additions, CSV previews/confirmation and deck additions. Custom cards are excluded from community activity and protected from provider refresh deactivation. Existing account deletion removes the user's custom records. Existing feeder functionality is preserved. Streamer effects and Bluetooth remain future roadmap work.
+Ownership is enforced for card details, catalog searches, oracle printings, sets, collection additions, CSV previews/confirmation and deck additions. Custom cards are excluded from community activity and protected from provider refresh deactivation. Existing account deletion removes the user's custom records. Streamer effects are available; see [Streamer preview](STREAMER-PREVIEW.md). Public automatic scanning is simulation-only. Bluetooth remains deferred to V3.5; see the [roadmap](V3-ROADMAP.md).
 
 ## Upgrade and recovery
 

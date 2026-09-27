@@ -1,6 +1,6 @@
 # Scanning and failed-scan history
 
-Available on `v2` after the v2.7.7 tag. Sign in and open **Scan**.
+Current guide for V2.7.8 on `v2`. Sign in and open **Scan**.
 
 ## Scan and confirm
 

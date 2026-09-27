@@ -1,6 +1,6 @@
 # Account and community controls
 
-CardVault keeps this V2 increment usable without SMTP, paid APIs, or external
+Current guide for V2.7.8. CardVault remains usable without SMTP, paid APIs, or external
 identity providers.
 
 ## Member controls
@@ -32,8 +32,14 @@ bounded newest-first list from existing opted-in users, collection additions,
 completed catalog refreshes, and active set releases. It does not maintain a
 second activity database or store social posts.
 
-## V2.7.5 account presentation
+## Account presentation and workspace
 
 Account now groups Look & comfort, Scan & stream, Sign-in & security, and Account
 & privacy. Existing security/community controls remain. See [personalization](PERSONALIZATION.md)
 and [streamer settings](STREAMER-PREVIEW.md) for new themes, motion, sound and private OBS links.
+
+In V2.7.8, Look & comfort also includes Workspace designer and saved looks.
+Choose a layout, save named looks, import/export appearance, or follow site
+defaults. Personal preferences are scoped to the account in this browser; they
+do not change other members' workspaces. Authorized administrators set shared
+defaults in Site & branding. Appearance files do not back up collection data.

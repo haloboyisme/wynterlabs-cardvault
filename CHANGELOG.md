@@ -2,6 +2,7 @@
 
 ## 2.7.8 — Collector Workspace — September 27, 2026
 
+- Reconcile current install, upgrade, account, scanner, security, contribution and publishing guides with 2.7.8; preserve historical releases and license terms.
 - Add grouped sidebar/top navigation, header card search and mobile shortcuts with an accessible More menu. Keep scanner exit warnings and existing account restrictions.
 - Add Collector, Gallery, Compact, Paper, Night Studio and Soft Glass workspace presets alongside existing Base Modes.
 - Expand site/personal layout controls for spacing, card size/view, logo size and dashboard panel order/visibility. Preserve existing collection display preferences.

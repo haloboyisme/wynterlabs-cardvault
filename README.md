@@ -264,13 +264,13 @@ Replace `YOUR_HOST_OR_IP` with the DNS name or LAN address people will use to
 open WynterLabs CardVault:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2.7.7 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
+sudo apt-get update && sudo apt-get install -y git && git clone --depth 1 --branch v2 https://github.com/haloboyisme/wynterlabs-cardvault.git && cd wynterlabs-cardvault && sudo ./deploy/standalone/bootstrap.sh --host YOUR_HOST_OR_IP
 ```
 
-This command installs the fixed `v2.7.7` release. For the latest branch follow-ups
-on a fresh install, use `--branch v2`; record the commit you install. Existing
-2.7.7 standalone installations must review the same-version limitation in the
-[upgrade guide](docs/UPGRADING.md).
+This command installs the maintained `v2` branch, currently version **2.7.8**.
+Record the installed commit with `git rev-parse HEAD`; the branch can advance.
+The older `v2.7.7` tag remains unchanged. Existing installations should follow the
+[upgrade guide](docs/UPGRADING.md), including backup and isolated restore checks.
 
 The bootstrap checks or installs Docker Engine and Docker Compose, generates
 unique secrets, builds the four-service stack, applies database migrations,

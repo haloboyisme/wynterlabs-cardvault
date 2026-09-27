@@ -1,11 +1,11 @@
 # Standalone upgrades
 
 The repaired upgrade helper shipped in Version 2.5.0 and is included in the
-stable **V2.7.7** release. The older `v2.0.1` download still contains the broken
+current **V2.7.8** branch build. The older `v2.0.1` download still contains the broken
 helper; do not use that older helper. See [installation](INSTALL.md) and the
 [final V2.5 verification record](v2.5-release-readiness.md).
 
-To upgrade an older standalone installation using V2.7.7:
+To upgrade an older standalone installation using the V2.7.8 checkout:
 
 1. Keep your original source checkout and escrowed secrets. Obtain the newer
    trusted release separately; never overwrite installation secrets.
@@ -27,7 +27,7 @@ A failed backup/restore check stops the upgrade before application changes.
 
 Application rollback is not a database downgrade. After a migration failure,
 preserve the backup and use the documented isolated recovery procedure; do not
-assume older code can safely run against every newer schema. This patch does
+assume older code can safely run against every newer schema. V2.7.8 does
 not change migration rollback behavior.
 
 ## Upgrading to 2.7.8 on the v2 branch
